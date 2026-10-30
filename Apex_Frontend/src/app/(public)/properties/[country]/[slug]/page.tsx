@@ -1,8 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { PropertyVariant1 } from '@/components/property-variants/PropertyVariant1'
-import { PropertyVariant2 } from '@/components/property-variants/PropertyVariant2'
-import { PropertyVariant3 } from '@/components/property-variants/PropertyVariant3'
+import { CinematicPropertyDetail } from '@/components/property-detail/CinematicPropertyDetail'
 import { db } from '@/lib/db'
 import { SLUG_ALIASES, getPropertyBySlug } from '@/data/properties'
 
@@ -110,6 +108,8 @@ export default async function PropertyCountryPage({
       highlights: dbProperty.highlights || [],
       image: dbProperty.mainImage || dbProperty.images[0]?.url || '',
       gallery: dbProperty.images.map((img) => img.url),
+      mainVideoUrl: dbProperty.mainVideoUrl,
+      mainVideoThumb: dbProperty.mainVideoThumb,
       layoutVariant: dbProperty.layoutVariant || 1,
       services: dbProperty.services.map((ps) => ps.service),
     }
@@ -124,12 +124,5 @@ export default async function PropertyCountryPage({
     notFound()
   }
 
-  const variants: Record<number, React.ComponentType<any>> = {
-    1: PropertyVariant1,
-    2: PropertyVariant2,
-    3: PropertyVariant3,
-  }
-  const VariantComponent = variants[property.layoutVariant] ?? PropertyVariant1
-
-  return <VariantComponent property={property} />
+  return <CinematicPropertyDetail property={property} />
 }
