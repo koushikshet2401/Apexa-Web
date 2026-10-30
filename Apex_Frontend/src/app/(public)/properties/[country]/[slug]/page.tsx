@@ -6,6 +6,8 @@ import { PropertyVariant3 } from '@/components/property-variants/PropertyVariant
 import { db } from '@/lib/db'
 import { SLUG_ALIASES, getPropertyBySlug } from '@/data/properties'
 
+export const dynamic = 'force-dynamic'
+
 export async function generateMetadata({
   params,
 }: {

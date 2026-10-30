@@ -4,6 +4,8 @@ import { ContactSection } from '@/components/sections/ContactSection'
 import { ScrollCornerNavigator } from '@/components/ui/ScrollCornerNavigator'
 import { Footer } from '@/components/layout/Footer'
 
+export const dynamic = 'force-dynamic'
+
 export default function Home() {
   return (
     <>

@@ -8,6 +8,8 @@ import { db } from '@/lib/db'
 import { DESTINATIONS } from '@/data/destinations'
 import { ArrowLeft, ArrowUpRight } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export async function generateStaticParams() {
   try {
     const countries = await db.country.findMany({

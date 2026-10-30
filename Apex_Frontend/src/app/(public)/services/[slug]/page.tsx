@@ -8,6 +8,8 @@ import { SERVICES, ServiceItem } from '@/data/services'
 import { db } from '@/lib/db'
 import { ArrowLeft, ArrowRight, ArrowUpRight, CheckCircle2 } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export async function generateStaticParams() {
   try {
     const dbServices = await db.serviceCategory.findMany({
