@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: '*.cloudflare.com' },
       { protocol: 'https', hostname: '*.r2.cloudflarestorage.com' },
+      { protocol: 'https', hostname: '*.r2.dev' },
     ],
   },
   redirects: async () => [
@@ -51,9 +52,9 @@ const nextConfig: NextConfig = {
             "script-src 'self' 'unsafe-eval' 'unsafe-inline'",  // unsafe-eval needed by Next.js dev mode
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "font-src 'self' https://fonts.gstatic.com",
-            "img-src 'self' data: blob: https://images.unsplash.com https://*.cloudflare.com https://*.r2.cloudflarestorage.com",
-            "media-src 'self' https://*.cloudflare.com https://*.r2.cloudflarestorage.com",
-            "connect-src 'self'",
+            "img-src 'self' data: blob: https://images.unsplash.com https://*.cloudflare.com https://*.r2.cloudflarestorage.com https://*.r2.dev",
+            "media-src 'self' data: blob: https://*.cloudflare.com https://*.r2.cloudflarestorage.com https://*.r2.dev",
+            "connect-src 'self' https://*.r2.cloudflarestorage.com https://*.r2.dev",
             "frame-ancestors 'none'",
           ].join('; '),
         },

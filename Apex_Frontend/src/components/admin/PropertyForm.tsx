@@ -15,6 +15,7 @@ import {
   X,
   UploadCloud,
 } from 'lucide-react'
+import MediaField from './MediaField'
 
 interface CountryOption {
   id: string
@@ -632,44 +633,30 @@ export default function PropertyForm({
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">
-                Main Image URL
-              </label>
-              <input
-                type="text"
-                value={mainImage}
-                onChange={(e) => setMainImage(e.target.value)}
-                placeholder="/images/properties/damac-riverside.jpg"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">
-                Main Video URL
-              </label>
-              <input
-                type="text"
-                value={mainVideoUrl}
-                onChange={(e) => setMainVideoUrl(e.target.value)}
-                placeholder="/videos/properties/meridian.mp4"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">
-                Video Thumbnail URL
-              </label>
-              <input
-                type="text"
-                value={mainVideoThumb}
-                onChange={(e) => setMainVideoThumb(e.target.value)}
-                placeholder="/images/properties/thumb-1.jpg"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
-            </div>
+            <MediaField
+              label="Main Image"
+              value={mainImage}
+              onChange={setMainImage}
+              folder="properties"
+              accept="image/*"
+              placeholder="/images/properties/damac-riverside.jpg"
+            />
+            <MediaField
+              label="Main Video URL"
+              value={mainVideoUrl}
+              onChange={setMainVideoUrl}
+              folder="properties"
+              accept="video/mp4"
+              placeholder="/videos/properties/meridian.mp4"
+            />
+            <MediaField
+              label="Video Thumbnail"
+              value={mainVideoThumb}
+              onChange={setMainVideoThumb}
+              folder="properties"
+              accept="image/*"
+              placeholder="/images/properties/thumb-1.jpg"
+            />
           </div>
         </div>
 
@@ -806,32 +793,30 @@ export default function PropertyForm({
 
           {/* Add Image URL bar */}
           <div className="p-4 rounded-lg bg-[#040810] border border-white/5 space-y-3">
-            <div className="text-xs font-mono text-gray-300">Add Image By URL</div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <input
-                type="text"
-                value={newImageUrl}
-                onChange={(e) => setNewImageUrl(e.target.value)}
-                placeholder="Image URL (e.g. /images/properties/detail-1.jpg)"
-                className="md:col-span-2 bg-[#070E1C] border border-white/10 rounded-lg px-3.5 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
+            <MediaField
+              label="Add Image to Gallery"
+              value={newImageUrl}
+              onChange={setNewImageUrl}
+              folder="properties"
+              accept="image/*"
+              placeholder="Paste URL, click 'Upload File', or 'From Library'"
+            />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
               <input
                 type="text"
                 value={newImageAlt}
                 onChange={(e) => setNewImageAlt(e.target.value)}
                 placeholder="Caption / Alt text"
-                className="bg-[#070E1C] border border-white/10 rounded-lg px-3.5 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
+                className="md:col-span-2 bg-[#070E1C] border border-white/10 rounded-lg px-3.5 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
               />
-            </div>
-            <div className="flex justify-end">
               <button
                 type="button"
                 onClick={handleAddImage}
                 disabled={addingImage || !newImageUrl.trim()}
-                className="px-4 py-2 rounded-lg bg-[#0B1528] border border-[#7DD3FC]/30 text-xs text-[#7DD3FC] hover:bg-[#7DD3FC]/10 flex items-center gap-1.5 disabled:opacity-40 transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-lg bg-[#0B1528] border border-[#7DD3FC]/30 text-xs text-[#7DD3FC] hover:bg-[#7DD3FC]/10 flex items-center justify-center gap-1.5 disabled:opacity-40 transition-colors cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>{addingImage ? 'Adding...' : 'Add Image to Gallery'}</span>
+                <span>{addingImage ? 'Adding...' : 'Confirm & Add to Gallery'}</span>
               </button>
             </div>
           </div>

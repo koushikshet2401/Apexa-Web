@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Save, Trash2, AlertCircle, CheckCircle2, X } from 'lucide-react'
+import MediaField from './MediaField'
 
 interface ServiceFormProps {
   initialService?: any
@@ -269,27 +270,23 @@ export default function ServiceForm({ initialService }: ServiceFormProps) {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">Image URL</label>
-              <input
-                type="text"
-                value={image}
-                onChange={(e) => setImage(e.target.value)}
-                placeholder="/images/services/luxury-villas.jpg"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
-            </div>
+            <MediaField
+              label="Service Cover Image"
+              value={image}
+              onChange={setImage}
+              folder="services"
+              accept="image/*"
+              placeholder="/images/services/luxury-villas.jpg"
+            />
 
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">Video URL</label>
-              <input
-                type="text"
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-                placeholder="/videos/services/villas.mp4"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
-            </div>
+            <MediaField
+              label="Service Video Reel URL"
+              value={videoUrl}
+              onChange={setVideoUrl}
+              folder="services"
+              accept="video/mp4"
+              placeholder="/videos/services/villas.mp4"
+            />
 
             <div>
               <label className="block text-xs font-mono text-gray-300 mb-1.5">Display Order</label>

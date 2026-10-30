@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { Home, Save, CheckCircle2, AlertCircle, ExternalLink, X, Film } from 'lucide-react'
+import MediaField from './MediaField'
 
 interface HomepageContentData {
   id?: string
@@ -131,31 +132,23 @@ export default function HomepageContentClient({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">
-                Hero Video Stream URL
-              </label>
-              <input
-                type="text"
-                value={heroVideoUrl}
-                onChange={(e) => setHeroVideoUrl(e.target.value)}
-                placeholder="/videos/hero-unveil.mp4"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
-            </div>
+            <MediaField
+              label="Hero Video Stream"
+              value={heroVideoUrl}
+              onChange={setHeroVideoUrl}
+              folder="homepage"
+              accept="video/mp4"
+              placeholder="/videos/hero-unveil.mp4"
+            />
 
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">
-                Hero Poster / Thumbnail URL
-              </label>
-              <input
-                type="text"
-                value={heroVideoThumb}
-                onChange={(e) => setHeroVideoThumb(e.target.value)}
-                placeholder="/images/hero-thumb.jpg"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
-            </div>
+            <MediaField
+              label="Hero Poster / Thumbnail"
+              value={heroVideoThumb}
+              onChange={setHeroVideoThumb}
+              folder="homepage"
+              accept="image/*"
+              placeholder="/images/hero-thumb.jpg"
+            />
 
             <div className="md:col-span-2">
               <label className="block text-xs font-mono text-gray-300 mb-1.5">
@@ -193,31 +186,23 @@ export default function HomepageContentClient({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">
-                One Team Video URL
-              </label>
-              <input
-                type="text"
-                value={oneTeamVideoUrl}
-                onChange={(e) => setOneTeamVideoUrl(e.target.value)}
-                placeholder="/videos/one-team.mp4"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
-            </div>
+            <MediaField
+              label="One Team Video Reel"
+              value={oneTeamVideoUrl}
+              onChange={setOneTeamVideoUrl}
+              folder="homepage"
+              accept="video/mp4"
+              placeholder="/videos/one-team.mp4"
+            />
 
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">
-                Private Advisory Video URL
-              </label>
-              <input
-                type="text"
-                value={advisoryVideoUrl}
-                onChange={(e) => setAdvisoryVideoUrl(e.target.value)}
-                placeholder="/videos/advisory.mp4"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
-            </div>
+            <MediaField
+              label="Private Advisory Video Reel"
+              value={advisoryVideoUrl}
+              onChange={setAdvisoryVideoUrl}
+              folder="homepage"
+              accept="video/mp4"
+              placeholder="/videos/advisory.mp4"
+            />
           </div>
         </div>
 

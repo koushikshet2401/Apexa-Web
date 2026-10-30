@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Save, Trash2, AlertCircle, CheckCircle2, X } from 'lucide-react'
+import MediaField from './MediaField'
 
 interface CountryFormProps {
   initialCountry?: any
@@ -288,16 +289,14 @@ export default function CountryForm({ initialCountry }: CountryFormProps) {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">Card Image URL</label>
-              <input
-                type="text"
-                value={cardImage}
-                onChange={(e) => setCardImage(e.target.value)}
-                placeholder="/images/destinations/dubai.jpg"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
-            </div>
+            <MediaField
+              label="Card Image"
+              value={cardImage}
+              onChange={setCardImage}
+              folder="countries"
+              accept="image/*"
+              placeholder="/images/destinations/dubai.jpg"
+            />
 
             <div>
               <label className="block text-xs font-mono text-gray-300 mb-1.5">Display Order</label>
@@ -310,27 +309,23 @@ export default function CountryForm({ initialCountry }: CountryFormProps) {
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">Hero Video URL</label>
-              <input
-                type="text"
-                value={heroVideoUrl}
-                onChange={(e) => setHeroVideoUrl(e.target.value)}
-                placeholder="/videos/destinations/dubai-hero.mp4"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
-            </div>
+            <MediaField
+              label="Hero Video URL"
+              value={heroVideoUrl}
+              onChange={setHeroVideoUrl}
+              folder="countries"
+              accept="video/mp4"
+              placeholder="/videos/destinations/dubai-hero.mp4"
+            />
 
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">Hero Video Thumbnail</label>
-              <input
-                type="text"
-                value={heroVideoThumb}
-                onChange={(e) => setHeroVideoThumb(e.target.value)}
-                placeholder="/images/destinations/dubai-thumb.jpg"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
-            </div>
+            <MediaField
+              label="Hero Video Thumbnail"
+              value={heroVideoThumb}
+              onChange={setHeroVideoThumb}
+              folder="countries"
+              accept="image/*"
+              placeholder="/images/destinations/dubai-thumb.jpg"
+            />
 
             <div className="md:col-span-2 pt-2">
               <label className="flex items-center gap-2 cursor-pointer">
