@@ -1,9 +1,16 @@
 'use client'
 
 import { useState } from 'react'
-import { Check } from 'lucide-react'
+import Link from 'next/link'
+import { Check, ArrowRight } from 'lucide-react'
 
-export function EnquiryForm({ propertyName }: { propertyName: string }) {
+export function EnquiryForm({
+  propertyName,
+  propertyId,
+}: {
+  propertyName: string
+  propertyId?: string
+}) {
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [refId, setRefId] = useState<string | null>(null)
@@ -29,6 +36,7 @@ export function EnquiryForm({ propertyName }: { propertyName: string }) {
           service: 'Luxury Villas',
           message: `Private Residence Enquiry for ${propertyName}`,
           consent: true,
+          propertyId: propertyId || undefined,
         }),
       })
 
@@ -94,6 +102,16 @@ export function EnquiryForm({ propertyName }: { propertyName: string }) {
       >
         {loading ? 'Submitting...' : 'Register Private Interest'}
       </button>
+
+      <div className="pt-2 text-center">
+        <Link
+          href={`/contact?propertyId=${propertyId || ''}&propertyName=${encodeURIComponent(propertyName)}`}
+          className="inline-flex items-center gap-1.5 text-[11px] font-mono text-sky-400/80 hover:text-sky-300 transition-colors"
+        >
+          <span>Connect via full advisory desk</span>
+          <ArrowRight size={11} />
+        </Link>
+      </div>
     </form>
   )
 }

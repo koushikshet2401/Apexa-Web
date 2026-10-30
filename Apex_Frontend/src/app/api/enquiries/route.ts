@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { sendEnquiryNotification, sendEnquiryConfirmation } from '@/lib/email'
 
 // Simple in-memory rate limiting map (IP -> timestamps[])
 const rateLimitMap = new Map<string, number[]>()
@@ -94,18 +95,20 @@ export async function POST(request: Request) {
 
     // 10. Verify optional propertyId if passed
     let validPropertyId: string | null = null
+    let targetPropertyName: string | null = null
     if (propertyId && typeof propertyId === 'string') {
       const existingProp = await db.property.findFirst({
         where: { OR: [{ id: propertyId }, { slug: propertyId }] },
-        select: { id: true },
+        select: { id: true, name: true },
       })
       if (existingProp) {
         validPropertyId = existingProp.id
+        targetPropertyName = existingProp.name
       }
     }
 
     // 11. Store in Database
-    await db.enquiry.create({
+    const savedEnquiry = await db.enquiry.create({
       data: {
         enquiryRef: enquiryId,
         name: name.trim(),
@@ -119,12 +122,35 @@ export async function POST(request: Request) {
       },
     })
 
+    // 12. Non-blocking email dispatch (never fails API response if email transport fails)
+    sendEnquiryNotification({
+      enquiryRef: savedEnquiry.enquiryRef,
+      name: savedEnquiry.name,
+      email: savedEnquiry.email,
+      phone: savedEnquiry.phone,
+      serviceInterest: savedEnquiry.serviceInterest,
+      message: savedEnquiry.message,
+      propertyId: savedEnquiry.propertyId,
+      propertyName: targetPropertyName,
+      submittedAt: savedEnquiry.submittedAt,
+      ipAddress: ip,
+    }).catch((err) => {
+      console.error('[EMAIL_NOTIFY_ERROR]', savedEnquiry.enquiryRef, err)
+    })
+
+    sendEnquiryConfirmation(savedEnquiry.email, savedEnquiry.enquiryRef, savedEnquiry.name).catch(
+      (err) => {
+        console.error('[EMAIL_CONFIRM_ERROR]', savedEnquiry.enquiryRef, err)
+      }
+    )
+
     return NextResponse.json(
       {
         success: true,
         message: 'Thank you for your enquiry. Our team will be in touch.',
         enquiryId,
-        submittedAt: new Date().toISOString(),
+        enquiryRef: enquiryId,
+        submittedAt: savedEnquiry.submittedAt.toISOString(),
       },
       { status: 200 }
     )

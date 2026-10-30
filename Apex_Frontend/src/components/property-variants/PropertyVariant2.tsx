@@ -62,7 +62,7 @@ export function PropertyVariant2({ property }: { property: any }) {
               ))}
             </div>
             <div className="border border-[var(--border-default)] p-8 bg-[var(--bg-card)]">
-              <EnquiryForm propertyName={property.name} />
+              <EnquiryForm propertyName={property.name} propertyId={property.id} />
             </div>
           </div>
         </div>

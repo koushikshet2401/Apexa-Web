@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { Navigation } from '@/components/layout/Navigation'
 import { Footer } from '@/components/layout/Footer'
@@ -29,7 +30,9 @@ export default function ContactPage() {
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-8">
-          <ContactForm />
+          <Suspense fallback={<div className="text-center py-20 text-xs font-mono text-sky-400">Loading advisory portal...</div>}>
+            <ContactForm />
+          </Suspense>
         </div>
       </main>
       <Footer />

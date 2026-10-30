@@ -344,7 +344,17 @@ export default function EnquiriesManagementClient({
                   {selectedEnquiry.property && (
                     <div className="text-gray-300">
                       <span className="text-gray-500 block text-[10px]">Target Property:</span>
-                      <span className="text-white font-sans">{selectedEnquiry.property.name}</span>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <span className="text-white font-sans font-medium">{selectedEnquiry.property.name}</span>
+                        <a
+                          href={`/admin/properties/${selectedEnquiry.property.id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[#7DD3FC] hover:underline flex items-center gap-1 text-[11px]"
+                        >
+                          View Property <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
                     </div>
                   )}
                   <div className="text-gray-400 text-[11px] pt-2 border-t border-white/5">

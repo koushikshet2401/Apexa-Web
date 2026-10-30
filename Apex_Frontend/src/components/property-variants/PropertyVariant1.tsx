@@ -83,7 +83,7 @@ export function PropertyVariant1({ property }: { property: any }) {
                   </li>
                 ))}
               </ul>
-              <EnquiryForm propertyName={property.name} />
+              <EnquiryForm propertyName={property.name} propertyId={property.id} />
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Check, ChevronDown, Search, ShieldCheck } from 'lucide-react'
 import {
@@ -23,11 +24,21 @@ const SERVICE_OPTIONS = [
 ]
 
 export function ContactForm() {
+  const searchParams = useSearchParams()
+  const prefillPropertyId = searchParams.get('propertyId') || ''
+  const prefillPropertyName = searchParams.get('propertyName') || ''
+  const prefillService = searchParams.get('service') || ''
+
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [selectedCountry, setSelectedCountry] = useState<Country>(DEFAULT_COUNTRY)
   const [phoneNumber, setPhoneNumber] = useState('')
-  const [selectedService, setSelectedService] = useState('Luxury Villas')
+  const [selectedService, setSelectedService] = useState(() => {
+    if (prefillService && SERVICE_OPTIONS.includes(prefillService)) {
+      return prefillService
+    }
+    return 'Luxury Villas'
+  })
   const [message, setMessage] = useState('')
   const [consentGiven, setConsentGiven] = useState(false)
   const [honeypot, setHoneypot] = useState('')
@@ -122,6 +133,7 @@ export function ContactForm() {
           service: selectedService,
           message: message.trim(),
           consent: consentGiven,
+          propertyId: prefillPropertyId || undefined,
         }),
       })
 
@@ -233,6 +245,18 @@ export function ContactForm() {
               {formError && (
                 <div className="p-4 rounded-lg bg-red-950/40 border border-red-500/30 text-red-200 text-xs">
                   {formError}
+                </div>
+              )}
+
+              {prefillPropertyName && (
+                <div className="p-3.5 rounded-xl bg-sky-500/10 border border-sky-400/25 flex items-center justify-between text-xs text-sky-200">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
+                    <span>
+                      Inquiring regarding: <strong className="text-white font-medium">{prefillPropertyName}</strong>
+                    </span>
+                  </div>
+                  <span className="font-mono text-[10px] text-sky-300/70 uppercase tracking-wider">Property Inquiry</span>
                 </div>
               )}
 
