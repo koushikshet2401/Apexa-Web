@@ -14,7 +14,7 @@ export interface ServiceItem {
     title: string
     detail: string
   }[]
-  iconType: 'villa' | 'sky' | 'commercial'
+  iconType: 'villa' | 'sky' | 'commercial' | 'waterfront'
 }
 
 export const SERVICES: ServiceItem[] = [
@@ -132,6 +132,45 @@ export const SERVICES: ServiceItem[] = [
       {
         title: 'Institutional-Grade Asset Delivery',
         detail: 'Complete lifecycle delivery adhering to international sustainability standards and long-term capital preservation.',
+      },
+    ],
+  },
+  {
+    id: 'waterfront-residences',
+    number: '04',
+    slug: 'waterfront-residences',
+    title: 'Waterfront Residences',
+    subtitle: 'Harbourfront & Coastal Living',
+    tagline: 'Private harbourfront architecture, marina access, and waterside tranquility.',
+    description:
+      'Sculptural waterfront residences with private marina berths, harbourfront terraces, and panoramic ocean or bay vistas.',
+    heroDescription:
+      'Sculptural waterfront residences with private marina berths, harbourfront terraces, and panoramic ocean or bay vistas.',
+    route: '/services/waterfront-residences',
+    image: '/images/waterFrontResidenceImage.png',
+    iconType: 'waterfront',
+    architecturalFocus: [
+      'Private Marina & Mooring Integration',
+      'Marine-Grade Salt-Resistant Materials',
+      'Cantilevered Oceanfront Terraces',
+      'Panoramic 270-Degree Water Sightlines',
+    ],
+    deliverables: [
+      {
+        title: 'Maritime Site Analysis',
+        detail: 'Hydrological assessment, tidal ebb modeling, and orientation mapping for wind-sheltered private moorings.',
+      },
+      {
+        title: 'Harbourfront Structural Engineering',
+        detail: 'Specialized reinforced pilings, marine-grade alloys, and subterranean saltwater waterproofing.',
+      },
+      {
+        title: 'Private Berth Handover',
+        detail: 'Turnkey private dock facilities engineered for luxury yachts and personal watercraft with integrated shore power.',
+      },
+      {
+        title: 'Acoustic Water Isolation',
+        detail: 'Acoustically insulated floorplates and double-glazed facades neutralizing wake and coastal breeze noise.',
       },
     ],
   },

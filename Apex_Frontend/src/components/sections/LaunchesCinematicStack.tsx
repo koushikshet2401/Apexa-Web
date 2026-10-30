@@ -36,7 +36,7 @@ export interface VideoLaunch {
   href: string
 }
 
-const LAUNCHES: VideoLaunch[] = [
+const DEFAULT_LAUNCHES: VideoLaunch[] = [
   {
     id: 'launch-1',
     number: '01',
@@ -47,7 +47,7 @@ const LAUNCHES: VideoLaunch[] = [
     beds: '3–4 Bedrooms',
     price: 'AED 8.2M',
     videoSrc: '/videos/luxury-palm-beach.mp4',
-    href: '/properties/the-meridian',
+    href: '/properties/dubai/the-meridian',
   },
   {
     id: 'launch-2',
@@ -59,7 +59,7 @@ const LAUNCHES: VideoLaunch[] = [
     beds: '5 Bedrooms',
     price: '₹ 12.5 Cr',
     videoSrc: '/videos/VID02.mp4',
-    href: '/properties/aurelia-villa',
+    href: '/properties/india/aurelia-villa',
   },
   {
     id: 'launch-3',
@@ -71,7 +71,7 @@ const LAUNCHES: VideoLaunch[] = [
     beds: '4–6 Bedrooms',
     price: 'THB 68M',
     videoSrc: '/videos/VID01.mp4',
-    href: '/properties/the-peninsula-reserve',
+    href: '/properties/thailand/the-peninsula-reserve',
   },
 ]
 
@@ -91,7 +91,7 @@ export interface CollectionCountry {
   description: string
 }
 
-const COLLECTION_COUNTRIES: CollectionCountry[] = [
+const DEFAULT_COLLECTION_COUNTRIES: CollectionCountry[] = [
   {
     id: 'dubai-uae',
     countryCode: 'AE',
@@ -103,7 +103,7 @@ const COLLECTION_COUNTRIES: CollectionCountry[] = [
     location: 'DUBAI & PALM JUMEIRAH, UAE',
     specs: 'DUBAI · PALM JUMEIRAH · 3–6 BEDROOMS',
     image: '/images/DuabiCoolection.png',
-    href: '/destinations/uae',
+    href: '/collection/dubai',
     cities: 'DUBAI · PALM JUMEIRAH · ABU DHABI',
     description: 'Architectural masterworks rising along the Arabian Gulf with private moorings and cantilevered terraces.',
   },
@@ -118,7 +118,7 @@ const COLLECTION_COUNTRIES: CollectionCountry[] = [
     location: 'PHUKET & KOH SAMUI, THAILAND',
     specs: 'PHUKET · KOH SAMUI · 4–6 BEDROOMS',
     image: '/images/Thailand.png',
-    href: '/destinations/thailand',
+    href: '/collection/thailand',
     cities: 'PHUKET · BANGKOK · KOH SAMUI',
     description: 'Secluded hillside retreats and beachfront estates shaped by Thai craftsmanship overlooking the Andaman horizon.',
   },
@@ -133,7 +133,7 @@ const COLLECTION_COUNTRIES: CollectionCountry[] = [
     location: 'TBILISI & BATUMI, GEORGIA',
     specs: 'TBILISI · BATUMI · 3–5 BEDROOMS',
     image: '/images/GeorgiaCollection.png',
-    href: '/destinations/georgia',
+    href: '/collection/georgia',
     cities: 'TBILISI · BATUMI · BORJOMI',
     description: 'Where ancient Caucasian heritage meets contemporary stone chalets and Black Sea coastal residences.',
   },
@@ -148,7 +148,7 @@ const COLLECTION_COUNTRIES: CollectionCountry[] = [
     location: 'SYDNEY & MELBOURNE, AUSTRALIA',
     specs: 'SYDNEY · MELBOURNE · 3–5 BEDROOMS',
     image: '/images/AusCollection.png',
-    href: '/destinations/australia',
+    href: '/collection/australia',
     cities: 'SYDNEY · MELBOURNE · GOLD COAST',
     description: 'Coastal architectural villas and harbourfront penthouses shaped by natural light and ocean panoramas.',
   },
@@ -163,7 +163,7 @@ const COLLECTION_COUNTRIES: CollectionCountry[] = [
     location: 'KUALA LUMPUR & COAST, MALAYSIA',
     specs: 'KUALA LUMPUR · PENANG · 2–4 BEDROOMS',
     image: '/images/MalaysiaCollection.png',
-    href: '/destinations/malaysia',
+    href: '/collection/malaysia',
     cities: 'KUALA LUMPUR · PENANG · LANGKAWI',
     description: 'Tropical sanctuaries nestled between lush rainforest canopies and cosmopolitan coastlines.',
   },
@@ -178,7 +178,23 @@ const COUNTRY_FILTERS = [
   { label: 'Malaysia', value: 'Malaysia' },
 ]
 
-export function LaunchesCinematicStack() {
+const DEFAULT_SPACE_PROPERTIES = PERSPECTIVE_GALLERY_PROPERTIES
+
+export interface LaunchesCinematicStackProps {
+  launches?: VideoLaunch[]
+  countries?: CollectionCountry[]
+  spaceProperties?: PropertyItem[]
+}
+
+export function LaunchesCinematicStack({
+  launches,
+  countries,
+  spaceProperties,
+}: LaunchesCinematicStackProps = {}) {
+  const LAUNCHES = launches && launches.length >= 3 ? launches : DEFAULT_LAUNCHES
+  const COLLECTION_COUNTRIES = countries && countries.length > 0 ? countries : DEFAULT_COLLECTION_COUNTRIES
+  const PERSPECTIVE_GALLERY_PROPERTIES =
+    spaceProperties && spaceProperties.length > 0 ? spaceProperties : DEFAULT_SPACE_PROPERTIES
   const router = useRouter()
   const containerRef = useRef<HTMLDivElement>(null)
   const pinRef = useRef<HTMLDivElement>(null)
@@ -1625,7 +1641,7 @@ export function LaunchesCinematicStack() {
 
               {/* Bottom-Right: Waterfront Residences */}
               <Link
-                href="/properties"
+                href="/services/waterfront-residences"
                 className="relative h-28 sm:h-36 md:h-44 lg:h-52 rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 hover:border-sky-400/50 transition-all duration-300 group shadow-xl"
               >
                 <Image

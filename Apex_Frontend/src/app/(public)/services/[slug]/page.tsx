@@ -5,12 +5,20 @@ import type { Metadata } from 'next'
 import { Navigation } from '@/components/layout/Navigation'
 import { Footer } from '@/components/layout/Footer'
 import { SERVICES, ServiceItem } from '@/data/services'
+import { db } from '@/lib/db'
 import { ArrowLeft, ArrowRight, ArrowUpRight, CheckCircle2 } from 'lucide-react'
 
 export async function generateStaticParams() {
-  return SERVICES.map((service) => ({
-    slug: service.slug,
-  }))
+  try {
+    const dbServices = await db.serviceCategory.findMany({
+      where: { isPublished: true },
+      select: { slug: true },
+    })
+    if (dbServices.length > 0) {
+      return dbServices.map((s) => ({ slug: s.slug }))
+    }
+  } catch {}
+  return SERVICES.map((service) => ({ slug: service.slug }))
 }
 
 export async function generateMetadata({
@@ -19,15 +27,21 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
-  const service = SERVICES.find((s) => s.slug === slug)
+  const dbService = await db.serviceCategory.findUnique({
+    where: { slug },
+  })
+  const fallback = SERVICES.find((s) => s.slug === slug)
 
-  if (!service) {
+  if (!dbService && !fallback) {
     return { title: 'Service Not Found — Apex Pacific Holdings' }
   }
 
+  const title = dbService?.name || fallback?.title || 'Service'
+  const description = dbService?.heroDescription || dbService?.description || fallback?.heroDescription || ''
+
   return {
-    title: `${service.title} — Apex Pacific Holdings`,
-    description: service.heroDescription,
+    title: `${title} — Apex Pacific Holdings`,
+    description,
   }
 }
 
@@ -55,6 +69,16 @@ function ServiceEmblem({ type }: { type: ServiceItem['iconType'] }) {
       </svg>
     )
   }
+  if (type === 'waterfront') {
+    return (
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" className="text-[var(--accent)]">
+        <path d="M4 22C8 20 12 24 16 22C20 20 24 24 28 22C30 21 31 21.5 32 22" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+        <path d="M4 26C8 24 12 28 16 26C20 24 24 28 28 26C30 25 31 25.5 32 26" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+        <path d="M8 18L18 6L28 18H8Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+        <line x1="18" y1="18" x2="18" y2="10" stroke="currentColor" strokeWidth="1.2" />
+      </svg>
+    )
+  }
   return (
     <svg width="36" height="36" viewBox="0 0 36 36" fill="none" className="text-[var(--accent)]">
       <path d="M6 30V10L18 4L30 10V30H6Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
@@ -73,11 +97,61 @@ export default async function ServiceDetailPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  const service = SERVICES.find((s) => s.slug === slug)
 
-  if (!service) {
+  const dbService = await db.serviceCategory.findUnique({
+    where: { slug },
+    include: {
+      properties: {
+        include: {
+          property: {
+            include: {
+              images: { orderBy: { order: 'asc' } },
+              country: true,
+            },
+          },
+        },
+      },
+    },
+  })
+
+  const fallbackService = SERVICES.find((s) => s.slug === slug)
+
+  if (!dbService && !fallbackService) {
     notFound()
   }
+
+  // Construct normalized service object
+  const service = {
+    number: dbService ? `0${dbService.displayOrder || 1}` : fallbackService?.number || '01',
+    title: dbService?.name || fallbackService?.title || '',
+    subtitle: dbService?.subtitle || fallbackService?.subtitle || '',
+    tagline: dbService?.tagline || fallbackService?.tagline || '',
+    heroDescription:
+      dbService?.heroDescription || dbService?.description || fallbackService?.heroDescription || '',
+    image: dbService?.image || fallbackService?.image || '/images/laxuryVillaImage.png',
+    iconType: (fallbackService?.iconType || 'villa') as ServiceItem['iconType'],
+    architecturalFocus: fallbackService?.architecturalFocus || [
+      'Microclimate & Sun Orientation',
+      'Artisanal Stone & Timber Joinery',
+      'Integrated Native Landscapes',
+      'Multi-Generational Spatial Flow',
+    ],
+    deliverables: fallbackService?.deliverables || [
+      {
+        title: 'Topographic & Solar Orientation',
+        detail: 'Deep site-specific study maximizing prevailing breezes, privacy sightlines, and morning light angles.',
+      },
+      {
+        title: 'Bespoke Architectural Engineering',
+        detail: 'Comprehensive structural, MEP, and building envelope design with zero compromise on structural purity.',
+      },
+    ],
+  }
+
+  const assignedProperties =
+    dbService?.properties
+      ?.map((ps) => ps.property)
+      ?.filter((p) => p && p.isPublished) || []
 
   // Find next service for bottom navigation
   const currentIndex = SERVICES.findIndex((s) => s.slug === slug)
@@ -124,9 +198,11 @@ export default async function ServiceDetailPage({
                 {service.title}
               </h1>
 
-              <p className="font-serif italic text-lg sm:text-2xl text-[var(--accent-light)] font-light mb-6 leading-relaxed max-w-2xl">
-                &ldquo;{service.tagline}&rdquo;
-              </p>
+              {service.tagline && (
+                <p className="font-serif italic text-lg sm:text-2xl text-[var(--accent-light)] font-light mb-6 leading-relaxed max-w-2xl">
+                  &ldquo;{service.tagline}&rdquo;
+                </p>
+              )}
 
               <p className="font-sans text-[var(--text-secondary)] text-sm sm:text-base leading-relaxed font-light max-w-2xl mb-8">
                 {service.heroDescription}
@@ -134,7 +210,7 @@ export default async function ServiceDetailPage({
 
               <div className="flex flex-wrap items-center gap-4 pt-2">
                 <Link
-                  href="/#contact"
+                  href="/contact"
                   className="inline-flex items-center justify-center px-7 py-3 bg-[var(--accent)] hover:bg-[var(--accent-light)] text-[var(--bg-primary)] text-[11px] uppercase tracking-[0.2em] font-sans font-medium rounded-full transition-all duration-300 hover:scale-[1.02]"
                 >
                   Schedule Private Consultation
@@ -172,7 +248,72 @@ export default async function ServiceDetailPage({
           </div>
 
           {/* ════════════════════════════════════════════════════════════════
-              2. VISUAL SHOWCASE AREA (Architectural Photography)
+              2. REPRESENTATIVE RESIDENCES (Dynamic from DB)
+             ════════════════════════════════════════════════════════════════ */}
+          {assignedProperties.length > 0 && (
+            <div className="py-16 sm:py-20 border-b border-[var(--accent)]/15">
+              <div className="flex items-center justify-between mb-10">
+                <div>
+                  <span className="font-sans text-[11px] uppercase tracking-[0.24em] text-[var(--accent)] block mb-1">
+                    REPRESENTATIVE RESIDENCES
+                  </span>
+                  <h2 className="font-serif text-2xl sm:text-3xl font-light text-[var(--text-primary)]">
+                    Signature Properties in {service.title}
+                  </h2>
+                </div>
+                <span className="font-mono text-[10px] tracking-[0.22em] text-[var(--text-muted)] uppercase hidden sm:inline-block">
+                  {assignedProperties.length} PROPERTIES
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {assignedProperties.map((p) => {
+                  const countrySlug =
+                    p.country?.slug ||
+                    (p.cityName?.toLowerCase() === 'mumbai' || p.cityName?.toLowerCase() === 'hyderabad'
+                      ? 'india'
+                      : p.cityName?.toLowerCase() === 'milan'
+                      ? 'italy'
+                      : 'dubai')
+                  return (
+                    <div
+                      key={p.id}
+                      className="group bg-[var(--bg-card)]/70 rounded-[4px] overflow-hidden border border-[var(--accent)]/15 hover:border-[var(--accent)]/40 transition-all duration-300"
+                    >
+                      <div className="relative aspect-[16/10] overflow-hidden">
+                        <Image
+                          src={p.mainImage || p.images[0]?.url || '/images/DuabiCoolection.png'}
+                          alt={p.name}
+                          fill
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-card)] via-transparent to-transparent opacity-80" />
+                      </div>
+
+                      <div className="p-6">
+                        <span className="font-sans text-[10px] uppercase tracking-[0.22em] text-[var(--accent)] block mb-1">
+                          {p.type} · {p.cityName || p.country?.name}
+                        </span>
+                        <h3 className="font-serif text-xl text-[var(--text-primary)] mb-2">{p.name}</h3>
+                        <p className="font-sans text-xs text-[var(--text-muted)] mb-4">{p.beds}</p>
+                        <Link
+                          href={`/properties/${countrySlug}/${p.slug}`}
+                          className="inline-flex items-center gap-1.5 font-sans text-xs uppercase tracking-[0.18em] text-[var(--accent)] hover:text-[var(--text-primary)] transition-colors"
+                        >
+                          <span>View Residence</span>
+                          <ArrowUpRight size={13} />
+                        </Link>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ════════════════════════════════════════════════════════════════
+              3. VISUAL SHOWCASE AREA (Architectural Photography)
              ════════════════════════════════════════════════════════════════ */}
           <div className="py-16 sm:py-20 border-b border-[var(--accent)]/15">
             <div className="flex items-center justify-between mb-8">
@@ -238,7 +379,7 @@ export default async function ServiceDetailPage({
           </div>
 
           {/* ════════════════════════════════════════════════════════════════
-              3. CAPABILITIES & DELIVERABLES SPECIFICATION
+              4. CAPABILITIES & DELIVERABLES SPECIFICATION
              ════════════════════════════════════════════════════════════════ */}
           <div className="py-16 sm:py-20 border-b border-[var(--accent)]/15">
             <div className="max-w-2xl mb-12">
@@ -274,7 +415,7 @@ export default async function ServiceDetailPage({
           </div>
 
           {/* ════════════════════════════════════════════════════════════════
-              4. NEXT SERVICE & DIRECT NAVIGATION
+              5. NEXT SERVICE & DIRECT NAVIGATION
              ════════════════════════════════════════════════════════════════ */}
           <div className="pt-16 sm:pt-20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             <Link

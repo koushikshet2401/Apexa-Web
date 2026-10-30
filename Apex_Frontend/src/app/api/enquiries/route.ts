@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { db } from '@/lib/db'
 
 // Simple in-memory rate limiting map (IP -> timestamps[])
 const rateLimitMap = new Map<string, number[]>()
@@ -7,17 +8,18 @@ const ALLOWED_SERVICES = [
   'Luxury Villas',
   'Commercial Properties',
   'Sky Residences',
+  'Waterfront Residences',
   'General Enquiry',
 ]
 
 export async function POST(request: Request) {
   try {
-    // 1. IP rate limiting (max 5 requests per 10 minutes per IP)
+    // 1. IP rate limiting (max 10 requests per 10 minutes per IP)
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'anonymous'
     const now = Date.now()
     const windowMs = 10 * 60 * 1000
     const timestamps = (rateLimitMap.get(ip) || []).filter((t) => now - t < windowMs)
-    if (timestamps.length >= 5) {
+    if (timestamps.length >= 10) {
       return NextResponse.json(
         { success: false, error: 'Too many requests. Please try again later.' },
         { status: 429 }
@@ -35,7 +37,7 @@ export async function POST(request: Request) {
       service,
       message,
       consent,
-      consentTimestamp,
+      propertyId,
       honeypot, // Spam honeypot
     } = body
 
@@ -70,13 +72,8 @@ export async function POST(request: Request) {
       )
     }
 
-    // 7. Validate Service Interest
-    if (!service || !ALLOWED_SERVICES.includes(service)) {
-      return NextResponse.json(
-        { success: false, error: 'Please select a valid service interest.' },
-        { status: 400 }
-      )
-    }
+    // 7. Validate Service Interest (allow flexible or default to General Enquiry if not passed)
+    const selectedService = service && ALLOWED_SERVICES.includes(service) ? service : 'General Enquiry'
 
     // 8. Validate DPDP Consent
     if (consent !== true) {
@@ -95,15 +92,32 @@ export async function POST(request: Request) {
     const randomSuffix = Math.random().toString(36).substring(2, 7).toUpperCase()
     const enquiryId = `APX-${datePrefix}-${randomSuffix}`
 
-    // 10. Privacy-safe audit log (redacting sensitive PII as per data minimisation standards)
-    const maskedPhone = phone.length > 5 ? `${phone.slice(0, 4)}****${phone.slice(-2)}` : '***'
-    const maskedEmail = email.includes('@')
-      ? `${email[0]}***@${email.split('@')[1]}`
-      : '***'
+    // 10. Verify optional propertyId if passed
+    let validPropertyId: string | null = null
+    if (propertyId && typeof propertyId === 'string') {
+      const existingProp = await db.property.findFirst({
+        where: { OR: [{ id: propertyId }, { slug: propertyId }] },
+        select: { id: true },
+      })
+      if (existingProp) {
+        validPropertyId = existingProp.id
+      }
+    }
 
-    console.log(
-      `[ENQUIRY_RECEIVED] ID: ${enquiryId} | Service: ${service} | Phone: ${maskedPhone} | Email: ${maskedEmail} | Consent: ${consent} | Timestamp: ${consentTimestamp || new Date().toISOString()}`
-    )
+    // 11. Store in Database
+    await db.enquiry.create({
+      data: {
+        enquiryRef: enquiryId,
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        serviceInterest: selectedService,
+        message: message && typeof message === 'string' ? message.trim() : null,
+        propertyId: validPropertyId,
+        status: 'new',
+        ipAddress: ip,
+      },
+    })
 
     return NextResponse.json(
       {

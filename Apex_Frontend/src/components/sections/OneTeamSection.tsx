@@ -36,7 +36,7 @@ const TILES: MediaTile[] = [
     id: 'waterfront',
     title: 'Waterfront Residences',
     image: '/images/waterFrontResidenceImage.png',
-    href: '/properties',
+    href: '/services/waterfront-residences',
   },
 ]
 

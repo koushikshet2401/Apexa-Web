@@ -9,6 +9,33 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '*.r2.cloudflarestorage.com' },
     ],
   },
+  redirects: async () => [
+    {
+      source: '/destinations/uae',
+      destination: '/collection/dubai',
+      permanent: true,
+    },
+    {
+      source: '/destinations/thailand',
+      destination: '/collection/thailand',
+      permanent: true,
+    },
+    {
+      source: '/destinations/malaysia',
+      destination: '/collection/malaysia',
+      permanent: true,
+    },
+    {
+      source: '/destinations/australia',
+      destination: '/collection/australia',
+      permanent: true,
+    },
+    {
+      source: '/destinations/georgia',
+      destination: '/collection/georgia',
+      permanent: true,
+    },
+  ],
   headers: async () => [
     {
       source: '/(.*)',

@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Country {
+  id             String     @id @default(cuid())
+  slug           String     @unique   // "dubai", "thailand", "malaysia", "australia", "georgia"
+  name           String
+  displayName    String               // e.g. "Dubai / UAE"
+  region         String
+  cities         String               // "DUBAI · PALM JUMEIRAH · ABU DHABI"
+  tagline        String?
+  description    String?
+  heroVideoUrl   String?
+  heroVideoThumb String?
+  cardImage      String?              // country card image shown in collection carousel
+  displayOrder   Int        @default(0)
+  isPublished    Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  properties     Property[]
+}
+
+model ServiceCategory {
+  id              String            @id @default(cuid())
+  slug            String            @unique   // "luxury-villas", "sky-residences", etc.
+  name            String
+  subtitle        String?
+  tagline         String?
+  description     String?
+  heroDescription String?
+  image           String?
+  videoUrl        String?
+  displayOrder    Int               @default(0)
+  isPublished     Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  properties      PropertyService[]
+}
+
+model Property {
+  id               String            @id @default(cuid())
+  slug             String            @unique
+  name             String
+  cardLabel        String?
+  tagline          String?
+  shortDescription String?
+  description      String?
+  type             String?           // "residential", "mixed_use", etc.
+  beds             String?           // e.g. "3–4 Bedrooms"
+  baths            String?
+  area             String?
+  price            String?
+  cityName         String?
+  locationLine     String?           // "DUBAI MARITIME CITY, UAE"
+  mainVideoUrl     String?
+  mainVideoThumb   String?
+  mainImage        String?
+  highlights       String[]          @default([])
+  layoutVariant    Int               @default(1)
+  isPublished      Boolean           @default(false)
+  isDraft          Boolean           @default(true)
+  isFeaturedLaunch Boolean           @default(false)
+  launchOrder      Int?              // lower = newer = shown first in Latest Launches
+  isSpaceInRound   Boolean           @default(false)
+  spaceOrder       Int?
+  launchDate       DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  countryId        String?
+  country          Country?          @relation(fields: [countryId], references: [id])
+  images           PropertyImage[]
+  services         PropertyService[]
+  enquiries        Enquiry[]
+}
+
+model PropertyImage {
+  id         String   @id @default(cuid())
+  url        String
+  alt        String?
+  order      Int      @default(0)
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
+
+model PropertyService {
+  propertyId String
+  serviceId  String
+  property   Property        @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  service    ServiceCategory @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([propertyId, serviceId])
+}
+
+model HomepageContent {
+  id               String   @id @default(cuid())
+  heroVideoUrl     String?
+  heroVideoThumb   String?
+  unveilHeading    String?
+  unveilSubtext    String?
+  oneTeamVideoUrl  String?
+  advisoryVideoUrl String?
+  updatedAt        DateTime @updatedAt
+}
+
+model Enquiry {
+  id              String    @id @default(cuid())
+  enquiryRef      String    @unique
+  name            String
+  email           String
+  phone           String
+  serviceInterest String?
+  message         String?
+  propertyId      String?
+  property        Property? @relation(fields: [propertyId], references: [id])
+  status          String    @default("new")   // "new", "read", "replied"
+  submittedAt     DateTime  @default(now())
+  ipAddress       String?
+}

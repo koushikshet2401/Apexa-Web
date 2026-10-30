@@ -43,6 +43,8 @@ export default async function DestinationLandingPage({
     notFound()
   }
 
+  const countrySlug = destination.slug === 'uae' ? 'dubai' : destination.slug
+
   return (
     <>
       <Navigation />
@@ -134,7 +136,7 @@ export default async function DestinationLandingPage({
                     <h3 className="font-serif text-xl text-[var(--text-primary)] mb-2">{project.title}</h3>
                     <p className="font-sans text-xs text-[var(--text-muted)] mb-4">{project.beds}</p>
                     <Link
-                      href={`/properties/${project.slug}`}
+                      href={`/properties/${countrySlug}/${project.slug}`}
                       className="inline-flex items-center gap-1.5 font-sans text-xs uppercase tracking-[0.18em] text-[var(--accent)] hover:text-[var(--text-primary)] transition-colors"
                     >
                       <span>View Residence</span>
