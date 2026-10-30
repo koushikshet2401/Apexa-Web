@@ -198,17 +198,31 @@ export function CinematicPropertyDetail({ property }: { property: PropertyDetail
         />
 
         {/* Cinematic gradient vignette */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#040810]/70 via-transparent to-black/40 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#040810]/80 via-black/30 to-black/50 pointer-events-none" />
 
         {/* Minimal Discrete Back Pill (Top Left, subtle) */}
         <div className="absolute top-24 left-6 sm:left-12 z-20">
           <Link
             href="/properties"
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/40 hover:bg-black/70 backdrop-blur-md border border-white/10 text-[11px] font-mono uppercase tracking-[0.2em] text-white/80 hover:text-white transition-all shadow-lg"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/50 hover:bg-black/80 backdrop-blur-md border border-white/15 text-[11px] font-mono uppercase tracking-[0.2em] text-white/90 hover:text-white transition-all shadow-lg"
           >
             <ArrowLeft size={12} />
             <span>Residences</span>
           </Link>
+        </div>
+
+        {/* Cinematic Property Name Hero Title */}
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-6 pointer-events-none">
+          <motion.div
+            initial={{ opacity: 0, y: 25 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
+            className="max-w-5xl"
+          >
+            <h1 className="heading-display text-4xl sm:text-6xl md:text-7xl lg:text-8xl text-white font-light tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)] drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">
+              {property.name}
+            </h1>
+          </motion.div>
         </div>
 
         {/* Bottom subtle scroll invitation */}
