@@ -35,7 +35,7 @@ export async function generateMetadata({
   const fallback = SERVICES.find((s) => s.slug === slug)
 
   if (!dbService && !fallback) {
-    return { title: 'Service Not Found — Apex Pacific Holdings' }
+    notFound()
   }
 
   const title = dbService?.name || fallback?.title || 'Service'

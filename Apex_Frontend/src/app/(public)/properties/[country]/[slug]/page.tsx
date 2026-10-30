@@ -16,6 +16,13 @@ export async function generateMetadata({
   const { country, slug } = await params
   const resolvedSlug = SLUG_ALIASES[slug] || slug
 
+  // If unpublished in DB, trigger notFound
+  const unpublished = await db.property.findFirst({
+    where: { slug: resolvedSlug, isPublished: false },
+    select: { id: true },
+  })
+  if (unpublished) notFound()
+
   const dbProperty = await db.property.findFirst({
     where: {
       slug: resolvedSlug,
@@ -41,7 +48,7 @@ export async function generateMetadata({
   }
 
   const fallback = getPropertyBySlug(resolvedSlug)
-  if (!fallback) return { title: 'Not Found — Apex Pacific Holdings' }
+  if (!fallback) notFound()
 
   return {
     title: `${fallback.name} — ${fallback.city} | Apex Pacific Holdings`,
@@ -56,6 +63,15 @@ export default async function PropertyCountryPage({
 }) {
   const { country, slug } = await params
   const resolvedSlug = SLUG_ALIASES[slug] || slug
+
+  // If explicitly unpublished in database, trigger 404
+  const unpublished = await db.property.findFirst({
+    where: { slug: resolvedSlug, isPublished: false },
+    select: { id: true },
+  })
+  if (unpublished) {
+    notFound()
+  }
 
   const dbProperty = await db.property.findFirst({
     where: {

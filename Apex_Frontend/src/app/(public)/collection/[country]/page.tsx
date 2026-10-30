@@ -41,7 +41,7 @@ export async function generateMetadata({
   })
 
   if (!country) {
-    return { title: 'Collection Not Found — Apex Pacific Holdings' }
+    notFound()
   }
 
   return {
