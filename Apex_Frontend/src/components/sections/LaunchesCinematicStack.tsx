@@ -180,16 +180,27 @@ const COUNTRY_FILTERS = [
 
 const DEFAULT_SPACE_PROPERTIES = PERSPECTIVE_GALLERY_PROPERTIES
 
+export interface HomepageContentProps {
+  heroVideoUrl?: string | null
+  heroVideoThumb?: string | null
+  unveilHeading?: string | null
+  unveilSubtext?: string | null
+  oneTeamVideoUrl?: string | null
+  advisoryVideoUrl?: string | null
+}
+
 export interface LaunchesCinematicStackProps {
   launches?: VideoLaunch[]
   countries?: CollectionCountry[]
   spaceProperties?: PropertyItem[]
+  homepageContent?: HomepageContentProps | null
 }
 
 export function LaunchesCinematicStack({
   launches,
   countries,
   spaceProperties,
+  homepageContent,
 }: LaunchesCinematicStackProps = {}) {
   const LAUNCHES = launches && launches.length >= 3 ? launches : DEFAULT_LAUNCHES
   const COLLECTION_COUNTRIES = countries && countries.length > 0 ? countries : DEFAULT_COLLECTION_COUNTRIES
@@ -834,7 +845,7 @@ export function LaunchesCinematicStack({
           >
             <video
               ref={heroVideoRef}
-              src="/videos/RealEstate Copyrightfree.mp4"
+              src={homepageContent?.heroVideoUrl || "/videos/RealEstate Copyrightfree.mp4"}
               autoPlay
               muted
               loop
@@ -854,7 +865,7 @@ export function LaunchesCinematicStack({
                 opacity: 1,
               }}
             >
-              <source src="/videos/RealEstate Copyrightfree.mp4" type="video/mp4" />
+              <source src={homepageContent?.heroVideoUrl || "/videos/RealEstate Copyrightfree.mp4"} type="video/mp4" />
             </video>
 
             {/* 1. Base Subtle Transparent Midnight Navy Blue Tint (18% opacity, pure architectural cinematic tone) */}
@@ -1044,12 +1055,14 @@ export function LaunchesCinematicStack({
               className="heading-display font-light text-white tracking-tight leading-[1.08] mb-5 sm:mb-8 text-balance"
               style={{ fontSize: 'clamp(2.3rem, 5.8vw, 4.8rem)' }}
             >
-              Unveil the Latest in <em className="italic text-sky-200">Exceptional Living</em>
+              {homepageContent?.unveilHeading || (
+                <>Unveil the Latest in <em className="italic text-sky-200">Exceptional Living</em></>
+              )}
             </h2>
 
             {/* Subtext */}
             <p className="font-sans text-xs sm:text-base md:text-lg text-[#94A3B8] font-light max-w-2xl mx-auto leading-relaxed text-pretty mb-10 sm:mb-14">
-              Discover exceptional properties across our international portfolio, each selected for its location, design and long-term potential.
+              {homepageContent?.unveilSubtext || "Discover exceptional properties across our international portfolio, each selected for its location, design and long-term potential."}
             </p>
 
             {/* Scroll Indicator */}
@@ -1586,7 +1599,7 @@ export function LaunchesCinematicStack({
             >
               <video
                 ref={oneTeamVideoRef}
-                src="/videos/one%20team%20end%20to%20end.mp4"
+                src={homepageContent?.oneTeamVideoUrl || "/videos/one%20team%20end%20to%20end.mp4"}
                 autoPlay
                 muted
                 loop
@@ -1599,7 +1612,7 @@ export function LaunchesCinematicStack({
                 className="w-full h-full object-cover object-center"
                 style={{ opacity: 1 }}
               >
-                <source src="/videos/one%20team%20end%20to%20end.mp4" type="video/mp4" />
+                <source src={homepageContent?.oneTeamVideoUrl || "/videos/one%20team%20end%20to%20end.mp4"} type="video/mp4" />
               </video>
               <div className="absolute inset-0 bg-gradient-to-t from-[#040810]/80 via-transparent to-transparent pointer-events-none" />
 
@@ -1833,7 +1846,7 @@ export function LaunchesCinematicStack({
           <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
             <video
               ref={advisoryVideoRef}
-              src="/videos/gemini_generated_video_0e105bc8.mp4"
+              src={homepageContent?.advisoryVideoUrl || "/videos/gemini_generated_video_0e105bc8.mp4"}
               autoPlay
               loop
               muted
@@ -1853,7 +1866,7 @@ export function LaunchesCinematicStack({
                 opacity: 1,
               }}
             >
-              <source src="/videos/gemini_generated_video_0e105bc8.mp4" type="video/mp4" />
+              <source src={homepageContent?.advisoryVideoUrl || "/videos/gemini_generated_video_0e105bc8.mp4"} type="video/mp4" />
             </video>
             {/* Subtle, crystal-clear dark overlay at ~12% opacity (preserving natural brightness and clarity) */}
             <div className="absolute inset-0 bg-black/12 pointer-events-none" />

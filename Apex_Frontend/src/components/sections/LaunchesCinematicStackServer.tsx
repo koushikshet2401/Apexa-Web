@@ -125,11 +125,15 @@ export async function LaunchesCinematicStackServer() {
     } as PropertyItem
   })
 
+  // 4. Fetch homepage content
+  const dbHomepageContent = await db.homepageContent.findFirst()
+
   return (
     <LaunchesCinematicStack
       launches={launches.length > 0 ? launches : undefined}
       countries={countries.length > 0 ? countries : undefined}
       spaceProperties={spaceProperties.length > 0 ? spaceProperties : undefined}
+      homepageContent={dbHomepageContent}
     />
   )
 }
