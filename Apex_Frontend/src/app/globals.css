@@ -1,0 +1,323 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   CSS CUSTOM PROPERTIES — Deep Midnight Navy Architectural Luxury
+   Midnight Blue · Navy · Steel Blue · Silver Accent
+   ============================================ */
+
+:root {
+  /* Fonts */
+  --font-display: 'Cormorant Garamond', 'Cinzel', 'Playfair Display', Georgia, serif;
+  --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Surfaces — Deep midnight blue and navy */
+  --bg-primary: #040810;
+  --bg-secondary: #070E1C;
+  --bg-card: #0B1528;
+  --bg-surface: #101C33;
+  --bg-overlay: rgba(4, 8, 16, 0.82);
+
+  /* Typography — Cool Ivory & Crisp White */
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --text-inverse: #040810;
+
+  /* Borders — Restrained Silver & Steel Blue micro-trim */
+  --border-light: rgba(203, 213, 225, 0.10);
+  --border-default: rgba(203, 213, 225, 0.18);
+  --border-strong: rgba(203, 213, 225, 0.32);
+
+  /* Accents — Muted Slate Blue, Steel Blue & Ice Glow */
+  --accent: #7DD3FC;
+  --accent-light: #BAE6FD;
+  --accent-muted: rgba(125, 211, 252, 0.12);
+  --accent-silver: #CBD5E1;
+
+  --steelblue: #3B5373;
+  --steelblue-light: #4E6A91;
+  --steelblue-muted: rgba(59, 83, 115, 0.18);
+
+  /* CTA — Silver Titanium */
+  --cta: #CBD5E1;
+  --cta-hover: #E2E8F0;
+}
+
+/* ============================================
+   BASE RESETS
+   ============================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  background-color: var(--bg-primary);
+}
+
+/* ============================================
+   LENIS SMOOTH SCROLL SPECIFICATION
+   ============================================ */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
+  padding-bottom: 72px;
+  /* Safety spacing for mobile bottom navigation */
+}
+
+@media (min-width: 768px) {
+  body {
+    padding-bottom: 0px;
+  }
+}
+
+/* ============================================
+   TYPOGRAPHY UTILITIES
+   ============================================ */
+
+.text-balance {
+  text-wrap: balance;
+}
+
+.text-pretty {
+  text-wrap: pretty;
+}
+
+/* Display headings: always use display font */
+.heading-display {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 300;
+}
+
+/* Editorial italic emphasis */
+.italic-serif {
+  font-family: var(--font-display), Georgia, serif;
+  font-style: italic;
+}
+
+/* Uppercase label */
+.label {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ============================================
+   CONTAINER
+   ============================================ */
+
+.container-wide {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-inline: clamp(1.5rem, 5vw, 4rem);
+}
+
+.container-content {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: clamp(1.5rem, 5vw, 4rem);
+}
+
+.container-narrow {
+  width: 100%;
+  max-width: 760px;
+  margin-inline: auto;
+  padding-inline: clamp(1.5rem, 5vw, 2rem);
+}
+
+/* ============================================
+   SECTION SPACING
+   ============================================ */
+
+.section-padding {
+  padding-block: clamp(5rem, 10vw, 9rem);
+}
+
+.section-padding-sm {
+  padding-block: clamp(3rem, 6vw, 5rem);
+}
+
+/* ============================================
+   SCROLL ANIMATIONS — base states
+   ============================================ */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.25, 0.1, 0.25, 1),
+    transform 0.7s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-delay-1 {
+  transition-delay: 0.1s;
+}
+
+.reveal-delay-2 {
+  transition-delay: 0.2s;
+}
+
+.reveal-delay-3 {
+  transition-delay: 0.3s;
+}
+
+.reveal-delay-4 {
+  transition-delay: 0.4s;
+}
+
+/* Image reveal — scale in from slightly zoomed */
+.reveal-image {
+  overflow: hidden;
+}
+
+.reveal-image img {
+  transform: scale(1.06);
+  transition: transform 0.9s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.reveal-image.is-visible img {
+  transform: scale(1);
+}
+
+/* ============================================
+   HOVER EFFECTS
+   ============================================ */
+
+.img-zoom {
+  overflow: hidden;
+}
+
+.img-zoom img {
+  transition: transform 0.8s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.img-zoom:hover img {
+  transform: scale(1.04);
+}
+
+/* ============================================
+   SCROLLBAR & UTILITIES
+   ============================================ */
+
+/* Hide scrollbar completely while maintaining touch & trackpad scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none !important; /* IE and Edge */
+  scrollbar-width: none !important; /* Firefox */
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--steelblue);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ============================================
+   SELECTION
+   ============================================ */
+
+::selection {
+  background: rgba(125, 211, 252, 0.25);
+  color: #FFFFFF;
+}
+
+/* ============================================
+   REDUCED MOTION
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .reveal,
+  .reveal-image img,
+  .img-zoom img {
+    transition: none;
+    transform: none;
+    opacity: 1;
+  }
+
+  * {
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================
+   HIDE NEXT.JS DEV PORTAL (Prevents overlay on mobile bottom navigation)
+   ============================================ */
+nextjs-portal,
+#__next-build-watcher {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* ============================================
+   HIDE NEXT.JS DEV PORTAL (Prevents overlay on mobile bottom navigation)
+   ============================================ */
+nextjs-portal,
+#__next-build-watcher {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

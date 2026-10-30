@@ -1,0 +1,84 @@
+================================================================================
+APEX LUXURY REAL ESTATE WEB PLATFORM - REQUIREMENTS & SETUP GUIDE
+================================================================================
+
+1. SYSTEM PREREQUISITES
+--------------------------------------------------------------------------------
+- Node.js: >= 20.x (Recommended: Node 20 LTS or Node 22 LTS)
+- Package Manager: pnpm >= 9.x or 10.x (Recommended)
+                   Alternative: npm >= 10.x / yarn >= 1.22
+- Operating System: Windows / macOS / Linux
+- Git: >= 2.x
+
+2. QUICK START (RUN LOCALLY)
+--------------------------------------------------------------------------------
+Step 1: Clone repository
+   git clone https://github.com/koushikshet2401/Apexa-Web.git
+   cd Apexa-Web
+
+Step 2: Install dependencies
+   # Using pnpm (Recommended):
+   pnpm install
+
+   # Or using npm:
+   npm install
+
+Step 3: Start the local development server
+   # Using pnpm:
+   pnpm dev
+
+   # Or using npm:
+   npm run dev
+
+Step 4: Open your browser
+   Visit: http://localhost:3000
+
+3. PRODUCTION BUILD & DEPLOYMENT
+--------------------------------------------------------------------------------
+To compile and test the optimized production build:
+   pnpm build
+   pnpm start
+
+   # Or with npm:
+   npm run build
+   npm run start
+
+4. AVAILABLE SCRIPTS
+--------------------------------------------------------------------------------
+- dev       : Starts Next.js development server with hot module reload (HMR)
+- build     : Compiles and optimizes the application for production
+- start     : Launches the compiled production server
+- lint      : Runs ESLint checks for code quality and syntax standards
+
+5. CORE DEPENDENCIES & LIBRARIES
+--------------------------------------------------------------------------------
+Framework & Core:
+- Next.js (App Router): ^15.1.7
+- React: ^19.0.0
+- React DOM: ^19.0.0
+- TypeScript: ^5.x
+
+UI Styling & Animation:
+- Tailwind CSS: ^3.4.17
+- Framer Motion: ^12.4.7
+- GSAP: ^3.15.0
+- Lenis Smooth Scroll: ^1.3.27
+- Lucide React (Icons): ^1.61.0
+- clsx & tailwind-merge: ^2.1.1 / ^3.7.0
+- Embla Carousel (React & Autoplay): ^8.6.0
+- React Intersection Observer: ^11.0.1
+
+Development & Linting:
+- ESLint & eslint-config-next: ^9.x / ^15.1.7
+- Autoprefixer & PostCSS: ^10.4.20 / ^8.5.1
+- Prettier with Tailwind Plugin: ^3.5.0 / ^0.6.11
+- TypeScript Node types: @types/node (^20), @types/react (^19), @types/react-dom (^19)
+
+6. ENVIRONMENT CONFIGURATION (OPTIONAL)
+--------------------------------------------------------------------------------
+The project runs out-of-the-box with default mock APIs.
+If configuring third-party email/CRM providers in the future, create a .env.local file:
+# Example:
+# NEXT_PUBLIC_SITE_URL=http://localhost:3000
+# CONTACT_EMAIL=enquiries@apexpacticholdings.com
+================================================================================
