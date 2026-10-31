@@ -29,7 +29,7 @@ const COLLECTION_ITEMS: CollectionItem[] = [
     beds: '5 BEDROOMS',
     specs: 'CONTEMPORARY VILLA · HYDERABAD · 5 BEDROOMS',
     image: '/images/laxuryVillaImage.png',
-    href: '/properties/aurelia-villa',
+    href: '/collection/dubai/aurelia-villa',
   },
   {
     id: 'horizon-pavilion',
@@ -40,7 +40,7 @@ const COLLECTION_ITEMS: CollectionItem[] = [
     beds: 'CONCEPT STUDY',
     specs: 'COMMERCIAL LANDMARK · CONCEPT STUDY',
     image: '/images/commercialimage.png',
-    href: '/properties/horizon-pavilion',
+    href: '/collection/malaysia/horizon-pavilion',
   },
   {
     id: 'verdant-house',
@@ -51,7 +51,7 @@ const COLLECTION_ITEMS: CollectionItem[] = [
     beds: '3 BEDROOMS',
     specs: 'BOUTIQUE SKY RESIDENCE · DUBAI · 3 BEDROOMS',
     image: '/images/skyResidenceImage.png',
-    href: '/properties/verdant-house',
+    href: '/collection/dubai/verdant-house',
   },
   {
     id: 'peninsula-reserve',
@@ -62,7 +62,7 @@ const COLLECTION_ITEMS: CollectionItem[] = [
     beds: '5 BEDROOMS',
     specs: 'WATERFRONT ESTATE · PHUKET · 5 BEDROOMS',
     image: '/images/waterFrontResidenceImage.png',
-    href: '/properties/the-peninsula-reserve',
+    href: '/collection/thailand/the-peninsula-reserve',
   },
   {
     id: 'marble-sanctuary',
@@ -73,7 +73,7 @@ const COLLECTION_ITEMS: CollectionItem[] = [
     beds: '3 BEDROOMS',
     specs: 'CONTEMPORARY INTERIOR · MILAN · 3 BEDROOMS',
     image: '/images/image1.png',
-    href: '/residences/contemporary-interior',
+    href: '/collection/dubai/marble-sanctuary',
   },
 ]
 
@@ -208,7 +208,7 @@ export function TheCollectionSection() {
           {/* Action Button & Navigation Arrows Row */}
           <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
             <Link
-              href="/properties"
+              href="/collection"
               className="inline-flex items-center gap-2 px-5 py-2.5 sm:px-7 sm:py-3.5 rounded-full bg-[#0E1A30] hover:bg-[#1E293B] text-white border border-[#38BDF8]/40 hover:border-[#38BDF8] text-[11px] sm:text-xs font-medium uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_0_20px_rgba(56,189,248,0.15)] group"
             >
               <span>Explore All Launches</span>

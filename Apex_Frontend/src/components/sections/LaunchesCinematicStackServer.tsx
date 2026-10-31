@@ -42,7 +42,7 @@ export async function LaunchesCinematicStackServer() {
       beds: p.beds || '3–5 Bedrooms',
       price: p.price || 'Price on Application',
       videoSrc: p.mainVideoUrl || '/videos/luxury-palm-beach.mp4',
-      href: `/properties/${countrySlug}/${p.slug}`,
+      href: `/collection/${countrySlug}/${p.slug}`,
     }
   })
 
@@ -121,7 +121,7 @@ export async function LaunchesCinematicStackServer() {
       layoutVariant: p.layoutVariant || 1,
       lat: 0,
       lng: 0,
-      href: `/properties/${countrySlug}/${p.slug}`,
+      href: `/collection/${countrySlug}/${p.slug}`,
     } as PropertyItem
   })
 

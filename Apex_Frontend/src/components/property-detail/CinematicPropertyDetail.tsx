@@ -43,7 +43,12 @@ interface PropertyDetailData {
   services?: any[]
 }
 
-export function CinematicPropertyDetail({ property }: { property: PropertyDetailData }) {
+export interface CinematicPropertyDetailProps {
+  property: PropertyDetailData
+  backHref?: string
+}
+
+export function CinematicPropertyDetail({ property, backHref }: CinematicPropertyDetailProps) {
   // 1. Video resolution
   const videoSrc =
     property.mainVideoUrl ||
@@ -202,13 +207,23 @@ export function CinematicPropertyDetail({ property }: { property: PropertyDetail
 
         {/* Minimal Discrete Back Pill (Top Left, subtle) */}
         <div className="absolute top-24 left-6 sm:left-12 z-20">
-          <Link
-            href="/properties"
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/50 hover:bg-black/80 backdrop-blur-md border border-white/15 text-[11px] font-mono uppercase tracking-[0.2em] text-white/90 hover:text-white transition-all shadow-lg"
-          >
-            <ArrowLeft size={12} />
-            <span>Residences</span>
-          </Link>
+          {backHref ? (
+            <Link
+              href={backHref}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/50 hover:bg-black/80 backdrop-blur-md border border-white/15 text-[11px] font-mono uppercase tracking-[0.2em] text-white/90 hover:text-white transition-all shadow-lg cursor-pointer"
+            >
+              <ArrowLeft size={12} />
+              <span>Back</span>
+            </Link>
+          ) : (
+            <button
+              onClick={() => window.history.back()}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/50 hover:bg-black/80 backdrop-blur-md border border-white/15 text-[11px] font-mono uppercase tracking-[0.2em] text-white/90 hover:text-white transition-all shadow-lg cursor-pointer"
+            >
+              <ArrowLeft size={12} />
+              <span>Back</span>
+            </button>
+          )}
         </div>
 
         {/* Cinematic Property Name Hero Title */}

@@ -184,7 +184,7 @@ export function PropertiesClient({ properties }: { properties: Property[] }) {
               {filtered.map((property) => (
                 <Link
                   key={property.id}
-                  href={`/properties/${property.slug}`}
+                  href={`/collection/dubai/${property.slug}`}
                   className="group flex flex-col rounded-2xl overflow-hidden border border-white/10 bg-[#070E1C] hover:border-sky-400/50 transition-all duration-500 shadow-lg hover:shadow-[0_15px_35px_rgba(56,189,248,0.12)] hover:-translate-y-1"
                 >
                   {/* Card Image */}

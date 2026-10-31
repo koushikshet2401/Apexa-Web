@@ -6,6 +6,28 @@ import { SLUG_ALIASES, getPropertyBySlug } from '@/data/properties'
 
 export const dynamic = 'force-dynamic'
 
+export async function generateStaticParams() {
+  try {
+    const properties = await db.property.findMany({
+      where: { isPublished: true },
+      select: {
+        slug: true,
+        country: { select: { slug: true } },
+      },
+    })
+    return properties.map((p) => ({
+      country: p.country?.slug || 'dubai',
+      slug: p.slug,
+    }))
+  } catch {
+    return [
+      { country: 'dubai', slug: 'the-meridian' },
+      { country: 'dubai', slug: 'aurelia-villa' },
+      { country: 'thailand', slug: 'the-peninsula-reserve' },
+    ]
+  }
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -54,7 +76,7 @@ export async function generateMetadata({
   }
 }
 
-export default async function PropertyCountryPage({
+export default async function CollectionPropertyPage({
   params,
 }: {
   params: Promise<{ country: string; slug: string }>
@@ -124,5 +146,10 @@ export default async function PropertyCountryPage({
     notFound()
   }
 
-  return <CinematicPropertyDetail property={property} />
+  return (
+    <CinematicPropertyDetail
+      property={property}
+      backHref={`/collection/${country}`}
+    />
+  )
 }

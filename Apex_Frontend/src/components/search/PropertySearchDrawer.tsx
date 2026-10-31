@@ -152,22 +152,18 @@ export function PropertySearchDrawer({ isOpen, onClose }: PropertySearchDrawerPr
     onClose()
 
     if (community === 'Thailand') {
-      router.push('/destinations/thailand')
+      router.push('/collection/thailand')
     } else if (community === 'Malaysia') {
-      router.push('/destinations/malaysia')
+      router.push('/collection/malaysia')
     } else if (community === 'Australia') {
-      router.push('/destinations/australia')
+      router.push('/collection/australia')
     } else if (community === 'Georgia') {
-      router.push('/destinations/georgia')
+      router.push('/collection/georgia')
     } else if (community !== 'Any') {
       // Dubai-specific communities
-      router.push('/destinations/uae')
+      router.push('/collection/dubai')
     } else {
-      const params = new URLSearchParams()
-      if (propertyType !== 'Any') params.set('type', propertyType.toLowerCase())
-      if (bedrooms !== 'Any') params.set('beds', bedrooms.replace(/\D/g, ''))
-      const qs = params.toString()
-      router.push(qs ? `/properties?${qs}` : '/properties')
+      router.push('/collection')
     }
   }
 

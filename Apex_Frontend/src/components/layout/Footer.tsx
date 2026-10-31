@@ -53,7 +53,7 @@ export function Footer() {
           </div>
 
           <Link
-            href="/properties"
+            href="/collection"
             className="group inline-flex items-center gap-1.5 font-mono text-[10px] sm:text-xs uppercase tracking-[0.22em] text-[#7DD3FC] hover:text-white transition-colors duration-200"
           >
             <span>EXPLORE ALL LAUNCHES</span>
@@ -77,7 +77,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/properties" className="hover:text-white transition-colors">
+                <Link href="/collection" className="hover:text-white transition-colors">
                   All Residences
                 </Link>
               </li>
@@ -118,17 +118,17 @@ export function Footer() {
             </h4>
             <ul className="space-y-1 font-sans text-[11px] text-[#94A3B8]">
               <li>
-                <Link href="/destinations/uae" className="hover:text-white transition-colors">
+                <Link href="/collection/dubai" className="hover:text-white transition-colors">
                   Dubai &amp; Abu Dhabi
                 </Link>
               </li>
               <li>
-                <Link href="/destinations/thailand" className="hover:text-white transition-colors">
+                <Link href="/collection/thailand" className="hover:text-white transition-colors">
                   Phuket, Thailand
                 </Link>
               </li>
               <li>
-                <Link href="/destinations/australia" className="hover:text-white transition-colors">
+                <Link href="/collection/australia" className="hover:text-white transition-colors">
                   Sydney &amp; Melbourne
                 </Link>
               </li>

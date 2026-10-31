@@ -36,6 +36,41 @@ const nextConfig: NextConfig = {
       destination: '/collection/georgia',
       permanent: true,
     },
+    // Redirect /destinations → /collection
+    {
+      source: '/destinations',
+      destination: '/collection',
+      permanent: true,
+    },
+    // Redirect old /properties/[country]/[slug] → /collection/[country]/[slug]
+    {
+      source: '/properties/:country/:slug',
+      destination: '/collection/:country/:slug',
+      permanent: true,
+    },
+    // Redirect old /properties/[slug] → /collection (best-effort, can't know country)
+    {
+      source: '/properties/:slug',
+      destination: '/collection',
+      permanent: false,
+    },
+    // Redirect /properties → /collection
+    {
+      source: '/properties',
+      destination: '/collection',
+      permanent: true,
+    },
+    // Redirect /residences → /collection
+    {
+      source: '/residences',
+      destination: '/collection',
+      permanent: true,
+    },
+    {
+      source: '/residences/:slug',
+      destination: '/collection',
+      permanent: false,
+    },
   ],
   headers: async () => [
     {

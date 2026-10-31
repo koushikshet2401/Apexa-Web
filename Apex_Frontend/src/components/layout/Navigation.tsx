@@ -20,7 +20,7 @@ const primaryNavLinks = [
   { label: 'Home', href: '/#home' },
   { label: 'New Launches', href: '/#launches' },
   { label: 'Communities', href: '/#communities' },
-  { label: 'Delivered', href: '/properties' },
+  { label: 'Residences', href: '/collection' },
   { label: 'About Apex', href: '/#about' },
 ]
 
@@ -363,8 +363,8 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
                     <Link href="/#communities" onClick={() => setMenuOpen(false)} className="hover:text-sky-300 transition-colors">
                       Communities
                     </Link>
-                    <Link href="/properties" onClick={() => setMenuOpen(false)} className="hover:text-sky-300 transition-colors">
-                      Delivered Projects
+                    <Link href="/collection" onClick={() => setMenuOpen(false)} className="hover:text-sky-300 transition-colors">
+                      Residences
                     </Link>
                     <Link href="/services/luxury-villas" onClick={() => setMenuOpen(false)} className="hover:text-sky-300 transition-colors">
                       Luxury Villas
@@ -430,7 +430,7 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
               {/* Bottom Box: EXPLORE ALL OF APEX PACIFIC HOLDINGS -> (Screenshot 1) */}
               <div className="pt-6 border-t border-white/10">
                 <Link
-                  href="/properties"
+                  href="/collection"
                   onClick={() => setMenuOpen(false)}
                   className="w-full flex items-center justify-between p-4 sm:p-5 rounded-lg border border-sky-400/30 hover:border-sky-400 bg-sky-400/[0.04] hover:bg-sky-400/10 transition-colors group"
                 >

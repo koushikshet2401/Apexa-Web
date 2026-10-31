@@ -31,7 +31,7 @@ export const DESTINATIONS: Destination[] = [
     tagline: 'Waterfront villas and sky residences in the Gulf.',
     description: 'Architectural masterworks rising along the Arabian Gulf with private moorings, cantilevered terraces, and panoramic desert-to-ocean vistas.',
     image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1600&q=85&auto=format&fit=crop',
-    route: '/destinations/uae',
+    route: '/collection/dubai',
     projects: [
       {
         id: 'the-meridian',
@@ -71,7 +71,7 @@ export const DESTINATIONS: Destination[] = [
     tagline: 'Tropical pool villas and beachfront sanctuaries.',
     description: 'Secluded hillside retreats and beachfront estates shaped by Thai craftsmanship, infinity pools that blur into the Andaman horizon, and lush tropical gardens.',
     image: 'https://images.unsplash.com/photo-1615460549969-36fa19521a4f?w=1600&q=85&auto=format&fit=crop',
-    route: '/destinations/thailand',
+    route: '/collection/thailand',
     projects: [
       {
         id: 'andaman-villa',
@@ -111,7 +111,7 @@ export const DESTINATIONS: Destination[] = [
     tagline: 'Green, resort-style homes close to the vibrant city.',
     description: 'Tropical sanctuaries nestled between lush rainforest canopies and cosmopolitan coastlines, offering private infinity terraces and botanical courtyards.',
     image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1600&q=85&auto=format&fit=crop',
-    route: '/destinations/malaysia',
+    route: '/collection/malaysia',
     projects: [
       {
         id: 'horizon-pavilion',
@@ -151,7 +151,7 @@ export const DESTINATIONS: Destination[] = [
     tagline: 'Coastal architectural villas and harbourfront penthouses.',
     description: 'Contemporary residences shaped by Australian design, natural light and exceptional coastal living.',
     image: 'https://images.unsplash.com/photo-1523217582562-09d0def993a6?w=1600&q=85&auto=format&fit=crop',
-    route: '/destinations/australia',
+    route: '/collection/australia',
     projects: [
       {
         id: 'ivory-residences',
@@ -191,7 +191,7 @@ export const DESTINATIONS: Destination[] = [
     tagline: 'Mountain chalets and Black Sea coastal estates.',
     description: 'Where ancient Caucasian heritage meets contemporary architecture — stone-clad chalets in the mountains and elegant seaside residences along the Black Sea coast.',
     image: 'https://images.unsplash.com/photo-1565008576549-57569a49371d?w=1600&q=85&auto=format&fit=crop',
-    route: '/destinations/georgia',
+    route: '/collection/georgia',
     projects: [
       {
         id: 'colchis-manor',

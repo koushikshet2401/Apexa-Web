@@ -59,7 +59,7 @@ export const PROPERTIES_DATA: Record<string, PropertyItem> = {
     layoutVariant: 3,
     lat: 3.139,
     lng: 101.6869,
-    href: '/residences/architectural-landmark',
+    href: '/collection/malaysia/horizon-pavilion',
   },
 
   'marble-sanctuary': {
@@ -97,7 +97,7 @@ export const PROPERTIES_DATA: Record<string, PropertyItem> = {
     layoutVariant: 1,
     lat: 45.4642,
     lng: 9.19,
-    href: '/residences/contemporary-interior',
+    href: '/collection/dubai/marble-sanctuary',
   },
 
   'verdant-house': {
@@ -135,7 +135,7 @@ export const PROPERTIES_DATA: Record<string, PropertyItem> = {
     layoutVariant: 1,
     lat: 18.922,
     lng: 72.8347,
-    href: '/residences/verdant-house',
+    href: '/collection/dubai/verdant-house',
   },
 
   'the-meridian': {
@@ -171,7 +171,7 @@ export const PROPERTIES_DATA: Record<string, PropertyItem> = {
     layoutVariant: 2,
     lat: 25.1972,
     lng: 55.2744,
-    href: '/residences/sky-residence',
+    href: '/collection/dubai/the-meridian',
   },
 
   'aurelia-villa': {
@@ -207,7 +207,7 @@ export const PROPERTIES_DATA: Record<string, PropertyItem> = {
     layoutVariant: 1,
     lat: 17.4318,
     lng: 78.3821,
-    href: '/residences/luxury-villa',
+    href: '/collection/dubai/aurelia-villa',
   },
 
   'ivory-residences': {
@@ -243,7 +243,7 @@ export const PROPERTIES_DATA: Record<string, PropertyItem> = {
     layoutVariant: 2,
     lat: -37.8136,
     lng: 144.9631,
-    href: '/residences/ivory-residences',
+    href: '/collection/australia/ivory-residences',
   },
 }
 

@@ -218,7 +218,7 @@ export default async function ServiceDetailPage({
                   Schedule Private Consultation
                 </Link>
                 <Link
-                  href="/properties"
+                  href="/collection"
                   className="inline-flex items-center gap-2 px-6 py-3 border border-[var(--accent)]/30 hover:border-[var(--accent)] text-[var(--text-primary)] text-[11px] uppercase tracking-[0.2em] font-sans font-medium rounded-full transition-all duration-300 hover:bg-[var(--accent)]/10"
                 >
                   <span>Explore Portfolio</span>
@@ -300,7 +300,7 @@ export default async function ServiceDetailPage({
                         <h3 className="font-serif text-xl text-[var(--text-primary)] mb-2">{p.name}</h3>
                         <p className="font-sans text-xs text-[var(--text-muted)] mb-4">{p.beds}</p>
                         <Link
-                          href={`/properties/${countrySlug}/${p.slug}`}
+                          href={`/collection/${countrySlug}/${p.slug}`}
                           className="inline-flex items-center gap-1.5 font-sans text-xs uppercase tracking-[0.18em] text-[var(--accent)] hover:text-[var(--text-primary)] transition-colors"
                         >
                           <span>View Residence</span>

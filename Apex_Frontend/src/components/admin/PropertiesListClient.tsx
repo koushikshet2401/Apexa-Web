@@ -231,7 +231,7 @@ export default function PropertiesListClient({
               <tbody className="divide-y divide-white/5">
                 {filtered.map((p) => {
                   const countrySlug = p.country?.slug || 'dubai'
-                  const publicUrl = `/properties/${countrySlug}/${p.slug}`
+                  const publicUrl = `/collection/${countrySlug}/${p.slug}`
 
                   return (
                     <tr key={p.id} className="hover:bg-white/[0.02] transition-colors">

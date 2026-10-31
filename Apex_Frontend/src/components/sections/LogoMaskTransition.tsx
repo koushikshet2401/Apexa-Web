@@ -326,7 +326,7 @@ export function LogoMaskTransition() {
                 </Link>
 
                 <Link
-                  href="/properties"
+                  href="/collection"
                   className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 bg-white/5 hover:bg-white/10 text-white border border-white/20 text-xs tracking-[0.18em] uppercase rounded-full transition-all duration-300 backdrop-blur-md"
                 >
                   <Eye className="w-4 h-4 text-[var(--steelblue)]" />

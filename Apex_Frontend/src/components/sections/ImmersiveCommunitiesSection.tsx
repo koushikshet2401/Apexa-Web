@@ -123,7 +123,7 @@ export function ImmersiveCommunitiesSection() {
                   {activeCommunity.projects.map((proj) => (
                     <Link
                       key={proj.id}
-                      href={`/properties/${proj.slug}`}
+                      href={`/collection/${activeCommunity.slug || 'dubai'}/${proj.slug}`}
                       className="group flex items-center justify-between p-4 rounded-xl border border-white/[0.06] bg-[#0B1528]/80 hover:bg-[#0F1D36] hover:border-sky-400/40 transition-all duration-300"
                     >
                       <div className="flex items-center gap-4 min-w-0">
@@ -162,7 +162,7 @@ export function ImmersiveCommunitiesSection() {
                   All Freehold &amp; Private Titles
                 </span>
                 <Link
-                  href="/properties"
+                  href="/collection"
                   className="inline-flex items-center gap-1.5 font-mono text-xs tracking-wider uppercase text-sky-400 hover:text-sky-300 transition-colors"
                 >
                   <span>View All Listings</span>

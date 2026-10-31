@@ -22,7 +22,7 @@ export default async function EditPropertyPage({
       },
     }),
     db.country.findMany({
-      select: { id: true, name: true, displayName: true },
+      select: { id: true, name: true, displayName: true, slug: true },
       orderBy: { name: 'asc' },
     }),
     db.serviceCategory.findMany({

@@ -33,7 +33,7 @@ export function PropertyVariant2({ property }: { property: any }) {
 
           {/* Right — scrolling content */}
           <div className="p-8 lg:p-16 pt-8 lg:pt-16">
-            <Link href="/properties" className="inline-flex items-center gap-2 label text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors mb-12">
+            <Link href="/collection" className="inline-flex items-center gap-2 label text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors mb-12">
               <ArrowLeft size={12} /> Back to residences
             </Link>
             <p className="text-[var(--text-muted)] text-sm font-mono mb-2">{property.beds} BR · {property.baths} BA · {property.area}</p>

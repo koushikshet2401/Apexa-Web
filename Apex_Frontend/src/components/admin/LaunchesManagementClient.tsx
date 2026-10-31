@@ -187,7 +187,7 @@ export default function LaunchesManagementClient({
                 {launches.map((l, idx) => {
                   const isTop3 = idx < 3
                   const countrySlug = l.country?.slug || 'dubai'
-                  const publicUrl = `/properties/${countrySlug}/${l.slug}`
+                  const publicUrl = `/collection/${countrySlug}/${l.slug}`
 
                   return (
                     <tr

@@ -68,11 +68,7 @@ export function HeroSection() {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (searchQuery.trim()) {
-      router.push(`/properties?q=${encodeURIComponent(searchQuery.trim())}`)
-    } else {
-      router.push('/properties')
-    }
+    router.push('/collection')
   }
 
   // Scroll transition with GSAP ScrollTrigger:

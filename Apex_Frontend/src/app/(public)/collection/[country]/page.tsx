@@ -109,7 +109,7 @@ export default async function CollectionCountryPage({
         <div className="relative max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-16">
           {/* Back link */}
           <Link
-            href="/#collection"
+            href="/collection"
             className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-[var(--accent)] hover:text-[var(--text-primary)] transition-colors mb-10 font-sans"
           >
             <ArrowLeft size={14} />
@@ -209,7 +209,7 @@ export default async function CollectionCountryPage({
                     <h3 className="font-serif text-xl text-[var(--text-primary)] mb-2">{project.title}</h3>
                     <p className="font-sans text-xs text-[var(--text-muted)] mb-4">{project.beds}</p>
                     <Link
-                      href={`/properties/${country.slug}/${project.slug}`}
+                      href={`/collection/${country.slug}/${project.slug}`}
                       className="inline-flex items-center gap-1.5 font-sans text-xs uppercase tracking-[0.18em] text-[var(--accent)] hover:text-[var(--text-primary)] transition-colors"
                     >
                       <span>View Residence</span>

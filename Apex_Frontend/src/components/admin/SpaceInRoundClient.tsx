@@ -179,7 +179,7 @@ export default function SpaceInRoundClient({
               <tbody className="divide-y divide-white/5">
                 {items.map((item, idx) => {
                   const countrySlug = item.country?.slug || 'dubai'
-                  const publicUrl = `/properties/${countrySlug}/${item.slug}`
+                  const publicUrl = `/collection/${countrySlug}/${item.slug}`
 
                   return (
                     <tr key={item.id} className="hover:bg-white/[0.02] transition-colors">
@@ -191,7 +191,7 @@ export default function SpaceInRoundClient({
 
                       <td className="py-4 px-5">
                         <div className="font-medium text-white text-sm">{item.name}</div>
-                        <div className="text-[11px] text-gray-400 font-mono">/properties/{countrySlug}/{item.slug}</div>
+                        <div className="text-[11px] text-gray-400 font-mono">/collection/{countrySlug}/{item.slug}</div>
                       </td>
 
                       <td className="py-4 px-5 text-gray-300">

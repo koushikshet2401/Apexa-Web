@@ -31,7 +31,7 @@ const LAUNCHES: VideoLaunch[] = [
     beds: '3–4 Bedrooms',
     price: 'AED 8.2M',
     videoSrc: '/videos/luxury-palm-beach.mp4',
-    href: '/properties/the-meridian',
+    href: '/collection/dubai/the-meridian',
   },
   {
     id: 'launch-2',
@@ -43,7 +43,7 @@ const LAUNCHES: VideoLaunch[] = [
     beds: '5 Bedrooms',
     price: '₹ 12.5 Cr',
     videoSrc: '/videos/VID02.mp4',
-    href: '/properties/aurelia-villa',
+    href: '/collection/dubai/aurelia-villa',
   },
   {
     id: 'launch-3',
@@ -55,7 +55,7 @@ const LAUNCHES: VideoLaunch[] = [
     beds: '4–6 Bedrooms',
     price: 'THB 68M',
     videoSrc: '/videos/VID01.mp4',
-    href: '/properties/the-peninsula-reserve',
+    href: '/collection/thailand/the-peninsula-reserve',
   },
 ]
 

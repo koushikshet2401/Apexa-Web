@@ -35,7 +35,7 @@ export function PropertyVariant1({ property }: { property: any }) {
 
         {/* Body */}
         <div className="container-content section-padding">
-          <Link href="/properties" className="inline-flex items-center gap-2 label text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors mb-16">
+          <Link href="/collection" className="inline-flex items-center gap-2 label text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors mb-16">
             <ArrowLeft size={12} /> Back to residences
           </Link>
 

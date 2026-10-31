@@ -41,7 +41,7 @@ const FEATURED_PROPERTIES: FeaturedProperty[] = [
     tagline: 'Seven elevated tiers with private sky garden terraces overlooking the Arabian Gulf.',
     description: 'Boutique tower of twenty-four exclusive residences featuring 270-degree ocean horizons and private biometric elevator access.',
     highlights: ['Cantilevered sky garden terraces', 'Horizon infinity pool suspended over marina', 'Private biometric elevator'],
-    href: '/properties/the-meridian',
+    href: '/collection/dubai/the-meridian',
   },
   {
     id: 'horizon',
@@ -59,7 +59,7 @@ const FEATURED_PROPERTIES: FeaturedProperty[] = [
     tagline: 'Curving monolithic architecture combining luxury residences with cultural and curated spaces.',
     description: 'A striking architectural landmark featuring an organic white double-glazed facade and bespoke Italian joinery.',
     highlights: ['Curved sculptural facade', 'Private art gallery & collector lounge', 'Wellness suite & hydrotherapy'],
-    href: '/properties/horizon-pavilion',
+    href: '/collection/malaysia/horizon-pavilion',
   },
   {
     id: 'aurelia',
@@ -77,7 +77,7 @@ const FEATURED_PROPERTIES: FeaturedProperty[] = [
     tagline: 'Contemporary five-bedroom villa set within sculpted stone and reflecting water courtyards.',
     description: 'Sculpted hillside estate balancing architectural precision with the organic warmth of Indian teak and natural slate.',
     highlights: ['Rooftop cantilevered infinity pool', 'Double-height formal salon', 'Private acoustic cinema'],
-    href: '/properties/aurelia-villa',
+    href: '/collection/dubai/aurelia-villa',
   },
   {
     id: 'ivory',
@@ -95,7 +95,7 @@ const FEATURED_PROPERTIES: FeaturedProperty[] = [
     tagline: 'Refined harbourfront apartments with imported Italian travertine and floor-to-ceiling glass.',
     description: 'Expansive wrap-around marina terraces with panoramic water vistas and integrated Gaggenau appliance suites.',
     highlights: ['Panoramic wrap-around terraces', 'Italian travertine finishes throughout', 'Direct private marina berth access'],
-    href: '/properties/ivory-residences',
+    href: '/collection/australia/ivory-residences',
   },
 ]
 
@@ -191,7 +191,7 @@ function SinglePropertySlide({
         </div>
 
         <Link
-          href="/properties"
+          href="/collection"
           className="group inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-sky-400/30 hover:border-sky-400 text-white hover:text-sky-300 text-[10px] tracking-widest uppercase transition-all duration-300"
         >
           <span>Explore All Launches</span>

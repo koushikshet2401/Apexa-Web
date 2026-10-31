@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 export default async function NewPropertyPage() {
   const [countries, services] = await Promise.all([
     db.country.findMany({
-      select: { id: true, name: true, displayName: true },
+      select: { id: true, name: true, displayName: true, slug: true },
       orderBy: { name: 'asc' },
     }),
     db.serviceCategory.findMany({

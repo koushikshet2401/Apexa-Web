@@ -19,7 +19,7 @@ export function PropertyVariant3({ property }: { property: any }) {
       <main className="bg-[var(--bg-primary)]">
         {/* Text-first header */}
         <section className="container-narrow section-padding pt-32">
-          <Link href="/properties" className="inline-flex items-center gap-2 label text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors mb-12">
+          <Link href="/collection" className="inline-flex items-center gap-2 label text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors mb-12">
             <ArrowLeft size={12} /> Back to residences
           </Link>
           <span className="label text-[var(--accent)] block mb-4">{property.city}, {property.country}</span>
