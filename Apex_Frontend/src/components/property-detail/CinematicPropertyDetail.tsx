@@ -250,19 +250,18 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
       </section>
 
       {/* =========================================================================
-          SECTION 2: FULL-SCREEN PROPERTY DETAILS SECTION (PINNED OVERLAY)
-          - Occupies entire viewport, smoothly overlays pinned video as user scrolls
+          SECTION 2: FULL-SCREEN PROPERTY DETAILS SECTION (PINNED OVERLAY ON DESKTOP, NATURAL SCROLL ON MOBILE)
+          - Occupies entire viewport on desktop, cleanly scrollable on mobile
           - Format:
               3–4 Bedrooms BR · 4 Baths BA · 3,800 sq ft
               AED 8.2M
               Description paragraph
               Highlights bullet points
-          - Remains pinned during scrolling, next section smoothly overlays it
           - Background animation: 21.dev GatewayFlow
       ========================================================================= */}
       <section
         id="property-details-section"
-        className="sticky top-0 min-h-screen h-screen w-full z-20 overflow-y-auto lg:overflow-hidden bg-[#040810] shadow-[0_-35px_80px_rgba(0,0,0,0.95)] border-t border-white/10 flex flex-col justify-center items-center relative"
+        className="relative lg:sticky top-0 min-h-screen h-auto lg:h-screen w-full z-20 overflow-y-auto bg-[#040810] shadow-[0_-35px_80px_rgba(0,0,0,0.95)] border-t border-white/10 flex flex-col justify-center items-center pt-20 pb-20 sm:py-16"
       >
         {/* 21.dev GatewayFlow Background Animation */}
         <div className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden opacity-40">
@@ -321,15 +320,14 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
       </section>
 
       {/* =========================================================================
-          SECTION 3: FULL-SCREEN PROPERTY IMAGES SECTION (PINNED OVERLAY)
-          - Occupies entire viewport, smoothly overlays pinned property details
+          SECTION 3: PROPERTY IMAGES SECTION (PINNED OVERLAY ON DESKTOP, NATURAL FLOW ON MOBILE)
+          - Occupies entire viewport on desktop, cleanly flows on mobile
           - Uses CircularTestimonials for 3D interactive image presentation
-          - Each image and accompanying description presents a specific feature
-          - Pins in place while user scrolls, next section smoothly overlays it
+          - Navigation arrows accessible directly on image + bottom controls
       ========================================================================= */}
       <section
         id="property-images-section"
-        className="sticky top-0 min-h-screen h-screen w-full z-30 overflow-y-auto lg:overflow-hidden bg-[#060D1A] shadow-[0_-35px_80px_rgba(0,0,0,0.95)] border-t border-white/10 flex flex-col justify-center items-center relative py-12"
+        className="relative lg:sticky top-0 min-h-screen h-auto lg:h-screen w-full z-30 bg-[#060D1A] shadow-[0_-35px_80px_rgba(0,0,0,0.95)] border-t border-white/10 flex flex-col justify-center items-center pt-20 sm:pt-28 pb-24 sm:pb-16"
       >
         {/* Subtle Ambient Background Gradients */}
         <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-[#040810] to-transparent pointer-events-none" />
@@ -371,27 +369,26 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
       </section>
 
       {/* =========================================================================
-          SECTION 4: FULL-SCREEN ENQUIRY SECTION (PINNED OVERLAY)
+          SECTION 4: ENQUIRY SECTION (PINNED OVERLAY ON DESKTOP, NATURAL FLOW ON MOBILE)
           - Titled "Enquire About This Property"
-          - Occupies entire viewport, smoothly overlays pinned property images
-          - Associated with current property for admin identification
+          - Full bottom clearance for submit button on all mobile screens
           - Saves to DB and sends notifications via /api/enquiries
       ========================================================================= */}
       <section
         id="property-enquiry-section"
-        className="sticky top-0 min-h-screen h-screen w-full z-40 overflow-y-auto lg:overflow-hidden bg-[#040810] shadow-[0_-35px_80px_rgba(0,0,0,0.95)] border-t border-white/10 flex flex-col justify-center items-center relative py-12 px-4 sm:px-6"
+        className="relative lg:sticky top-0 min-h-screen h-auto lg:h-screen w-full z-40 bg-[#040810] shadow-[0_-35px_80px_rgba(0,0,0,0.95)] border-t border-white/10 flex flex-col justify-center items-center pt-16 sm:pt-24 pb-32 sm:pb-20 px-4 sm:px-6"
       >
         {/* Ambient glow */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(56,189,248,0.06)_0%,transparent_70%)] pointer-events-none" />
 
         <div className="relative z-10 max-w-3xl w-full mx-auto">
           {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/30 text-[#7DD3FC] text-[11px] font-mono tracking-widest uppercase mb-3">
+          <div className="text-center mb-5 sm:mb-8">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/30 text-[#7DD3FC] text-[10px] sm:text-[11px] font-mono tracking-widest uppercase mb-2 sm:mb-3">
               <Sparkles size={12} />
               <span>Private Acquisition Desk</span>
             </div>
-            <h2 className="heading-display text-3xl sm:text-5xl text-white font-light tracking-tight mb-2">
+            <h2 className="heading-display text-2xl sm:text-5xl text-white font-light tracking-tight mb-1.5 sm:mb-2">
               Enquire About This Property
             </h2>
             <p className="font-sans text-xs sm:text-sm text-[#94A3B8] font-light max-w-lg mx-auto">
@@ -400,7 +397,7 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
           </div>
 
           {/* Form Card */}
-          <div className="rounded-2xl border border-white/10 bg-[#070D18]/90 p-6 sm:p-10 backdrop-blur-xl shadow-[0_25px_60px_rgba(0,0,0,0.7)]">
+          <div className="rounded-2xl border border-white/10 bg-[#070D18]/90 p-4 sm:p-10 backdrop-blur-xl shadow-[0_25px_60px_rgba(0,0,0,0.7)]">
             {formSubmitted ? (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -522,15 +519,15 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
                     Specific Requirements or Questions
                   </label>
                   <textarea
-                    rows={3}
+                    rows={2}
                     value={formMessage}
                     onChange={(e) => setFormMessage(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-lg bg-white/[0.03] border border-white/10 text-white text-xs sm:text-sm placeholder:text-white/20 focus:outline-none focus:border-[#7DD3FC] transition-colors resize-none"
+                    className="w-full px-3.5 py-2 sm:py-2.5 rounded-lg bg-white/[0.03] border border-white/10 text-white text-xs sm:text-sm placeholder:text-white/20 focus:outline-none focus:border-[#7DD3FC] transition-colors resize-none"
                   />
                 </div>
 
                 {/* Consent */}
-                <div className="flex items-center gap-2 pt-1">
+                <div className="flex items-center gap-2 pt-0.5">
                   <input
                     type="checkbox"
                     id="property-enquiry-consent"
@@ -543,11 +540,11 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
                   </label>
                 </div>
 
-                {/* Submit */}
+                {/* Submit Button — Clear of mobile bottom bar */}
                 <button
                   type="submit"
                   disabled={formLoading}
-                  className="w-full py-3.5 rounded-full bg-white text-[#040810] hover:bg-[#7DD3FC] font-mono text-xs uppercase tracking-widest font-semibold transition-all duration-300 shadow-[0_0_25px_rgba(255,255,255,0.15)] disabled:opacity-50 cursor-pointer"
+                  className="w-full py-3 sm:py-3.5 rounded-full bg-white text-[#040810] hover:bg-[#7DD3FC] font-mono text-xs uppercase tracking-widest font-semibold transition-all duration-300 shadow-[0_4px_25px_rgba(255,255,255,0.2)] disabled:opacity-50 cursor-pointer"
                 >
                   {formLoading ? 'Submitting Confidential Inquiry...' : 'Register Confidential Interest'}
                 </button>

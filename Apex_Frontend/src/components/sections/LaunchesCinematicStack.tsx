@@ -17,6 +17,7 @@ import {
   Pause,
   Search,
   X,
+  Loader2,
 } from 'lucide-react'
 import { PERSPECTIVE_GALLERY_PROPERTIES, PropertyItem } from '@/data/properties'
 import { PropertySearchDrawer } from '@/components/search/PropertySearchDrawer'
@@ -268,6 +269,14 @@ export function LaunchesCinematicStack({
   const [selectedCountry, setSelectedCountry] = useState('All')
   const [activeColIndex, setActiveColIndex] = useState(0)
   const [isMobile, setIsMobile] = useState(false)
+  const [navigatingHref, setNavigatingHref] = useState<string | null>(null)
+
+  const handleExploreCountry = (e: React.MouseEvent, href: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setNavigatingHref(href)
+    router.push(href)
+  }
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -1102,21 +1111,22 @@ export function LaunchesCinematicStack({
           <div className="absolute inset-0 bg-gradient-to-t from-[#040810]/90 via-black/20 to-transparent pointer-events-none" />
 
           {/* Overlay Content with safe pb for mobile nav */}
-          <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-10 md:p-14 lg:p-16 pb-[calc(env(safe-area-inset-bottom,0px)+96px)] sm:pb-12 md:pb-16 z-20 pointer-events-none">
-            <div className="max-w-xl pointer-events-auto">
+          <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-10 md:p-14 lg:p-16 pb-20 sm:pb-12 md:pb-16 z-20 pointer-events-none">
+            <div className="max-w-xl pointer-events-auto bg-black/50 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none p-4 sm:p-0 rounded-2xl sm:rounded-none border border-white/15 sm:border-none shadow-[0_8px_30px_rgba(0,0,0,0.8)] sm:shadow-none">
               <span className="inline-block text-[10px] sm:text-xs font-mono tracking-[0.25em] uppercase text-[#7DD3FC] mb-0.5 sm:mb-1">
                 {LAUNCHES[0].tag}
               </span>
               <h2 className="font-display text-xl sm:text-4xl md:text-5xl lg:text-6xl text-white font-light tracking-tight mb-0.5 sm:mb-1">
                 {LAUNCHES[0].title}
               </h2>
-              <p className="text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase text-[#94A3B8] mb-0.5 sm:mb-2">
-                {LAUNCHES[0].location}
-              </p>
-              <p className="text-[11px] sm:text-sm md:text-base text-white/90 font-light mb-1 sm:mb-2.5">
-                {LAUNCHES[0].type} &nbsp;/&nbsp; {LAUNCHES[0].beds}
-              </p>
-              <div className="flex items-baseline gap-2 mb-2 sm:mb-4">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase text-[#94A3B8] mb-0.5 sm:mb-2">
+                <span>{LAUNCHES[0].location}</span>
+                <span>·</span>
+                <span>{LAUNCHES[0].type}</span>
+                <span>·</span>
+                <span>{LAUNCHES[0].beds}</span>
+              </div>
+              <div className="flex items-baseline gap-2 mb-2.5 sm:mb-4">
                 <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-[#94A3B8]">
                   From
                 </span>
@@ -1126,10 +1136,10 @@ export function LaunchesCinematicStack({
               </div>
               <Link
                 href={LAUNCHES[0].href}
-                className="inline-flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-3 rounded-full bg-white/10 hover:bg-white text-white hover:text-black border border-white/20 hover:border-white text-[10px] sm:text-xs font-medium uppercase tracking-[0.2em] transition-all duration-300 backdrop-blur-md shadow-lg"
+                className="inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full bg-white text-black hover:bg-sky-200 border border-white text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_4px_25px_rgba(0,0,0,0.9)] cursor-pointer"
               >
                 <span>Explore Launch</span>
-                <ArrowUpRight size={13} />
+                <ArrowUpRight size={14} />
               </Link>
             </div>
           </div>
@@ -1166,21 +1176,22 @@ export function LaunchesCinematicStack({
           <div className="absolute inset-0 bg-gradient-to-t from-[#040810]/90 via-black/20 to-transparent pointer-events-none" />
 
           {/* Overlay Content with safe pb for mobile nav */}
-          <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-10 md:p-14 lg:p-16 pb-[calc(env(safe-area-inset-bottom,0px)+96px)] sm:pb-12 md:pb-16 z-20 pointer-events-none">
-            <div className="max-w-xl pointer-events-auto">
+          <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-10 md:p-14 lg:p-16 pb-20 sm:pb-12 md:pb-16 z-20 pointer-events-none">
+            <div className="max-w-xl pointer-events-auto bg-black/50 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none p-4 sm:p-0 rounded-2xl sm:rounded-none border border-white/15 sm:border-none shadow-[0_8px_30px_rgba(0,0,0,0.8)] sm:shadow-none">
               <span className="inline-block text-[10px] sm:text-xs font-mono tracking-[0.25em] uppercase text-[#7DD3FC] mb-0.5 sm:mb-1">
                 {LAUNCHES[1].tag}
               </span>
               <h2 className="font-display text-xl sm:text-4xl md:text-5xl lg:text-6xl text-white font-light tracking-tight mb-0.5 sm:mb-1">
                 {LAUNCHES[1].title}
               </h2>
-              <p className="text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase text-[#94A3B8] mb-0.5 sm:mb-2">
-                {LAUNCHES[1].location}
-              </p>
-              <p className="text-[11px] sm:text-sm md:text-base text-white/90 font-light mb-1 sm:mb-2.5">
-                {LAUNCHES[1].type} &nbsp;/&nbsp; {LAUNCHES[1].beds}
-              </p>
-              <div className="flex items-baseline gap-2 mb-2 sm:mb-4">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase text-[#94A3B8] mb-0.5 sm:mb-2">
+                <span>{LAUNCHES[1].location}</span>
+                <span>·</span>
+                <span>{LAUNCHES[1].type}</span>
+                <span>·</span>
+                <span>{LAUNCHES[1].beds}</span>
+              </div>
+              <div className="flex items-baseline gap-2 mb-2.5 sm:mb-4">
                 <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-[#94A3B8]">
                   From
                 </span>
@@ -1190,10 +1201,10 @@ export function LaunchesCinematicStack({
               </div>
               <Link
                 href={LAUNCHES[1].href}
-                className="inline-flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-3 rounded-full bg-white/10 hover:bg-white text-white hover:text-black border border-white/20 hover:border-white text-[10px] sm:text-xs font-medium uppercase tracking-[0.2em] transition-all duration-300 backdrop-blur-md shadow-lg"
+                className="inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full bg-white text-black hover:bg-sky-200 border border-white text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_4px_25px_rgba(0,0,0,0.9)] cursor-pointer"
               >
                 <span>Explore Launch</span>
-                <ArrowUpRight size={13} />
+                <ArrowUpRight size={14} />
               </Link>
             </div>
           </div>
@@ -1230,21 +1241,22 @@ export function LaunchesCinematicStack({
           <div className="absolute inset-0 bg-gradient-to-t from-[#040810]/90 via-black/20 to-transparent pointer-events-none" />
 
           {/* Overlay Content with safe pb for mobile nav */}
-          <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-10 md:p-14 lg:p-16 pb-[calc(env(safe-area-inset-bottom,0px)+96px)] sm:pb-12 md:pb-16 z-20 pointer-events-none">
-            <div className="max-w-xl pointer-events-auto">
+          <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-10 md:p-14 lg:p-16 pb-20 sm:pb-12 md:pb-16 z-20 pointer-events-none">
+            <div className="max-w-xl pointer-events-auto bg-black/50 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none p-4 sm:p-0 rounded-2xl sm:rounded-none border border-white/15 sm:border-none shadow-[0_8px_30px_rgba(0,0,0,0.8)] sm:shadow-none">
               <span className="inline-block text-[10px] sm:text-xs font-mono tracking-[0.25em] uppercase text-[#7DD3FC] mb-0.5 sm:mb-1">
                 {LAUNCHES[2].tag}
               </span>
               <h2 className="font-display text-xl sm:text-4xl md:text-5xl lg:text-6xl text-white font-light tracking-tight mb-0.5 sm:mb-1">
                 {LAUNCHES[2].title}
               </h2>
-              <p className="text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase text-[#94A3B8] mb-0.5 sm:mb-2">
-                {LAUNCHES[2].location}
-              </p>
-              <p className="text-[11px] sm:text-sm md:text-base text-white/90 font-light mb-1 sm:mb-2.5">
-                {LAUNCHES[2].type} &nbsp;/&nbsp; {LAUNCHES[2].beds}
-              </p>
-              <div className="flex items-baseline gap-2 mb-2 sm:mb-4">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase text-[#94A3B8] mb-0.5 sm:mb-2">
+                <span>{LAUNCHES[2].location}</span>
+                <span>·</span>
+                <span>{LAUNCHES[2].type}</span>
+                <span>·</span>
+                <span>{LAUNCHES[2].beds}</span>
+              </div>
+              <div className="flex items-baseline gap-2 mb-2.5 sm:mb-4">
                 <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-[#94A3B8]">
                   From
                 </span>
@@ -1254,10 +1266,10 @@ export function LaunchesCinematicStack({
               </div>
               <Link
                 href={LAUNCHES[2].href}
-                className="inline-flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-3 rounded-full bg-white/10 hover:bg-white text-white hover:text-black border border-white/20 hover:border-white text-[10px] sm:text-xs font-medium uppercase tracking-[0.2em] transition-all duration-300 backdrop-blur-md shadow-lg"
+                className="inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full bg-white text-black hover:bg-sky-200 border border-white text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_4px_25px_rgba(0,0,0,0.9)] cursor-pointer"
               >
                 <span>Explore Launch</span>
-                <ArrowUpRight size={13} />
+                <ArrowUpRight size={14} />
               </Link>
             </div>
           </div>
@@ -1428,22 +1440,25 @@ export function LaunchesCinematicStack({
                     {/* Card Overlay: Place/country text removed as requested since artwork already contains it */}
                     <div className="absolute inset-0 flex flex-col justify-end p-3.5 sm:p-5 pointer-events-none">
                       <div className="flex items-center justify-end pointer-events-auto">
-                        {/* Explore Action Button */}
-                        <Link
-                          href={item.href}
-                          onClick={(e) => {
-                            if (!isActive) {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              if (diff > 0) handleNextCol()
-                              else handlePrevCol()
-                            }
-                          }}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 hover:bg-sky-400 hover:text-[#040810] text-white border border-white/30 text-[10px] sm:text-xs font-mono uppercase tracking-[0.16em] backdrop-blur-md shadow-lg transition-all duration-300 shrink-0 cursor-pointer"
+                        {/* Explore Action Button with immediate loading state */}
+                        <button
+                          type="button"
+                          onClick={(e) => handleExploreCountry(e, item.href)}
+                          disabled={navigatingHref === item.href}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 hover:bg-sky-400 hover:text-[#040810] text-white border border-white/30 text-[10px] sm:text-xs font-mono uppercase tracking-[0.16em] backdrop-blur-md shadow-lg transition-all duration-300 shrink-0 cursor-pointer disabled:opacity-80"
                         >
-                          <span>Explore</span>
-                          <ArrowUpRight size={13} />
-                        </Link>
+                          {navigatingHref === item.href ? (
+                            <>
+                              <Loader2 size={12} className="animate-spin text-sky-200" />
+                              <span>Loading...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>Explore</span>
+                              <ArrowUpRight size={13} />
+                            </>
+                          )}
+                        </button>
                       </div>
                     </div>
                   </motion.div>
@@ -1468,14 +1483,25 @@ export function LaunchesCinematicStack({
                 </p>
               </div>
 
-              {/* Right: Direct Explore Destination Link */}
-              <Link
-                href={activeColItem.href}
-                className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-sky-500/15 hover:bg-sky-400 text-sky-300 hover:text-[#040810] border border-sky-400/40 text-[10px] sm:text-xs font-mono uppercase tracking-[0.18em] font-medium transition-all duration-300 shrink-0 shadow-lg cursor-pointer"
+              {/* Right: Direct Explore Destination Link with immediate loading state */}
+              <button
+                type="button"
+                onClick={(e) => handleExploreCountry(e, activeColItem.href)}
+                disabled={navigatingHref === activeColItem.href}
+                className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-sky-500/20 hover:bg-sky-400 text-sky-200 hover:text-[#040810] border border-sky-400/50 text-[10px] sm:text-xs font-mono uppercase tracking-[0.18em] font-medium transition-all duration-300 shrink-0 shadow-lg cursor-pointer disabled:opacity-80"
               >
-                <span>Explore {activeColItem.countryKey}</span>
-                <ArrowUpRight size={14} />
-              </Link>
+                {navigatingHref === activeColItem.href ? (
+                  <>
+                    <Loader2 size={13} className="animate-spin" />
+                    <span>Opening {activeColItem.countryKey}...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Explore {activeColItem.countryKey}</span>
+                    <ArrowUpRight size={14} />
+                  </>
+                )}
+              </button>
             </div>
 
             {/* Reference Bottom Horizontal Divider Rule */}

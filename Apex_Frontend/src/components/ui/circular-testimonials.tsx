@@ -71,6 +71,8 @@ export const CircularTestimonials = ({
 
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const autoplayIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
 
   const testimonialsLength = useMemo(() => testimonials.length, [testimonials]);
   const activeTestimonial = useMemo(
@@ -190,10 +192,25 @@ export const CircularTestimonials = ({
   return (
     <div className="w-full max-w-6xl px-4 sm:px-6 py-6 sm:py-8 mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
-        {/* Images 3D Container */}
+        {/* Images 3D Container with Touch Swiping and Mobile Floating Arrow Controls */}
         <div
-          className="relative w-full h-[22rem] sm:h-[25rem] md:h-[28rem] [perspective:1000px]"
+          className="relative w-full h-[16rem] sm:h-[22rem] md:h-[28rem] [perspective:1000px] touch-pan-x"
           ref={imageContainerRef}
+          onTouchStart={(e) => {
+            touchStartX.current = e.touches[0].clientX;
+            touchStartY.current = e.touches[0].clientY;
+          }}
+          onTouchEnd={(e) => {
+            if (touchStartX.current === null || touchStartY.current === null) return;
+            const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+            const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+            if (Math.abs(deltaX) > 35 && Math.abs(deltaX) > Math.abs(deltaY)) {
+              if (deltaX < 0) handleNext();
+              else handlePrev();
+            }
+            touchStartX.current = null;
+            touchStartY.current = null;
+          }}
         >
           {testimonials.map((testimonial, index) => (
             <img
@@ -205,6 +222,34 @@ export const CircularTestimonials = ({
               style={getImageStyle(index)}
             />
           ))}
+
+          {/* Mobile Direct Floating Arrows on Left & Right Edges */}
+          <div className="md:hidden absolute inset-y-0 -left-2 -right-2 flex items-center justify-between pointer-events-none z-20 px-1">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handlePrev();
+              }}
+              className="w-10 h-10 rounded-full bg-black/75 hover:bg-black border border-white/30 text-white flex items-center justify-center pointer-events-auto backdrop-blur-md active:scale-95 shadow-[0_4px_20px_rgba(0,0,0,0.8)] cursor-pointer"
+              aria-label="Previous space image"
+            >
+              <FaArrowLeft size={13} color="#F8FAFC" />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleNext();
+              }}
+              className="w-10 h-10 rounded-full bg-black/75 hover:bg-black border border-white/30 text-white flex items-center justify-center pointer-events-auto backdrop-blur-md active:scale-95 shadow-[0_4px_20px_rgba(0,0,0,0.8)] cursor-pointer"
+              aria-label="Next space image"
+            >
+              <FaArrowRight size={13} color="#F8FAFC" />
+            </button>
+          </div>
         </div>
 
         {/* Content Details */}

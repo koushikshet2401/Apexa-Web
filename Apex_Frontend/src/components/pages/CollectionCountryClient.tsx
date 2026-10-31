@@ -297,14 +297,14 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
                   </div>
                 </DialogTrigger>
 
-                {/* Expanded Dialog Modal */}
-                <DialogContainer className="p-3 sm:p-6 lg:p-8 pb-24 sm:pb-8">
+                {/* Expanded Dialog Modal — Fits 100% in mobile screen without requiring internal scroll */}
+                <DialogContainer className="p-2 sm:p-6 lg:p-8 pb-16 sm:pb-8 flex items-center justify-center">
                   <DialogContent
                     style={{ borderRadius: '24px' }}
-                    className="relative flex h-full max-h-[82vh] sm:max-h-[88vh] mx-auto flex-col overflow-y-auto border border-white/20 bg-[#070E1C] text-white shadow-[0_25px_80px_rgba(0,0,0,0.95)] w-full max-w-2xl"
+                    className="relative flex h-auto max-h-[86vh] sm:max-h-[88vh] mx-auto flex-col overflow-hidden sm:overflow-y-auto border border-white/20 bg-[#070E1C] text-white shadow-[0_25px_80px_rgba(0,0,0,0.95)] w-full max-w-2xl"
                   >
                     {/* Modal Hero Image */}
-                    <div className="relative w-full aspect-[16/10] max-h-[36vh] overflow-hidden bg-black shrink-0">
+                    <div className="relative w-full aspect-[16/9] max-h-[22vh] sm:max-h-[36vh] overflow-hidden bg-black shrink-0">
                       <DialogImage
                         src={project.image}
                         alt={project.title}
@@ -313,28 +313,28 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
                       <div className="absolute inset-0 bg-gradient-to-t from-[#070E1C] via-transparent to-black/30 pointer-events-none" />
                     </div>
 
-                    {/* Modal Content Body */}
-                    <div className="p-5 sm:p-7 md:p-8 flex-1 flex flex-col justify-between">
+                    {/* Modal Content Body — Perfectly balanced for 1-screen mobile view */}
+                    <div className="p-4 sm:p-7 md:p-8 flex-1 flex flex-col justify-between">
                       <div>
                         {/* Type & City */}
-                        <span className="font-mono text-[9px] sm:text-xs uppercase tracking-[0.25em] text-[#7DD3FC] block mb-1.5">
+                        <span className="font-mono text-[9px] sm:text-xs uppercase tracking-[0.25em] text-[#7DD3FC] block mb-1">
                           {project.type} · {project.city}
                         </span>
 
                         {/* Title */}
-                        <DialogTitle className="heading-display font-light text-2xl sm:text-4xl text-white tracking-tight mb-2">
+                        <DialogTitle className="heading-display font-light text-xl sm:text-4xl text-white tracking-tight mb-1 sm:mb-2">
                           {project.title}
                         </DialogTitle>
 
                         {/* Specifications Line */}
-                        <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] sm:text-xs text-white/70 mb-4 pb-3 border-b border-white/10">
+                        <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] sm:text-xs text-white/70 mb-2 sm:mb-4 pb-2 sm:pb-3 border-b border-white/10">
                           {project.beds && <span>{project.beds}</span>}
                           {project.baths && <span>· {project.baths} Baths</span>}
                           {project.area && <span>· {project.area}</span>}
                           {project.price && <span className="text-[#7DD3FC]">· {project.price}</span>}
                         </div>
 
-                        {/* Detailed Description */}
+                        {/* Detailed Description — Clean 2-line clamp on mobile so button is directly visible without scrolling */}
                         <DialogDescription
                           disableLayoutAnimation
                           variants={{
@@ -343,13 +343,13 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
                             exit: { opacity: 0, scale: 0.95, y: -20 },
                           }}
                         >
-                          <p className="font-sans text-xs sm:text-sm text-white/80 font-light leading-relaxed mb-5">
+                          <p className="font-sans text-xs sm:text-sm text-white/80 font-light leading-relaxed mb-2 sm:mb-5 line-clamp-2 sm:line-clamp-none">
                             {project.description || project.shortDescription || 'An extraordinary private architectural sanctuary curated by Apex Pacific Holdings.'}
                           </p>
 
-                          {/* Highlights */}
+                          {/* Highlights — Displayed on tablet/desktop, omitted on narrow mobile to ensure 0 scroll */}
                           {project.highlights && project.highlights.length > 0 && (
-                            <div className="mb-5 space-y-1.5">
+                            <div className="hidden sm:block mb-5 space-y-1.5">
                               <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-white/50 block mb-1.5">
                                 RESIDENCE HIGHLIGHTS
                               </span>
@@ -366,11 +366,11 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
                         </DialogDescription>
                       </div>
 
-                      {/* Explore Button */}
-                      <div className="pt-3 mt-3 border-t border-white/10 shrink-0">
+                      {/* Explore Button — Immediately visible without scrolling */}
+                      <div className="pt-2 sm:pt-3 mt-2 sm:mt-3 border-t border-white/10 shrink-0">
                         <Link
                           href={`/collection/${country.slug}/${project.slug}`}
-                          className="w-full inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#0C1F38] via-[#123157] to-[#0C1F38] hover:from-[#123157] hover:to-[#1E4D82] border border-[#7DD3FC]/40 hover:border-[#7DD3FC] text-white font-mono text-xs uppercase tracking-[0.25em] transition-all duration-300 shadow-[0_0_25px_rgba(56,189,248,0.2)] group cursor-pointer"
+                          className="w-full inline-flex items-center justify-center gap-2.5 px-5 py-3 sm:py-3.5 rounded-xl bg-gradient-to-r from-[#0C1F38] via-[#123157] to-[#0C1F38] hover:from-[#123157] hover:to-[#1E4D82] border border-[#7DD3FC]/40 hover:border-[#7DD3FC] text-white font-mono text-xs uppercase tracking-[0.25em] transition-all duration-300 shadow-[0_0_25px_rgba(56,189,248,0.2)] group cursor-pointer"
                         >
                           <span>Explore Residence</span>
                           <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
