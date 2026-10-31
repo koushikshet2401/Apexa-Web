@@ -19,7 +19,7 @@ export function Footer() {
 
   return (
     <footer
-      className="relative w-full border-t border-white/10 bg-[#040810] text-[#F8FAFC] overflow-hidden select-none"
+      className="relative z-30 w-full border-t border-white/10 bg-[#040810] text-[#F8FAFC] overflow-hidden select-none"
       aria-label="Apex Pacific Holdings Footer"
     >
       {/* Subtle ambient deep glow */}
