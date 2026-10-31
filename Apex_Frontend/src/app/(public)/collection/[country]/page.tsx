@@ -82,6 +82,12 @@ export default async function CollectionCountryPage({
           type: p.type || 'Residence',
           city: p.cityName || country.name,
           beds: p.beds || 'Bespoke',
+          baths: p.baths || undefined,
+          area: p.area || undefined,
+          price: p.price || undefined,
+          description: p.description || p.shortDescription || p.tagline || 'Ultra-prime architectural residence curated by Apex Pacific Holdings.',
+          shortDescription: p.shortDescription || p.tagline || undefined,
+          highlights: p.highlights || [],
           image: p.images[0]?.url || p.mainImage || country.cardImage || '/images/DuabiCoolection.png',
           slug: p.slug,
         }))
@@ -91,6 +97,7 @@ export default async function CollectionCountryPage({
           type: lp.type,
           city: lp.city,
           beds: lp.beds,
+          description: 'Ultra-prime architectural residence curated by Apex Pacific Holdings.',
           image: lp.image,
           slug: lp.slug,
         }))
