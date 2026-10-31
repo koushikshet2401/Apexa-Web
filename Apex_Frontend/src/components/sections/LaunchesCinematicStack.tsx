@@ -551,7 +551,7 @@ export function LaunchesCinematicStack({
       gsap.set(l7, { yPercent: 100, opacity: 1 })
       gsap.set(l8, { yPercent: 100, opacity: 1 })
       gsap.set(l9, { yPercent: 100, opacity: 1 })
-      if (apexText) gsap.set(apexText, { y: 0, scale: 1.0, opacity: 0.95 })
+      if (apexText && apexText.style.visibility !== 'hidden') gsap.set(apexText, { y: 0, scale: 1.0, opacity: 0.95 })
       if (topTiles) gsap.set(topTiles, { yPercent: isMob ? -160 : -140, opacity: 0 })
       if (bottomTiles) gsap.set(bottomTiles, { yPercent: isMob ? 160 : 140, opacity: 0 })
       if (videoWrap) gsap.set(videoWrap, { scale: 1.0 })
@@ -604,7 +604,7 @@ export function LaunchesCinematicStack({
 
       // ─── STAGE 0: HERO PINNED (0.0 to 2.0) ───
       // 1. APEX text smoothly pops up with upward movement, scale, and full brilliance
-      if (apexText) {
+      if (apexText && apexText.style.visibility !== 'hidden') {
         tl.to(
           apexText,
           {
@@ -841,7 +841,7 @@ export function LaunchesCinematicStack({
           >
             <video
               ref={heroVideoRef}
-              src={homepageContent?.heroVideoUrl || "/videos/RealEstate Copyrightfree.mp4"}
+              src={homepageContent?.heroVideoUrl || "/videos/Home Page.mp4"}
               autoPlay
               muted
               loop
@@ -861,7 +861,7 @@ export function LaunchesCinematicStack({
                 opacity: 1,
               }}
             >
-              <source src={homepageContent?.heroVideoUrl || "/videos/RealEstate Copyrightfree.mp4"} type="video/mp4" />
+              <source src={homepageContent?.heroVideoUrl || "/videos/Home Page.mp4"} type="video/mp4" />
             </video>
 
             {/* 1. Base Subtle Transparent Midnight Navy Blue Tint (18% opacity, pure architectural cinematic tone) */}
@@ -953,10 +953,11 @@ export function LaunchesCinematicStack({
             </div>
           </div>
 
-          {/* APEX Hero Brand Typography — Smooth Scroll-Linked Pop-Up */}
+          {/* APEX Hero Brand Typography — Hidden as per design update */}
           <div
             ref={apexTextRef}
             className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none z-20 will-change-transform px-4"
+            style={{ opacity: 0, visibility: 'hidden' }}
           >
             <h1 className="font-serif text-5xl sm:text-7xl md:text-8xl lg:text-9xl tracking-[0.28em] text-white font-light uppercase text-center leading-none drop-shadow-[0_4px_35px_rgba(0,0,0,0.85)]">
               APEX

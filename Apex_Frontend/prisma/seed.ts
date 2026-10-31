@@ -438,7 +438,7 @@ async function main() {
   console.log('--- Seeding Homepage Content ---')
   const homepage = await prisma.homepageContent.create({
     data: {
-      heroVideoUrl: '/videos/RealEstate Copyrightfree.mp4',
+      heroVideoUrl: '/videos/Home Page.mp4',
       heroVideoThumb: '/images/skyResidenceImage.png',
       unveilHeading: 'PRIVATE ARCHITECTURE & ESTATES',
       unveilSubtext:
