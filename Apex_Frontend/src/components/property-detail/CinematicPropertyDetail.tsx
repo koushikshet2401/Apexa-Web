@@ -213,7 +213,7 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
               className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/50 hover:bg-black/80 backdrop-blur-md border border-white/15 text-[11px] font-mono uppercase tracking-[0.2em] text-white/90 hover:text-white transition-all shadow-lg cursor-pointer"
             >
               <ArrowLeft size={12} />
-              <span>Back</span>
+              <span>Residences</span>
             </Link>
           ) : (
             <button
@@ -221,7 +221,7 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
               className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/50 hover:bg-black/80 backdrop-blur-md border border-white/15 text-[11px] font-mono uppercase tracking-[0.2em] text-white/90 hover:text-white transition-all shadow-lg cursor-pointer"
             >
               <ArrowLeft size={12} />
-              <span>Back</span>
+              <span>Residences</span>
             </button>
           )}
         </div>

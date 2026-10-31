@@ -31,7 +31,7 @@ export async function LaunchesCinematicStackServer() {
   })
 
   const launches: VideoLaunch[] = dbLaunches.map((p, idx) => {
-    const countrySlug = p.country?.slug || (p.cityName?.toLowerCase() === 'hyderabad' ? 'india' : 'dubai')
+    const countrySlug = p.country?.slug || 'dubai'
     return {
       id: p.id,
       number: `0${idx + 1}`,
@@ -91,13 +91,7 @@ export async function LaunchesCinematicStackServer() {
   })
 
   const spaceProperties: PropertyItem[] = dbSpaceProps.map((p) => {
-    const countrySlug =
-      p.country?.slug ||
-      (p.cityName?.toLowerCase() === 'mumbai' || p.cityName?.toLowerCase() === 'hyderabad'
-        ? 'india'
-        : p.cityName?.toLowerCase() === 'milan'
-        ? 'italy'
-        : 'dubai')
+    const countrySlug = p.country?.slug || 'dubai'
 
     return {
       id: p.id,

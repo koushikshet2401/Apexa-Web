@@ -246,7 +246,7 @@ async function main() {
       isDraft: false,
       isFeaturedLaunch: true,
       launchOrder: 2,
-      countrySlug: null,
+      countrySlug: 'dubai',
       serviceSlugs: ['luxury-villas'],
       gallery: [
         'https://images.unsplash.com/photo-1600210492486-724fe5c67fb3?w=1200&q=80&auto=format&fit=crop',
@@ -359,7 +359,7 @@ async function main() {
       isDraft: false,
       isFeaturedLaunch: false,
       launchOrder: null,
-      countrySlug: null,
+      countrySlug: 'dubai',
       serviceSlugs: ['luxury-villas'],
       gallery: [
         'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=1200&q=80&auto=format&fit=crop',
@@ -397,7 +397,7 @@ async function main() {
       isDraft: false,
       isFeaturedLaunch: false,
       launchOrder: null,
-      countrySlug: null,
+      countrySlug: 'dubai',
       serviceSlugs: ['luxury-villas'],
       gallery: [
         'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=1200&q=80&auto=format&fit=crop',
