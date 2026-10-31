@@ -229,8 +229,8 @@ export function DialogContainer({ children, className }: DialogContainerProps) {
             exit={{ opacity: 0 }}
             onClick={() => setIsOpen(false)}
           />
-          <div className={cn('fixed inset-0 z-50 w-full flex items-center justify-center p-4 sm:p-6 pointer-events-none', className)}>
-            <div className="pointer-events-auto w-full max-w-3xl max-h-[90vh] flex flex-col">
+          <div className={cn('fixed inset-0 z-50 w-full flex items-center justify-center p-3 sm:p-6 pb-20 sm:pb-6 pointer-events-none', className)}>
+            <div className="pointer-events-auto w-full max-w-2xl max-h-[82vh] sm:max-h-[88vh] flex flex-col">
               {children}
             </div>
           </div>

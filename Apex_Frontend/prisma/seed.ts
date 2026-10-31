@@ -438,12 +438,12 @@ async function main() {
   console.log('--- Seeding Homepage Content ---')
   const homepage = await prisma.homepageContent.create({
     data: {
-      heroVideoUrl: '/videos/Home Page.mp4',
+      heroVideoUrl: '/videos/home-page.mp4',
       heroVideoThumb: '/images/skyResidenceImage.png',
       unveilHeading: 'PRIVATE ARCHITECTURE & ESTATES',
       unveilSubtext:
         'Bespoke residences sculpted to their terrain across the world’s most coveted territories.',
-      oneTeamVideoUrl: '/videos/one team end to end.mp4',
+      oneTeamVideoUrl: '/videos/one-team-end-to-end.mp4',
       advisoryVideoUrl: '/videos/gemini_generated_video_0e105bc8.mp4',
     },
   })

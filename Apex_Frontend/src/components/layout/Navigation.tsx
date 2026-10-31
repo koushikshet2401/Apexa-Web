@@ -57,7 +57,12 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
           setShowBottomNav(true)
         }
       } else {
-        setShowBottomNav(true)
+        // On non-home pages (e.g. collection country pages), keep bottom nav hidden on top hero
+        if (window.scrollY < window.innerHeight * 0.75) {
+          setShowBottomNav(false)
+        } else {
+          setShowBottomNav(true)
+        }
       }
 
       // Auto-detect active section for bottom navigation highlight

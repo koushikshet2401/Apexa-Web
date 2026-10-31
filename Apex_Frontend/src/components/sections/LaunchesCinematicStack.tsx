@@ -841,7 +841,8 @@ export function LaunchesCinematicStack({
           >
             <video
               ref={heroVideoRef}
-              src={homepageContent?.heroVideoUrl || "/videos/Home Page.mp4"}
+              src={encodeURI(homepageContent?.heroVideoUrl || "/videos/home-page.mp4")}
+              poster={homepageContent?.heroVideoThumb || "/images/skyResidenceImage.png"}
               autoPlay
               muted
               loop
@@ -861,7 +862,7 @@ export function LaunchesCinematicStack({
                 opacity: 1,
               }}
             >
-              <source src={homepageContent?.heroVideoUrl || "/videos/Home Page.mp4"} type="video/mp4" />
+              <source src={encodeURI(homepageContent?.heroVideoUrl || "/videos/home-page.mp4")} type="video/mp4" />
             </video>
 
             {/* 1. Base Subtle Transparent Midnight Navy Blue Tint (18% opacity, pure architectural cinematic tone) */}
@@ -926,7 +927,7 @@ export function LaunchesCinematicStack({
             </div>
 
             {/* Bottom Search Bar — Positioned with safe clearance across all mobile and desktop screens */}
-            <div className="absolute bottom-16 sm:bottom-12 md:bottom-14 lg:bottom-16 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] sm:w-[calc(100%-4rem)] max-w-xl z-30 pointer-events-auto pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)]">
+            <div className="absolute bottom-24 sm:bottom-12 md:bottom-14 lg:bottom-16 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] sm:w-[calc(100%-4rem)] max-w-xl z-30 pointer-events-auto pb-[calc(env(safe-area-inset-bottom,0px)+1rem)]">
               <div
                 onClick={() => setIsSearchOpen(true)}
                 role="button"
@@ -1101,25 +1102,25 @@ export function LaunchesCinematicStack({
           <div className="absolute inset-0 bg-gradient-to-t from-[#040810]/90 via-black/20 to-transparent pointer-events-none" />
 
           {/* Overlay Content with safe pb for mobile nav */}
-          <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-10 md:p-14 lg:p-16 pb-[calc(env(safe-area-inset-bottom)+76px)] sm:pb-12 md:pb-16 z-20 pointer-events-none">
+          <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-10 md:p-14 lg:p-16 pb-[calc(env(safe-area-inset-bottom,0px)+96px)] sm:pb-12 md:pb-16 z-20 pointer-events-none">
             <div className="max-w-xl pointer-events-auto">
-              <span className="inline-block text-[10px] sm:text-xs font-mono tracking-[0.25em] uppercase text-[#7DD3FC] mb-1">
+              <span className="inline-block text-[10px] sm:text-xs font-mono tracking-[0.25em] uppercase text-[#7DD3FC] mb-0.5 sm:mb-1">
                 {LAUNCHES[0].tag}
               </span>
-              <h2 className="font-display text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-white font-light tracking-tight mb-1">
+              <h2 className="font-display text-xl sm:text-4xl md:text-5xl lg:text-6xl text-white font-light tracking-tight mb-0.5 sm:mb-1">
                 {LAUNCHES[0].title}
               </h2>
-              <p className="text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase text-[#94A3B8] mb-1 sm:mb-2">
+              <p className="text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase text-[#94A3B8] mb-0.5 sm:mb-2">
                 {LAUNCHES[0].location}
               </p>
-              <p className="text-xs sm:text-sm md:text-base text-white/90 font-light mb-1.5 sm:mb-2.5">
+              <p className="text-[11px] sm:text-sm md:text-base text-white/90 font-light mb-1 sm:mb-2.5">
                 {LAUNCHES[0].type} &nbsp;/&nbsp; {LAUNCHES[0].beds}
               </p>
-              <div className="flex items-baseline gap-2 mb-2.5 sm:mb-4">
+              <div className="flex items-baseline gap-2 mb-2 sm:mb-4">
                 <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-[#94A3B8]">
                   From
                 </span>
-                <span className="font-display text-lg sm:text-2xl md:text-3xl text-white tracking-wide">
+                <span className="font-display text-base sm:text-2xl md:text-3xl text-white tracking-wide">
                   {LAUNCHES[0].price}
                 </span>
               </div>
@@ -1165,25 +1166,25 @@ export function LaunchesCinematicStack({
           <div className="absolute inset-0 bg-gradient-to-t from-[#040810]/90 via-black/20 to-transparent pointer-events-none" />
 
           {/* Overlay Content with safe pb for mobile nav */}
-          <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-10 md:p-14 lg:p-16 pb-[calc(env(safe-area-inset-bottom)+76px)] sm:pb-12 md:pb-16 z-20 pointer-events-none">
+          <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-10 md:p-14 lg:p-16 pb-[calc(env(safe-area-inset-bottom,0px)+96px)] sm:pb-12 md:pb-16 z-20 pointer-events-none">
             <div className="max-w-xl pointer-events-auto">
-              <span className="inline-block text-[10px] sm:text-xs font-mono tracking-[0.25em] uppercase text-[#7DD3FC] mb-1">
+              <span className="inline-block text-[10px] sm:text-xs font-mono tracking-[0.25em] uppercase text-[#7DD3FC] mb-0.5 sm:mb-1">
                 {LAUNCHES[1].tag}
               </span>
-              <h2 className="font-display text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-white font-light tracking-tight mb-1">
+              <h2 className="font-display text-xl sm:text-4xl md:text-5xl lg:text-6xl text-white font-light tracking-tight mb-0.5 sm:mb-1">
                 {LAUNCHES[1].title}
               </h2>
-              <p className="text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase text-[#94A3B8] mb-1 sm:mb-2">
+              <p className="text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase text-[#94A3B8] mb-0.5 sm:mb-2">
                 {LAUNCHES[1].location}
               </p>
-              <p className="text-xs sm:text-sm md:text-base text-white/90 font-light mb-1.5 sm:mb-2.5">
+              <p className="text-[11px] sm:text-sm md:text-base text-white/90 font-light mb-1 sm:mb-2.5">
                 {LAUNCHES[1].type} &nbsp;/&nbsp; {LAUNCHES[1].beds}
               </p>
-              <div className="flex items-baseline gap-2 mb-2.5 sm:mb-4">
+              <div className="flex items-baseline gap-2 mb-2 sm:mb-4">
                 <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-[#94A3B8]">
                   From
                 </span>
-                <span className="font-display text-lg sm:text-2xl md:text-3xl text-white tracking-wide">
+                <span className="font-display text-base sm:text-2xl md:text-3xl text-white tracking-wide">
                   {LAUNCHES[1].price}
                 </span>
               </div>
@@ -1229,25 +1230,25 @@ export function LaunchesCinematicStack({
           <div className="absolute inset-0 bg-gradient-to-t from-[#040810]/90 via-black/20 to-transparent pointer-events-none" />
 
           {/* Overlay Content with safe pb for mobile nav */}
-          <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-10 md:p-14 lg:p-16 pb-[calc(env(safe-area-inset-bottom)+76px)] sm:pb-12 md:pb-16 z-20 pointer-events-none">
+          <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-10 md:p-14 lg:p-16 pb-[calc(env(safe-area-inset-bottom,0px)+96px)] sm:pb-12 md:pb-16 z-20 pointer-events-none">
             <div className="max-w-xl pointer-events-auto">
-              <span className="inline-block text-[10px] sm:text-xs font-mono tracking-[0.25em] uppercase text-[#7DD3FC] mb-1">
+              <span className="inline-block text-[10px] sm:text-xs font-mono tracking-[0.25em] uppercase text-[#7DD3FC] mb-0.5 sm:mb-1">
                 {LAUNCHES[2].tag}
               </span>
-              <h2 className="font-display text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-white font-light tracking-tight mb-1">
+              <h2 className="font-display text-xl sm:text-4xl md:text-5xl lg:text-6xl text-white font-light tracking-tight mb-0.5 sm:mb-1">
                 {LAUNCHES[2].title}
               </h2>
-              <p className="text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase text-[#94A3B8] mb-1 sm:mb-2">
+              <p className="text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase text-[#94A3B8] mb-0.5 sm:mb-2">
                 {LAUNCHES[2].location}
               </p>
-              <p className="text-xs sm:text-sm md:text-base text-white/90 font-light mb-1.5 sm:mb-2.5">
+              <p className="text-[11px] sm:text-sm md:text-base text-white/90 font-light mb-1 sm:mb-2.5">
                 {LAUNCHES[2].type} &nbsp;/&nbsp; {LAUNCHES[2].beds}
               </p>
-              <div className="flex items-baseline gap-2 mb-2.5 sm:mb-4">
+              <div className="flex items-baseline gap-2 mb-2 sm:mb-4">
                 <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-[#94A3B8]">
                   From
                 </span>
-                <span className="font-display text-lg sm:text-2xl md:text-3xl text-white tracking-wide">
+                <span className="font-display text-base sm:text-2xl md:text-3xl text-white tracking-wide">
                   {LAUNCHES[2].price}
                 </span>
               </div>
@@ -1596,7 +1597,7 @@ export function LaunchesCinematicStack({
             >
               <video
                 ref={oneTeamVideoRef}
-                src={homepageContent?.oneTeamVideoUrl || "/videos/one%20team%20end%20to%20end.mp4"}
+                src={encodeURI(homepageContent?.oneTeamVideoUrl || "/videos/one-team-end-to-end.mp4")}
                 autoPlay
                 muted
                 loop
@@ -1609,7 +1610,7 @@ export function LaunchesCinematicStack({
                 className="w-full h-full object-cover object-center"
                 style={{ opacity: 1 }}
               >
-                <source src={homepageContent?.oneTeamVideoUrl || "/videos/one%20team%20end%20to%20end.mp4"} type="video/mp4" />
+                <source src={encodeURI(homepageContent?.oneTeamVideoUrl || "/videos/one-team-end-to-end.mp4")} type="video/mp4" />
               </video>
               <div className="absolute inset-0 bg-gradient-to-t from-[#040810]/80 via-transparent to-transparent pointer-events-none" />
 
