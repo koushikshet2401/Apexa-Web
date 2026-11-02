@@ -314,7 +314,7 @@ export function AboutSection() {
                 transition={{ duration: 0.75, delay: 0.08, ease: [0.25, 0.1, 0.25, 1] }}
               >
                 A legacy in every{' '}
-                <em className="italic text-sky-200" style={{ fontStyle: 'italic' }}>address</em>
+                <span className="text-sky-200">address</span>
               </motion.h2>
             </div>
 
@@ -389,7 +389,7 @@ export function AboutSection() {
 
               <div className="flex flex-col gap-0.5">
                 <span
-                  className="font-serif italic text-white font-light"
+                  className="font-serif text-white font-light"
                   style={{ fontSize: 'clamp(0.9rem,1.2vw,1.05rem)', letterSpacing: '0.01em' }}
                 >
                   Apex Pacific Holdings

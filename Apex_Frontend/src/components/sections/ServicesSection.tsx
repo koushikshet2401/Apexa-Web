@@ -94,9 +94,9 @@ export function ServicesSection() {
             transition={{ duration: 0.7 }}
           >
             One team,{' '}
-            <em className="italic font-serif text-sky-200">
+            <span className="font-serif text-sky-200">
               end to end
-            </em>
+            </span>
           </motion.h2>
 
           <motion.p

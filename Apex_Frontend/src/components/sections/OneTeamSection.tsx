@@ -211,7 +211,7 @@ export function OneTeamSection() {
               className="heading-display font-light text-white tracking-tight leading-[1.08] mb-5 sm:mb-7 text-balance"
               style={{ fontSize: 'clamp(2.4rem, 6vw, 4.8rem)' }}
             >
-              One team, <em className="italic text-sky-200">end to end</em>
+              One team, <span className="text-sky-200">end to end</span>
             </h2>
 
             {/* Description */}

@@ -321,7 +321,7 @@ export function LogoMaskTransition() {
                   href="/#contact"
                   className="inline-flex items-center justify-center gap-2.5 px-7 py-3.5 bg-[var(--steelblue)] hover:bg-[#D9BC7A] text-[#171411] font-medium text-xs tracking-[0.18em] uppercase rounded-full transition-all duration-300 shadow-md group"
                 >
-                  <span>Inquire Residence</span>
+                  <span>Enquire Residence</span>
                   <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </Link>
 

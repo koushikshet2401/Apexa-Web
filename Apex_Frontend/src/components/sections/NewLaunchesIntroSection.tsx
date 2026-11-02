@@ -32,7 +32,7 @@ export function NewLaunchesIntroSection() {
           className="heading-display font-light text-white tracking-tight leading-[1.08] mb-4 sm:mb-6 text-balance"
           style={{ fontSize: 'clamp(2.2rem, 5.5vw, 4.4rem)' }}
         >
-          Unveil the Latest in <em className="italic text-sky-200">Exceptional Living</em>
+          Unveil the Latest in <span className="text-sky-200">Exceptional Living</span>
         </h2>
 
         {/* Supporting Text */}

@@ -27,7 +27,7 @@ export function EditorialQuoteSection() {
         </div>
 
         {/* Refined editorial quote */}
-        <blockquote className="font-serif italic text-2xl sm:text-4xl lg:text-5xl font-light text-[#F8FAFC] leading-[1.25] text-balance mb-8">
+        <blockquote className="font-serif text-2xl sm:text-4xl lg:text-5xl font-light text-[#F8FAFC] leading-[1.25] text-balance mb-8">
           &ldquo;Architecture is not merely the enclosure of space, but the thoughtful orchestration of light, materiality, and enduring legacy.&rdquo;
         </blockquote>
 

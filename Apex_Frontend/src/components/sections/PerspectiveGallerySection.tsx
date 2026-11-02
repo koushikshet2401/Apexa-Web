@@ -218,7 +218,7 @@ export function PerspectiveGallerySection() {
             transition={{ duration: 0.7, delay: 0.1 }}
             className="heading-display text-display-lg sm:text-display-xl text-white mb-5 text-balance"
           >
-            Our Portfolio in <em className="italic-serif text-sky-300">Perspective</em>
+            Our Portfolio in <span className="text-sky-300">Perspective</span>
           </motion.h2>
 
           <motion.p

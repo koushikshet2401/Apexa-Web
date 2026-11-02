@@ -116,7 +116,7 @@ export function TheCollectionSection() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-6 sm:mb-12">
           <div>
             <h2 className="font-display text-3xl sm:text-5xl md:text-6xl text-white font-light tracking-tight">
-              The <em className="italic font-serif text-[#F1F5F9]">collection</em>
+              The <span className="font-serif text-[#F1F5F9]">collection</span>
             </h2>
           </div>
           <p className="font-sans text-xs sm:text-sm text-[#94A3B8] max-w-md font-light leading-relaxed">

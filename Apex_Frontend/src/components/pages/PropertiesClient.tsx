@@ -88,7 +88,7 @@ export function PropertiesClient({ properties }: { properties: Property[] }) {
 
             {/* Exact Required Heading */}
             <h1 className="heading-display text-4xl sm:text-6xl lg:text-7xl text-white font-light tracking-tight leading-[1.05] mb-6 text-balance">
-              Unveil the Latest in <em className="italic text-sky-200">Exceptional Living</em>
+              Unveil the Latest in <span className="text-sky-200">Exceptional Living</span>
             </h1>
 
             {/* Supporting Text */}

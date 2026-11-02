@@ -97,7 +97,7 @@ export default function PrivacyPolicyPage() {
                 Under Section 5 and Section 6 of the DPDP Act, 2023, your personal data is processed solely on the basis of your{' '}
                 <strong className="text-white">free, specific, informed, and unambiguous consent</strong> for the following specified purpose:
               </p>
-              <blockquote className="border-l-2 border-[var(--accent)] pl-4 italic text-white/90 my-2">
+              <blockquote className="border-l-2 border-[var(--accent)] pl-4 text-white/90 my-2">
                 &ldquo;To evaluate, coordinate, and respond to your direct real-estate, architectural, or advisory enquiry, and to facilitate private viewings requested by you.&rdquo;
               </blockquote>
               <p>

@@ -155,7 +155,7 @@ export function CollectionSection() {
                 className="font-serif font-light text-[var(--text-primary)] tracking-tight leading-[0.96]"
                 style={{ fontSize: 'clamp(2.6rem, 5.2vw, 4.8rem)' }}
               >
-                The <em className="italic text-[var(--accent-light)] font-serif not-italic" style={{ fontStyle: 'italic' }}>collection</em>
+                The <span className="text-[var(--accent-light)] font-serif">collection</span>
               </h2>
 
               {/* Decorative gold ring marker (as in Reference 4) */}

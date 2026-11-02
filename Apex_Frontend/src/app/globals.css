@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=DM+Mono:wght@300;400&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,9 +10,12 @@
    ============================================ */
 
 :root {
-  /* Fonts */
-  --font-display: 'Cormorant Garamond', 'Cinzel', 'Playfair Display', Georgia, serif;
-  --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Fonts: Poppins for all headings & headlines, Lato for everything else */
+  --font-display: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   /* Surfaces — Deep midnight blue and navy */
@@ -93,9 +98,9 @@ html.lenis body {
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: var(--font-sans), 'Lato', system-ui, sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
-  overflow-x: hidden;
+  overflow-x: clip;
   padding-bottom: 72px;
   /* Safety spacing for mobile bottom navigation */
 }
@@ -108,7 +113,30 @@ body {
 
 /* ============================================
    TYPOGRAPHY UTILITIES
+   All headings & main headlines: Poppins (Clean, Upright, No Italics)
+   All body, UI text, descriptions: Lato (Clean, Upright, No Italics)
+   Strictly NO italics anywhere on the website
    ============================================ */
+
+*,
+*::before,
+*::after,
+h1, h2, h3, h4, h5, h6,
+p, span, a, div, em, i, cite, blockquote,
+.italic,
+.italic-serif,
+.heading-display,
+.font-serif,
+.font-display,
+.font-sans {
+  font-style: normal !important;
+}
+
+/* All HTML headings: Poppins */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading), 'Poppins', sans-serif;
+  font-style: normal !important;
+}
 
 .text-balance {
   text-wrap: balance;
@@ -118,21 +146,37 @@ body {
   text-wrap: pretty;
 }
 
-/* Display headings: always use display font */
+/* Display headings: always use Poppins font */
 .heading-display {
-  font-family: var(--font-display), Georgia, serif;
-  font-weight: 300;
+  font-family: var(--font-display), 'Poppins', sans-serif;
+  font-style: normal !important;
 }
 
-/* Editorial italic emphasis */
+/* Editorial emphasis */
 .italic-serif {
-  font-family: var(--font-display), Georgia, serif;
-  font-style: italic;
+  font-family: var(--font-display), 'Poppins', sans-serif;
+  font-style: normal !important;
+}
+
+/* Universal heading & body class mappings */
+.font-serif {
+  font-family: var(--font-heading), 'Poppins', sans-serif !important;
+  font-style: normal !important;
+}
+
+.font-display {
+  font-family: var(--font-heading), 'Poppins', sans-serif !important;
+  font-style: normal !important;
+}
+
+.font-sans {
+  font-family: var(--font-sans), 'Lato', sans-serif !important;
+  font-style: normal !important;
 }
 
 /* Uppercase label */
 .label {
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: var(--font-sans), 'Lato', system-ui, sans-serif;
   font-size: 0.6875rem;
   font-weight: 500;
   letter-spacing: 0.18em;

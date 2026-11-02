@@ -21,6 +21,8 @@ import {
 } from 'lucide-react'
 import { PERSPECTIVE_GALLERY_PROPERTIES, PropertyItem } from '@/data/properties'
 import { PropertySearchDrawer } from '@/components/search/PropertySearchDrawer'
+import { OrbitalLoader } from '@/components/ui/orbital-loader'
+import { ThreeDPhotoCarousel, CarouselCardItem } from '@/components/ui/3d-carousel'
 import { cn } from '@/lib/utils'
 
 export interface VideoLaunch {
@@ -240,6 +242,16 @@ export function LaunchesCinematicStack({
   const hasMovedRoundRef = useRef<boolean>(false)
   const isTouchVerticalRoundRef = useRef<boolean | null>(null)
 
+  const roundCarouselCards: CarouselCardItem[] = useMemo(() => {
+    return PERSPECTIVE_GALLERY_PROPERTIES.map((prop) => ({
+      id: prop.id,
+      image: prop.image,
+      title: prop.cardLabel || prop.name,
+      subtitle: `${prop.city}, ${prop.country}`,
+      href: prop.href,
+    }))
+  }, [])
+
   // One team media refs
   const oneTeamVideoRef = useRef<HTMLVideoElement>(null)
   const oneTeamVideoWrapRef = useRef<HTMLDivElement>(null)
@@ -262,20 +274,46 @@ export function LaunchesCinematicStack({
   const [videoLoaded, setVideoLoaded] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const [activeStep, setActiveStep] = useState(0)
+  const [activeStep, setActiveStep] = useState(() => {
+    if (typeof window === 'undefined') return 0
+    const hash = window.location.hash.replace('#', '').toLowerCase()
+    if (hash === 'launches') return 1
+    if (hash === 'collection') return 5
+    if (hash === 'spaces') return 8
+    if (hash === 'services') return 7
+    return 0
+  })
 
   // Collection carousel & filter state
   const [colSearchQuery, setColSearchQuery] = useState('')
   const [selectedCountry, setSelectedCountry] = useState('All')
   const [activeColIndex, setActiveColIndex] = useState(0)
-  const [isMobile, setIsMobile] = useState(false)
+  const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 768 : false))
   const [navigatingHref, setNavigatingHref] = useState<string | null>(null)
+  const [roundVisitingHref, setRoundVisitingHref] = useState<string | null>(null)
 
   const handleExploreCountry = (e: React.MouseEvent, href: string) => {
     e.preventDefault()
     e.stopPropagation()
     setNavigatingHref(href)
     router.push(href)
+    setTimeout(() => {
+      if (typeof window !== 'undefined' && window.location.pathname !== href) {
+        window.location.href = href
+      }
+    }, 450)
+  }
+
+  const handleExploreLaunch = (e: React.MouseEvent, href: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setNavigatingHref(href)
+    router.push(href)
+    setTimeout(() => {
+      if (typeof window !== 'undefined' && window.location.pathname !== href) {
+        window.location.href = href
+      }
+    }, 450)
   }
 
   useEffect(() => {
@@ -464,7 +502,7 @@ export function LaunchesCinematicStack({
   const handleRoundPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDraggingRoundRef.current) return
     const deltaX = e.clientX - startXRoundRef.current
-    if (Math.abs(deltaX) > 4) {
+    if (Math.abs(deltaX) > 10) {
       hasMovedRoundRef.current = true
     }
     // Dragging right increases rotation (clockwise movement to right)
@@ -500,18 +538,35 @@ export function LaunchesCinematicStack({
     setRoundRotation(roundRotationRef.current)
   }
 
+  const handleVisitButtonClick = (e: React.MouseEvent, href: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!href) return
+    const targetHref = href.includes('?') ? href : `${href}?from=spaces`
+    setRoundVisitingHref(targetHref)
+    router.push(targetHref)
+    setTimeout(() => {
+      if (typeof window !== 'undefined' && window.location.pathname !== targetHref) {
+        window.location.href = targetHref
+      }
+    }, 400)
+  }
+
   const handleRoundCardClick = (cardIndex: number, prop: PropertyItem, relAngle: number) => {
+    // If user dragged more than 10px, treat as rotation gesture
     if (hasMovedRoundRef.current) return
 
-    // If card is front-center (within 22 degrees), click navigates to property details
-    if (Math.abs(relAngle) < 22) {
-      router.push(prop.href)
-      return
+    // Clicking any card directly navigates to that property's details page with ?from=spaces
+    if (prop?.href) {
+      const targetHref = prop.href.includes('?') ? prop.href : `${prop.href}?from=spaces`
+      setRoundVisitingHref(targetHref)
+      router.push(targetHref)
+      setTimeout(() => {
+        if (typeof window !== 'undefined' && window.location.pathname !== targetHref) {
+          window.location.href = targetHref
+        }
+      }, 400)
     }
-
-    // Otherwise clicking side card brings it smoothly to front-center
-    roundRotationRef.current = (roundRotationRef.current - relAngle) % 360
-    setRoundRotation(roundRotationRef.current)
   }
 
   // GSAP ScrollTrigger Master Pinned Stack
@@ -572,13 +627,14 @@ export function LaunchesCinematicStack({
           end: isMob ? '+=3800vh' : '+=4800vh',
           pin: pinEl,
           pinSpacing: true,
-          scrub: 1.0, // Responsive, fluid scrub without sluggishness
+          scrub: isMob ? 0.3 : 0.6, // Fast, crisp scrub so dragging the scrollbar or swiping updates instantly
           anticipatePin: 1,
           invalidateOnRefresh: true,
           onUpdate: (self) => {
             const p = self.progress
             if (typeof window !== 'undefined') {
               window.dispatchEvent(new CustomEvent('hero-in-view', { detail: { isHero: p < 0.032 } }))
+              window.dispatchEvent(new CustomEvent('apex-step-change', { detail: { progress: p } }))
             }
             if (p < 0.030) {
               setActiveStep(0) // Hero
@@ -821,6 +877,95 @@ export function LaunchesCinematicStack({
         { yPercent: 0, duration: 2.5, ease: 'none' },
         64.5
       )
+
+      const getProgressForTarget = (targetName: string): number | null => {
+        const clean = (targetName || '').replace('#', '').toLowerCase()
+        if (clean === 'home' || clean === '') return 0.0
+        if (clean === 'launches') return 0.10
+        if (clean === 'collection') return 0.496
+        if (clean === 'services' || clean === 'about' || clean === 'portfolio') return 0.74
+        if (clean === 'spaces') return 0.88
+        if (clean === 'contact' || clean === 'advisory' || clean === 'speak-with-us') return 0.98
+        return null
+      }
+
+      // Synchronous initial placement if arriving with hash (ZERO flash of home, ZERO auto-scroll)
+      const initialProgress = typeof window !== 'undefined' ? getProgressForTarget(window.location.hash) : null
+      if (initialProgress !== null && initialProgress > 0) {
+        tl.progress(initialProgress)
+        const st = tl.scrollTrigger
+        if (st) {
+          const targetY = st.start + (st.end - st.start) * initialProgress
+          window.scrollTo(0, targetY)
+        }
+      }
+
+      const handleNavigateTarget = (targetName: string, immediate = true) => {
+        if (typeof window === 'undefined') return
+        const targetProgress = getProgressForTarget(targetName)
+        if (targetProgress === null) return
+
+        // Always ensure body overflow is uninhibited
+        document.body.style.overflow = ''
+
+        const applyTarget = () => {
+          const st = tl.scrollTrigger
+          if (!st) return
+          st.refresh()
+          const targetY = st.start + (st.end - st.start) * targetProgress
+
+          tl.progress(targetProgress)
+          window.scrollTo(0, targetY)
+
+          const lenis = (window as unknown as { __lenis?: { scrollTo: (target: number, opts?: { duration?: number; immediate?: boolean }) => void } }).__lenis
+          if (lenis) {
+            lenis.scrollTo(targetY, { duration: immediate ? 0 : 0.8, immediate })
+          } else {
+            window.scrollTo({ top: targetY, behavior: immediate ? 'auto' : 'smooth' })
+          }
+        }
+
+        applyTarget()
+        requestAnimationFrame(applyTarget)
+      }
+
+      const onApexNavigate = (e: Event) => {
+        const ce = e as CustomEvent<{ target: string; immediate?: boolean }>
+        if (ce.detail?.target) {
+          handleNavigateTarget(ce.detail.target, ce.detail.immediate ?? true)
+        }
+      }
+
+      const onHashChange = () => {
+        handleNavigateTarget(window.location.hash, true)
+      }
+
+      window.addEventListener('apex-navigate', onApexNavigate)
+      window.addEventListener('hashchange', onHashChange)
+
+      // On mount/refresh with hash: enforce INSTANT positioning (immediate = true) without scrolling down through hero
+      const timer1 = setTimeout(() => {
+        if (window.location.hash) {
+          handleNavigateTarget(window.location.hash, true)
+        }
+      }, 50)
+      const timer2 = setTimeout(() => {
+        if (window.location.hash) {
+          handleNavigateTarget(window.location.hash, true)
+        }
+      }, 250)
+      const timer3 = setTimeout(() => {
+        if (window.location.hash) {
+          handleNavigateTarget(window.location.hash, true)
+        }
+      }, 600)
+      return () => {
+        clearTimeout(timer1)
+        clearTimeout(timer2)
+        clearTimeout(timer3)
+        window.removeEventListener('apex-navigate', onApexNavigate)
+        window.removeEventListener('hashchange', onHashChange)
+      }
     }, container)
 
     return () => ctx.revert()
@@ -898,18 +1043,7 @@ export function LaunchesCinematicStack({
             ref={heroContentRef}
             className="absolute inset-0 z-20 pointer-events-none will-change-[opacity]"
           >
-            {/* Top Branding — Logo Only (Text lines removed as requested) */}
-            <div className="absolute top-20 sm:top-24 left-5 right-5 sm:left-12 sm:right-12 flex items-center justify-between pointer-events-auto">
-              <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border border-white/25 shadow-[0_4px_20px_rgba(0,0,0,0.8)] bg-black/40 flex-shrink-0">
-                <Image
-                  src="/apex_pacific_holdings_logo.svg"
-                  alt="APEX PACIFIC HOLDINGS"
-                  fill
-                  className="object-cover scale-[1.08]"
-                  priority
-                />
-              </div>
-            </div>
+
 
             {/* Center Video Play/Pause Control:
                 - Kept invisible (opacity-0) while playing normally so no icon obstructs the screen.
@@ -935,8 +1069,8 @@ export function LaunchesCinematicStack({
               </button>
             </div>
 
-            {/* Bottom Search Bar — Positioned with safe clearance across all mobile and desktop screens */}
-            <div className="absolute bottom-24 sm:bottom-12 md:bottom-14 lg:bottom-16 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] sm:w-[calc(100%-4rem)] max-w-xl z-30 pointer-events-auto pb-[calc(env(safe-area-inset-bottom,0px)+1rem)]">
+            {/* Bottom Search Bar — Elevated on mobile so it sits comfortably upside with generous clearance */}
+            <div className="absolute bottom-36 sm:bottom-12 md:bottom-14 lg:bottom-16 left-1/2 -translate-x-1/2 w-[calc(100%-2.5rem)] sm:w-[calc(100%-4rem)] max-w-xl z-30 pointer-events-auto pb-[calc(env(safe-area-inset-bottom,0px)+1rem)]">
               <div
                 onClick={() => setIsSearchOpen(true)}
                 role="button"
@@ -963,19 +1097,12 @@ export function LaunchesCinematicStack({
             </div>
           </div>
 
-          {/* APEX Hero Brand Typography — Hidden as per design update */}
+          {/* APEX Hero Brand Typography — Completely removed as requested */}
           <div
             ref={apexTextRef}
-            className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none z-20 will-change-transform px-4"
-            style={{ opacity: 0, visibility: 'hidden' }}
-          >
-            <h1 className="font-serif text-5xl sm:text-7xl md:text-8xl lg:text-9xl tracking-[0.28em] text-white font-light uppercase text-center leading-none drop-shadow-[0_4px_35px_rgba(0,0,0,0.85)]">
-              APEX
-            </h1>
-            <span className="font-mono text-[9px] sm:text-xs md:text-sm tracking-[0.38em] text-[#7DD3FC] uppercase mt-2.5 sm:mt-4 font-medium drop-shadow-md text-center">
-              PACIFIC HOLDINGS
-            </span>
-          </div>
+            className="hidden pointer-events-none select-none"
+            style={{ display: 'none', opacity: 0, visibility: 'hidden' }}
+          />
 
           {/* APEX A Emblem Mark Zoom */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-15 overflow-hidden">
@@ -1035,7 +1162,7 @@ export function LaunchesCinematicStack({
            ══════════════════════════════════════════════════════════════════ */}
         <div
           ref={layer1Ref}
-          id="launches"
+          data-section="launches"
           style={{ zIndex: 20 }}
           className="absolute inset-0 w-full h-full flex flex-col items-center justify-center text-center px-6 sm:px-12 z-20 will-change-[transform,filter] bg-[#040810] shadow-[0_-25px_60px_rgba(0,0,0,0.95)]"
         >
@@ -1063,7 +1190,7 @@ export function LaunchesCinematicStack({
               style={{ fontSize: 'clamp(2.3rem, 5.8vw, 4.8rem)' }}
             >
               {homepageContent?.unveilHeading || (
-                <>Unveil the Latest in <em className="italic text-sky-200">Exceptional Living</em></>
+                <>Unveil the Latest in <span className="text-sky-200">Exceptional Living</span></>
               )}
             </h2>
 
@@ -1134,13 +1261,24 @@ export function LaunchesCinematicStack({
                   {LAUNCHES[0].price}
                 </span>
               </div>
-              <Link
-                href={LAUNCHES[0].href}
-                className="inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full bg-white text-black hover:bg-sky-200 border border-white text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_4px_25px_rgba(0,0,0,0.9)] cursor-pointer"
+              <button
+                type="button"
+                onClick={(e) => handleExploreLaunch(e, `${LAUNCHES[0].href}?from=launches`)}
+                disabled={navigatingHref?.startsWith(LAUNCHES[0].href)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full bg-white text-black hover:bg-sky-200 border border-white text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_4px_25px_rgba(0,0,0,0.9)] cursor-pointer disabled:opacity-90"
               >
-                <span>Explore Launch</span>
-                <ArrowUpRight size={14} />
-              </Link>
+                {navigatingHref?.startsWith(LAUNCHES[0].href) ? (
+                  <>
+                    <OrbitalLoader size="xs" className="w-3.5 h-3.5" />
+                    <span>Entering...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Explore Launch</span>
+                    <ArrowUpRight size={14} />
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
@@ -1199,13 +1337,24 @@ export function LaunchesCinematicStack({
                   {LAUNCHES[1].price}
                 </span>
               </div>
-              <Link
-                href={LAUNCHES[1].href}
-                className="inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full bg-white text-black hover:bg-sky-200 border border-white text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_4px_25px_rgba(0,0,0,0.9)] cursor-pointer"
+              <button
+                type="button"
+                onClick={(e) => handleExploreLaunch(e, `${LAUNCHES[1].href}?from=launches`)}
+                disabled={navigatingHref?.startsWith(LAUNCHES[1].href)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full bg-white text-black hover:bg-sky-200 border border-white text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_4px_25px_rgba(0,0,0,0.9)] cursor-pointer disabled:opacity-90"
               >
-                <span>Explore Launch</span>
-                <ArrowUpRight size={14} />
-              </Link>
+                {navigatingHref?.startsWith(LAUNCHES[1].href) ? (
+                  <>
+                    <OrbitalLoader size="xs" className="w-3.5 h-3.5" />
+                    <span>Entering...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Explore Launch</span>
+                    <ArrowUpRight size={14} />
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
@@ -1264,13 +1413,24 @@ export function LaunchesCinematicStack({
                   {LAUNCHES[2].price}
                 </span>
               </div>
-              <Link
-                href={LAUNCHES[2].href}
-                className="inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full bg-white text-black hover:bg-sky-200 border border-white text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_4px_25px_rgba(0,0,0,0.9)] cursor-pointer"
+              <button
+                type="button"
+                onClick={(e) => handleExploreLaunch(e, `${LAUNCHES[2].href}?from=launches`)}
+                disabled={navigatingHref?.startsWith(LAUNCHES[2].href)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full bg-white text-black hover:bg-sky-200 border border-white text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_4px_25px_rgba(0,0,0,0.9)] cursor-pointer disabled:opacity-90"
               >
-                <span>Explore Launch</span>
-                <ArrowUpRight size={14} />
-              </Link>
+                {navigatingHref?.startsWith(LAUNCHES[2].href) ? (
+                  <>
+                    <OrbitalLoader size="xs" className="w-3.5 h-3.5" />
+                    <span>Entering...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Explore Launch</span>
+                    <ArrowUpRight size={14} />
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
@@ -1281,7 +1441,7 @@ export function LaunchesCinematicStack({
            ══════════════════════════════════════════════════════════════════ */}
         <div
           ref={layer5Ref}
-          id="collection"
+          data-section="collection"
           style={{ zIndex: 60 }}
           className="absolute inset-0 w-full h-[100dvh] max-h-[100dvh] will-change-[transform,filter] z-[60] bg-[#040810] flex flex-col justify-between pt-[calc(env(safe-area-inset-top)+84px)] sm:pt-24 md:pt-28 px-4 sm:px-8 md:px-12 pb-[calc(env(safe-area-inset-bottom)+76px)] sm:pb-8 border-t border-white/10 shadow-[0_-30px_70px_rgba(0,0,0,0.98)] overflow-hidden"
         >
@@ -1298,7 +1458,7 @@ export function LaunchesCinematicStack({
             {/* Title & Description Row */}
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-1 sm:gap-6">
               <h2 className="font-serif text-2xl sm:text-4xl md:text-5xl text-white font-light tracking-tight leading-none">
-                The <em className="italic font-serif text-sky-200">collection</em>
+                The <span className="text-sky-200">collection</span>
               </h2>
               <p className="font-sans text-[11px] sm:text-xs md:text-sm text-[#94A3B8] max-w-md font-light leading-relaxed text-left sm:text-right line-clamp-1 sm:line-clamp-none">
                 Five addresses, each designed around its site. Drag, swipe or click to explore the portfolio.
@@ -1449,7 +1609,7 @@ export function LaunchesCinematicStack({
                         >
                           {navigatingHref === item.href ? (
                             <>
-                              <Loader2 size={12} className="animate-spin text-sky-200" />
+                              <OrbitalLoader size="xs" className="w-3 h-3" />
                               <span>Loading...</span>
                             </>
                           ) : (
@@ -1492,7 +1652,7 @@ export function LaunchesCinematicStack({
               >
                 {navigatingHref === activeColItem.href ? (
                   <>
-                    <Loader2 size={13} className="animate-spin" />
+                    <OrbitalLoader size="xs" className="w-3.5 h-3.5" />
                     <span>Opening {activeColItem.countryKey}...</span>
                   </>
                 ) : (
@@ -1541,7 +1701,7 @@ export function LaunchesCinematicStack({
               className="heading-display font-light text-white tracking-tight leading-[1.08] mb-5 sm:mb-7 text-balance"
               style={{ fontSize: 'clamp(2.4rem, 6vw, 4.8rem)' }}
             >
-              One team, <em className="italic text-sky-200">end to end</em>
+              One team, <span className="text-sky-200">end to end</span>
             </h2>
 
             {/* Description */}
@@ -1563,6 +1723,7 @@ export function LaunchesCinematicStack({
            ══════════════════════════════════════════════════════════════════ */}
         <div
           ref={layer7Ref}
+          data-section="services"
           style={{ zIndex: 80 }}
           className="absolute inset-0 w-full h-[100dvh] max-h-[100dvh] will-change-[transform,filter] z-[80] bg-[#040810] flex flex-col justify-center items-center px-3 sm:px-6 md:px-8 lg:px-12 pb-[calc(env(safe-area-inset-bottom)+70px)] sm:pb-8 pt-4 sm:pt-6 overflow-hidden shadow-[0_-30px_70px_rgba(0,0,0,0.98)] border-t border-white/10"
         >
@@ -1619,7 +1780,7 @@ export function LaunchesCinematicStack({
             {/* ─── ROW 2: CENTRAL PINNED VIDEO (Rises from bottom first) ─── */}
             <div
               ref={oneTeamVideoWrapRef}
-              className="relative w-full h-44 sm:h-64 md:h-76 lg:h-88 rounded-xl sm:rounded-2xl overflow-hidden border border-white/15 bg-black shadow-2xl will-change-transform"
+              className="relative w-full h-44 sm:h-64 md:h-76 lg:h-88 rounded-xl sm:rounded-2xl overflow-hidden border border-white/15 bg-black shadow-2xl will-change-transform pointer-events-none select-none"
             >
               <video
                 ref={oneTeamVideoRef}
@@ -1633,7 +1794,7 @@ export function LaunchesCinematicStack({
                   setOneTeamVideoLoaded(true)
                   playSafely(oneTeamVideoRef.current)
                 }}
-                className="w-full h-full object-cover object-center"
+                className="w-full h-full object-cover object-center pointer-events-none select-none"
                 style={{ opacity: 1 }}
               >
                 <source src={encodeURI(homepageContent?.oneTeamVideoUrl || "/videos/one-team-end-to-end.mp4")} type="video/mp4" />
@@ -1718,7 +1879,7 @@ export function LaunchesCinematicStack({
           <div className="w-full max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-3 sm:gap-4 shrink-0 pointer-events-auto">
             <div>
               <h2 className="heading-display font-light text-white text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight leading-none">
-                Spaces <em className="italic text-sky-200">in the round</em>
+                Spaces <span className="text-sky-200">in the round</span>
               </h2>
             </div>
             <p className="max-w-md font-sans text-xs sm:text-sm text-[#94A3B8] font-light leading-relaxed">
@@ -1726,131 +1887,71 @@ export function LaunchesCinematicStack({
             </p>
           </div>
 
-          {/* 2. 3D Rotating Circular Carousel Stage */}
-          <div
-            ref={stageRoundRef}
-            onPointerDown={handleRoundPointerDown}
-            onPointerMove={handleRoundPointerMove}
-            onPointerUp={handleRoundPointerUp}
-            onPointerCancel={handleRoundPointerUp}
-            onMouseEnter={() => {
-              isHoveredRoundRef.current = true
-            }}
-            onMouseLeave={() => {
-              isHoveredRoundRef.current = false
-            }}
-            className="relative w-full flex-1 flex items-center justify-center cursor-grab active:cursor-grabbing touch-pan-y my-auto pointer-events-auto select-none"
-            style={{
-              perspective: isMobile ? '850px' : '1350px',
-              perspectiveOrigin: 'center 50%',
-            }}
-          >
-            {/* Cards Ring Container with 3D Preservation */}
-            <div
-              className="relative w-full h-full flex items-center justify-center pointer-events-none"
-              style={{
-                transformStyle: 'preserve-3d',
-              }}
-            >
-              {PERSPECTIVE_GALLERY_PROPERTIES.map((prop, i) => {
-                const total = PERSPECTIVE_GALLERY_PROPERTIES.length
-                const angleStep = 360 / total
-                const baseAngle = i * angleStep
-                let relAngle = (baseAngle + roundRotation) % 360
-                if (relAngle > 180) relAngle -= 360
-                if (relAngle < -180) relAngle += 360
+          {/* 2. 3D Rotating Circular Carousel Stage using Framer Motion 3D Physics */}
+          <div className="relative w-full flex-1 flex items-center justify-center pointer-events-auto my-auto overflow-hidden">
+            <ThreeDPhotoCarousel
+              cards={roundCarouselCards}
+              showControls={true}
+              enableLightbox={false}
+              autoRotateSpeed={10}
+              heightClassName="h-[360px] sm:h-[460px]"
+              renderItem={(item) => (
+                <div
+                  className="relative w-full h-[250px] sm:h-[390px] rounded-2xl overflow-hidden border border-white/20 hover:border-sky-400/60 transition-all duration-300 group shadow-[0_20px_50px_rgba(0,0,0,0.9)] bg-[#070E1C]"
+                >
+                  <img
+                    src={item.image}
+                    alt={item.title || 'Property'}
+                    className="w-full h-full object-cover object-center pointer-events-none transition-transform duration-700 ease-out group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent pointer-events-none" />
 
-                const isActive = Math.abs(relAngle) < 22
-                const rad = (relAngle * Math.PI) / 180
-                const cylinderRadius = isMobile ? 250 : 440
-                const angleTuning = isMobile ? 0.62 : 0.66
-                const tx = Math.sin(rad) * cylinderRadius
-                const tz = Math.cos(rad) * cylinderRadius - cylinderRadius
-                const ry = -relAngle * angleTuning
-
-                const dist = Math.abs(relAngle)
-                const cardScale = isMobile
-                  ? 1.04 - (dist / 180) * 0.28
-                  : 1.08 - (dist / 180) * 0.32
-
-                // Smooth fade for cards moving around the rear so front 3 cards dominate
-                const cardOpacity = dist <= 75
-                  ? 1.0
-                  : Math.max(0.18, 1.0 - ((dist - 75) / 105) * 0.82)
-
-                // Depth-accurate zIndex
-                const cardZIndex = Math.round(1000 + tz)
-
-                return (
-                  <div
-                    key={prop.id}
-                    onClick={() => handleRoundCardClick(i, prop, relAngle)}
-                    className="absolute pointer-events-auto cursor-pointer will-change-transform"
-                    style={{
-                      width: isMobile ? '220px' : '300px',
-                      height: isMobile ? '320px' : '430px',
-                      transform: `translate3d(${tx}px, 0px, ${tz}px) rotateY(${ry}deg) scale(${cardScale})`,
-                      opacity: cardOpacity,
-                      zIndex: cardZIndex,
-                    }}
-                  >
-                    <div
-                      className={cn(
-                        'relative w-full h-full rounded-2xl overflow-hidden border transition-all duration-300 group shadow-2xl bg-[#07090E]',
-                        isActive
-                          ? 'border-sky-400/50 shadow-[0_25px_60px_rgba(0,0,0,0.85)] ring-1 ring-sky-400/20'
-                          : 'border-white/15 hover:border-white/35 shadow-[0_15px_35px_rgba(0,0,0,0.65)]'
-                      )}
-                    >
-                      {/* Actual Property Image */}
-                      <Image
-                        src={prop.image}
-                        alt={prop.name}
-                        fill
-                        className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
-                        sizes={isMobile ? '220px' : '300px'}
-                        priority={i < 3}
-                      />
-
-                      {/* Subtle Ambient Gradient Overlay at Bottom only */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent pointer-events-none" />
-
-                      {/* Card Content: Clean uppercase label matching reference screenshot */}
-                      <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 pointer-events-none">
-                        <span className="font-mono text-xs sm:text-sm uppercase tracking-[0.22em] text-white font-medium drop-shadow-md block">
-                          {prop.cardLabel || prop.name}
+                  <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-4 flex items-center justify-between gap-1.5 sm:gap-2 z-20">
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="font-mono text-[9px] sm:text-xs uppercase tracking-[0.16em] text-white font-medium drop-shadow-md truncate">
+                        {item.title}
+                      </span>
+                      {item.subtitle && (
+                        <span className="font-mono text-[8px] sm:text-[9px] uppercase tracking-wider text-[#7DD3FC]/80 truncate">
+                          {item.subtitle}
                         </span>
-                      </div>
+                      )}
                     </div>
+
+                    <button
+                      type="button"
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onTouchStart={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (item.href) handleVisitButtonClick(e, item.href)
+                      }}
+                      disabled={roundVisitingHref === item.href}
+                      className={cn(
+                        "pointer-events-auto inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full font-mono text-[8px] sm:text-[10px] uppercase tracking-[0.14em] sm:tracking-[0.18em] transition-all duration-300 shadow-md backdrop-blur-md cursor-pointer shrink-0",
+                        roundVisitingHref === item.href
+                          ? "bg-sky-400 text-black border-sky-400 font-semibold shadow-[0_0_15px_rgba(56,189,248,0.5)] cursor-wait"
+                          : "bg-black/70 hover:bg-white text-white hover:text-black border border-white/25 hover:border-white group/btn"
+                      )}
+                      aria-label={`Visit ${item.title}`}
+                    >
+                      {roundVisitingHref === item.href ? (
+                        <>
+                          <OrbitalLoader size="xs" className="w-3 h-3" />
+                          <span>ENTERING...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>VISIT</span>
+                          <ArrowUpRight size={10} className="group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
+                        </>
+                      )}
+                    </button>
                   </div>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* 3. Bottom Drag Indicator & Directional Controls */}
-          <div className="w-full max-w-7xl mx-auto flex items-center justify-center gap-6 shrink-0 pointer-events-auto pt-3 pb-2">
-            <button
-              type="button"
-              onClick={handleRoundPrev}
-              aria-label="Rotate Previous"
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-white/20 bg-black/50 hover:bg-white/10 hover:border-sky-400 text-white/80 hover:text-white flex items-center justify-center backdrop-blur-md transition-all cursor-pointer shadow-lg active:scale-95"
-            >
-              <ChevronLeft size={15} />
-            </button>
-
-            <span className="font-mono text-[10px] sm:text-xs tracking-[0.28em] text-[#94A3B8] uppercase select-none">
-              ← DRAG TO ROTATE →
-            </span>
-
-            <button
-              type="button"
-              onClick={handleRoundNext}
-              aria-label="Rotate Next"
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-white/20 bg-black/50 hover:bg-white/10 hover:border-sky-400 text-white/80 hover:text-white flex items-center justify-center backdrop-blur-md transition-all cursor-pointer shadow-lg active:scale-95"
-            >
-              <ChevronRight size={15} />
-            </button>
+                </div>
+              )}
+            />
           </div>
         </div>
 
@@ -1861,7 +1962,7 @@ export function LaunchesCinematicStack({
            ══════════════════════════════════════════════════════════════════ */}
         <div
           ref={layer9Ref}
-          id="speak-with-us"
+          data-section="speak-with-us"
           style={{ zIndex: 100 }}
           className="absolute inset-0 w-full h-[100dvh] max-h-[100dvh] will-change-[transform,filter] z-[100] bg-[#040810] flex flex-col items-center justify-center text-center px-6 sm:px-12 pb-[calc(env(safe-area-inset-bottom)+70px)] sm:pb-0 shadow-[0_-30px_70px_rgba(0,0,0,0.98)] border-t border-white/10 overflow-hidden select-none pointer-events-auto"
           aria-label="Private Advisory"
@@ -1912,7 +2013,7 @@ export function LaunchesCinematicStack({
               className="heading-display font-light text-white tracking-tight leading-[1.08] mb-4 sm:mb-6 text-balance drop-shadow-[0_2px_12px_rgba(0,0,0,0.85)]"
               style={{ fontSize: 'clamp(2.3rem, 5.2vw, 4.4rem)' }}
             >
-              Begin your <em className="italic text-sky-200">conversation</em>
+              Begin your <span className="text-sky-200">conversation</span>
             </h2>
 
             {/* Description */}
@@ -1946,6 +2047,25 @@ export function LaunchesCinematicStack({
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
       />
+
+      {/* Cinematic Transition Overlay with OrbitalLoader */}
+      <AnimatePresence>
+        {(navigatingHref || roundVisitingHref) && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[150] bg-[#040810]/80 backdrop-blur-md flex flex-col items-center justify-center pointer-events-auto select-none"
+          >
+            <OrbitalLoader
+              size="md"
+              message="Entering Residence..."
+              messagePlacement="bottom"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   )
 }

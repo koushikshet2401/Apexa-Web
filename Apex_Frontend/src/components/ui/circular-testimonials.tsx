@@ -138,7 +138,7 @@ export const CircularTestimonials = ({
       };
     }
     const gap = calculateGap(containerWidth);
-    const maxStickUp = gap * 0.7;
+    const maxStickUp = containerWidth < 768 ? 0 : gap * 0.45;
     const isActive = index === activeIndex;
     const isLeft = (activeIndex - 1 + testimonialsLength) % testimonialsLength === index;
     const isRight = (activeIndex + 1) % testimonialsLength === index;
@@ -190,11 +190,11 @@ export const CircularTestimonials = ({
   }
 
   return (
-    <div className="w-full max-w-6xl px-4 sm:px-6 py-6 sm:py-8 mx-auto">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
+    <div className="w-full max-w-6xl px-4 sm:px-6 py-4 sm:py-8 mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10 md:gap-16 items-center">
         {/* Images 3D Container with Touch Swiping and Mobile Floating Arrow Controls */}
         <div
-          className="relative w-full h-[16rem] sm:h-[22rem] md:h-[28rem] [perspective:1000px] touch-pan-x"
+          className="relative w-full h-[15rem] sm:h-[22rem] md:h-[28rem] [perspective:1000px] touch-pan-x"
           ref={imageContainerRef}
           onTouchStart={(e) => {
             touchStartX.current = e.touches[0].clientX;
@@ -217,6 +217,12 @@ export const CircularTestimonials = ({
               key={testimonial.src + index}
               src={testimonial.src}
               alt={testimonial.name}
+              onError={(e) => {
+                const target = e.currentTarget
+                if (!target.src.includes('unsplash.com')) {
+                  target.src = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'
+                }
+              }}
               className="absolute inset-0 w-full h-full object-cover rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.7)] border border-white/10"
               data-index={index}
               style={getImageStyle(index)}
@@ -253,7 +259,7 @@ export const CircularTestimonials = ({
         </div>
 
         {/* Content Details */}
-        <div className="flex flex-col justify-between min-h-[200px] md:min-h-[260px] text-left">
+        <div className="flex flex-col justify-between min-h-[170px] md:min-h-[250px] text-left">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeIndex}
@@ -307,7 +313,7 @@ export const CircularTestimonials = ({
           </AnimatePresence>
 
           {/* Navigation Arrows */}
-          <div className="flex items-center gap-3.5 pt-6">
+          <div className="flex items-center gap-3.5 pt-4 sm:pt-6">
             <button
               type="button"
               className="w-11 h-11 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 border border-white/15 hover:border-sky-400 hover:scale-105"

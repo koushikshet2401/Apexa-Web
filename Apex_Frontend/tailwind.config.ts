@@ -79,8 +79,11 @@ const config: Config = {
         },
       },
       fontFamily: {
-        display: ['var(--font-display)', 'Cormorant Garamond', 'Georgia', 'serif'],
-        sans: ['var(--font-sans)', 'DM Sans', 'system-ui', 'sans-serif'],
+        display: ['var(--font-display)', 'Poppins', 'sans-serif'],
+        heading: ['var(--font-heading)', 'Poppins', 'sans-serif'],
+        serif: ['var(--font-serif)', 'Poppins', 'sans-serif'],
+        sans: ['var(--font-sans)', 'Lato', 'system-ui', 'sans-serif'],
+        body: ['var(--font-body)', 'Lato', 'system-ui', 'sans-serif'],
         mono: ['var(--font-mono)', 'DM Mono', 'monospace'],
       },
       fontSize: {

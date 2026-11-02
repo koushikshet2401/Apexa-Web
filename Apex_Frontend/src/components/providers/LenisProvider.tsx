@@ -18,16 +18,13 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
     // Initialize global Lenis with balanced, responsive cinematic momentum
     const lenis = new Lenis({
       autoRaf: false, // Frame-locked to GSAP ticker below
-      duration: 1.15,
+      duration: 1.0,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
-      syncTouch: true,
-      syncTouchLerp: 0.08,
-      touchInertiaExponent: 1.25,
+      syncTouch: false, // Prevents intercepting native touch gestures and browser scrollbar dragging
       wheelMultiplier: 1.0,
-      touchMultiplier: 0.95,
       infinite: false,
     })
 

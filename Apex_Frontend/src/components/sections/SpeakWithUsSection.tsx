@@ -39,7 +39,7 @@ export function SpeakWithUsSection() {
           className="heading-display font-light text-white tracking-tight leading-[1.08] mb-4 sm:mb-6 text-balance"
           style={{ fontSize: 'clamp(2.3rem, 5.2vw, 4.4rem)' }}
         >
-          Begin your <em className="italic text-sky-200">conversation</em>
+          Begin your <span className="text-sky-200">conversation</span>
         </h2>
 
         {/* Description */}

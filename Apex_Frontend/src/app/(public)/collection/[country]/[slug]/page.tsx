@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { CinematicPropertyDetail } from '@/components/property-detail/CinematicPropertyDetail'
 import { db } from '@/lib/db'
 import { SLUG_ALIASES, getPropertyBySlug } from '@/data/properties'
+import { DESTINATIONS } from '@/data/destinations'
 
 export const dynamic = 'force-dynamic'
 
@@ -67,7 +68,20 @@ export async function generateMetadata({
     }
   }
 
-  const fallback = getPropertyBySlug(resolvedSlug)
+  let fallback = getPropertyBySlug(resolvedSlug)
+  if (!fallback) {
+    for (const dest of DESTINATIONS) {
+      const match = dest.projects.find((p) => p.slug === resolvedSlug || p.id === resolvedSlug)
+      if (match) {
+        fallback = {
+          name: match.title,
+          city: match.city,
+          description: `${match.title} in ${match.city}, ${dest.country}`,
+        } as any
+        break
+      }
+    }
+  }
   if (!fallback) notFound()
 
   return {
@@ -139,6 +153,46 @@ export default async function CollectionPropertyPage({
     const fallback = getPropertyBySlug(resolvedSlug)
     if (fallback) {
       property = fallback
+    } else {
+      // Robust safety net: locate property across DESTINATIONS
+      for (const dest of DESTINATIONS) {
+        const match = dest.projects.find((p) => p.slug === resolvedSlug || p.id === resolvedSlug)
+        if (match) {
+          property = {
+            id: match.id,
+            slug: match.slug,
+            name: match.title,
+            cardLabel: match.title.toUpperCase(),
+            country: dest.country,
+            city: match.city,
+            type: match.type,
+            beds: match.beds || '3–5 Bedrooms',
+            baths: '3–5 Baths',
+            area: '5,000 – 8,000 sq ft',
+            price: 'Price on Application',
+            tagline: `${match.type} in ${match.city}, ${dest.country}.`,
+            shortDescription: `Curated luxury ${match.type.toLowerCase()} located in ${match.city}.`,
+            description: `An exceptional architectural residence located in ${match.city}, ${dest.country}. Crafted with meticulous attention to natural light, indoor-outdoor fluidity, and bespoke finishes curated by Apex Pacific Holdings.`,
+            highlights: [
+              `Prime ${match.city} location with uninterrupted vistas`,
+              'Architectural design with custom artisan finishes',
+              'Private infinity pool & landscaped grounds',
+              '24/7 dedicated concierge & security',
+              'Smart home automation throughout',
+            ],
+            image: match.image,
+            gallery: [
+              match.image,
+              'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80&auto=format&fit=crop',
+              'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=1200&q=80&auto=format&fit=crop',
+              'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=80&auto=format&fit=crop',
+            ],
+            layoutVariant: 1,
+            services: [],
+          }
+          break
+        }
+      }
     }
   }
 

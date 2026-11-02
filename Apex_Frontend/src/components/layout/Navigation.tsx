@@ -3,11 +3,12 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Home,
   Sparkles,
-  MapPin,
+  Building2,
   MessageSquare,
   Grid2X2,
   ChevronRight,
@@ -15,16 +16,16 @@ import {
   ArrowRight,
 } from 'lucide-react'
 
-// Primary links matching Emaar layout (Screenshot 1)
+// Primary links matching luxury editorial layout
 const primaryNavLinks = [
-  { label: 'Home', href: '/#home' },
-  { label: 'New Launches', href: '/#launches' },
-  { label: 'Communities', href: '/#communities' },
-  { label: 'Residences', href: '/collection' },
-  { label: 'About Apex', href: '/#about' },
+  { label: 'Home', href: '/#home', id: 'home' },
+  { label: 'New Launches', href: '/#launches', id: 'launches' },
+  { label: 'Residences', href: '/#collection', id: 'collection' },
+  { label: 'About Apex', href: '/#about', id: 'about' },
 ]
 
 export function Navigation({ hasHero }: { hasHero?: boolean }) {
+  const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [showBottomNav, setShowBottomNav] = useState(false)
@@ -32,7 +33,11 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
   const closeRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
-    const isHome = window.location.pathname === '/'
+    const isHome = pathname === '/'
+
+    if (pathname?.startsWith('/collection')) {
+      setActiveBottomNav('residences')
+    }
 
     const handleHeroInView = (e: Event) => {
       const customEvent = e as CustomEvent<{ isHero?: boolean }>
@@ -41,6 +46,22 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
           setShowBottomNav(false)
         } else {
           setShowBottomNav(true)
+        }
+      }
+    }
+
+    const handleStepChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{ progress?: number; step?: number }>
+      if (isHome && customEvent.detail?.progress !== undefined) {
+        const p = customEvent.detail.progress
+        if (p < 0.05) {
+          setActiveBottomNav('home')
+        } else if (p < 0.42) {
+          setActiveBottomNav('launches')
+        } else if (p < 0.82) {
+          setActiveBottomNav('residences')
+        } else {
+          setActiveBottomNav('enquiry')
         }
       }
     }
@@ -64,32 +85,18 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
           setShowBottomNav(true)
         }
       }
-
-      // Auto-detect active section for bottom navigation highlight
-      const scrollPos = window.scrollY + 300
-      const contactEl = document.getElementById('contact')
-      const communitiesEl = document.getElementById('communities')
-      const launchesEl = document.getElementById('launches')
-
-      if (contactEl && scrollPos >= contactEl.offsetTop) {
-        setActiveBottomNav('enquiry')
-      } else if (communitiesEl && scrollPos >= communitiesEl.offsetTop) {
-        setActiveBottomNav('communities')
-      } else if (launchesEl && scrollPos >= launchesEl.offsetTop) {
-        setActiveBottomNav('launches')
-      } else {
-        setActiveBottomNav('home')
-      }
     }
 
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('hero-in-view', handleHeroInView)
+    window.addEventListener('apex-step-change', handleStepChange)
     return () => {
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('hero-in-view', handleHeroInView)
+      window.removeEventListener('apex-step-change', handleStepChange)
     }
-  }, [])
+  }, [pathname])
 
   // Focus trap: when menu opens, focus close button
   useEffect(() => {
@@ -105,54 +112,78 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  // Lock body scroll when menu is open
+  const closeMenu = () => {
+    setMenuOpen(false)
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = ''
+    }
+  }
+
+  // Lock body scroll when menu is open and guarantee cleanup
   useEffect(() => {
-    document.body.style.overflow = menuOpen ? 'hidden' : ''
+    if (menuOpen) {
+      document.body.style.overflow = 'hidden'
+      closeRef.current?.focus()
+    } else {
+      document.body.style.overflow = ''
+    }
     return () => {
       document.body.style.overflow = ''
     }
   }, [menuOpen])
 
   const openContactModal = (e?: React.MouseEvent) => {
-    if (e) e.preventDefault()
-    setMenuOpen(false)
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    closeMenu()
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('open-contact'))
     }
   }
 
-  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
-    if (id === 'contact') {
-      e.preventDefault()
+  const navigateToSection = (e: React.MouseEvent, id: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    closeMenu()
+
+    if (id === 'contact' || id === 'enquiry') {
       openContactModal()
       return
     }
-    if (window.location.pathname === '/') {
-      e.preventDefault()
-      const lenis = (window as unknown as { __lenis?: { scrollTo: (target: string | number, options?: { duration?: number }) => void } }).__lenis
-      if (id === 'home') {
+
+    if (id === 'home') {
+      if (pathname === '/') {
+        const lenis = (window as unknown as { __lenis?: { scrollTo: (target: number, opts?: { duration?: number; immediate?: boolean }) => void } }).__lenis
         if (lenis) {
-          lenis.scrollTo(0, { duration: 1.4 })
+          lenis.scrollTo(0, { duration: 0, immediate: true })
         } else {
-          window.scrollTo({ top: 0, behavior: 'smooth' })
+          window.scrollTo({ top: 0, behavior: 'auto' })
         }
-      } else if (id === 'launches') {
-        if (lenis) {
-          lenis.scrollTo(window.innerHeight * 1.6, { duration: 1.4 })
-        } else {
-          window.scrollTo({ top: window.innerHeight * 1.6, behavior: 'smooth' })
-        }
+        window.dispatchEvent(new CustomEvent('apex-navigate', { detail: { target: 'home', immediate: true } }))
+        try {
+          history.replaceState(null, '', '/#home')
+        } catch {}
       } else {
-        const el = document.getElementById(id)
-        if (el) {
-          if (lenis) {
-            lenis.scrollTo(`#${id}`, { duration: 1.4 })
-          } else {
-            el.scrollIntoView({ behavior: 'smooth' })
-          }
-        }
+        window.location.href = '/#home'
       }
+      return
     }
+
+    if (pathname === '/') {
+      window.dispatchEvent(new CustomEvent('apex-navigate', { detail: { target: id, immediate: true } }))
+      try {
+        history.replaceState(null, '', `/#${id}`)
+      } catch {}
+    } else {
+      window.location.href = `/#${id}`
+    }
+  }
+
+  // Backwards compatibility alias
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    navigateToSection(e, id)
   }
 
   return (
@@ -241,9 +272,9 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
             href="/#home"
             onClick={(e) => {
               setActiveBottomNav('home')
-              scrollToSection(e, 'home')
+              navigateToSection(e, 'home')
             }}
-            className={`flex flex-col items-center justify-center py-1 transition-colors ${activeBottomNav === 'home' ? 'text-sky-400 font-medium' : 'text-[#94A3B8] hover:text-white'
+            className={`flex flex-col items-center justify-center py-1 transition-colors cursor-pointer ${activeBottomNav === 'home' ? 'text-sky-400 font-medium' : 'text-[#94A3B8] hover:text-white'
               }`}
           >
             <Home size={18} strokeWidth={activeBottomNav === 'home' ? 2 : 1.5} />
@@ -255,42 +286,42 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
             href="/#launches"
             onClick={(e) => {
               setActiveBottomNav('launches')
-              scrollToSection(e, 'launches')
+              navigateToSection(e, 'launches')
             }}
-            className={`flex flex-col items-center justify-center py-1 transition-colors ${activeBottomNav === 'launches' ? 'text-sky-400 font-medium' : 'text-[#94A3B8] hover:text-white'
+            className={`flex flex-col items-center justify-center py-1 transition-colors cursor-pointer ${activeBottomNav === 'launches' ? 'text-sky-400 font-medium' : 'text-[#94A3B8] hover:text-white'
               }`}
           >
             <Sparkles size={18} strokeWidth={activeBottomNav === 'launches' ? 2 : 1.5} />
             <span className="text-[9px] font-mono tracking-wider uppercase mt-1">LAUNCHES</span>
           </Link>
 
-          {/* 3. COMMUNITIES */}
+          {/* 3. RESIDENCES (Takes user directly to /#collection) */}
           <Link
-            href="/#communities"
+            href="/#collection"
             onClick={(e) => {
-              setActiveBottomNav('communities')
-              scrollToSection(e, 'communities')
+              setActiveBottomNav('residences')
+              navigateToSection(e, 'collection')
             }}
-            className={`flex flex-col items-center justify-center py-1 transition-colors ${activeBottomNav === 'communities' ? 'text-sky-400 font-medium' : 'text-[#94A3B8] hover:text-white'
+            className={`flex flex-col items-center justify-center py-1 transition-colors cursor-pointer ${activeBottomNav === 'residences' ? 'text-sky-400 font-medium' : 'text-[#94A3B8] hover:text-white'
               }`}
           >
-            <MapPin size={18} strokeWidth={activeBottomNav === 'communities' ? 2 : 1.5} />
-            <span className="text-[9px] font-mono tracking-wider uppercase mt-1">COMMUNITIES</span>
+            <Building2 size={18} strokeWidth={activeBottomNav === 'residences' ? 2 : 1.5} />
+            <span className="text-[9px] font-mono tracking-wider uppercase mt-1">RESIDENCES</span>
           </Link>
 
           {/* 4. ENQUIRY */}
-          <Link
-            href="/#contact"
+          <button
+            type="button"
             onClick={(e) => {
               setActiveBottomNav('enquiry')
-              scrollToSection(e, 'contact')
+              openContactModal(e)
             }}
-            className={`flex flex-col items-center justify-center py-1 transition-colors ${activeBottomNav === 'enquiry' ? 'text-sky-400 font-medium' : 'text-[#94A3B8] hover:text-white'
+            className={`flex flex-col items-center justify-center py-1 transition-colors cursor-pointer ${activeBottomNav === 'enquiry' ? 'text-sky-400 font-medium' : 'text-[#94A3B8] hover:text-white'
               }`}
           >
             <MessageSquare size={18} strokeWidth={activeBottomNav === 'enquiry' ? 2 : 1.5} />
             <span className="text-[9px] font-mono tracking-wider uppercase mt-1">ENQUIRE</span>
-          </Link>
+          </button>
 
           {/* 5. MORE (Opens Full-Screen Menu) */}
           <button
@@ -305,156 +336,156 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
         </div>
       </nav>
 
-      {/* ─── FULL-SCREEN NAVIGATION OVERLAY (Screenshot 1 Reference) ────── */}
-      <AnimatePresence>
-        {menuOpen && (
-          <motion.div
-            key="overlay"
-            initial={{ opacity: 0, y: -15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
-            className="fixed inset-0 z-50 bg-[#040810] text-[#F8FAFC] flex flex-col overflow-y-auto"
-          >
-            {/* Top Bar matching Emaar Screenshot 1 */}
-            <div className="flex items-center justify-between px-6 sm:px-12 py-6 border-b border-white/10 shrink-0">
-              <span className="font-serif font-light text-white tracking-[0.28em] text-sm uppercase">
-                APEX PACIFIC HOLDINGS
-              </span>
+      {/* ─── FULL-SCREEN NAVIGATION OVERLAY ───────────────────────────────── */}
+      {menuOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation Menu"
+          data-lenis-prevent
+          className="fixed inset-0 z-50 bg-[#040810] text-[#F8FAFC] flex flex-col overflow-y-auto animate-in fade-in duration-150"
+        >
+          {/* Top Bar */}
+          <div className="flex items-center justify-between px-6 sm:px-12 py-6 border-b border-white/10 shrink-0">
+            <span className="font-serif font-light text-white tracking-[0.28em] text-sm uppercase">
+              APEX PACIFIC HOLDINGS
+            </span>
 
-              <button
-                ref={closeRef}
-                onClick={() => setMenuOpen(false)}
-                aria-label="Close navigation menu"
-                className="w-10 h-10 rounded-full border border-white/20 hover:border-white flex items-center justify-center text-white transition-colors cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
+            <button
+              ref={closeRef}
+              onClick={closeMenu}
+              aria-label="Close navigation menu"
+              className="w-10 h-10 rounded-full border border-white/20 hover:border-white flex items-center justify-center text-white transition-colors cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+          </div>
 
-            {/* Menu Body */}
-            <div className="flex-1 max-w-5xl w-full mx-auto px-6 sm:px-12 py-8 sm:py-10 flex flex-col justify-between">
-              {/* Primary Nav List (Home, New Launches, Communities, Delivered, About Apex) */}
-              <nav aria-label="Main Navigation Menu" className="divide-y divide-white/[0.08] mb-10">
-                {primaryNavLinks.map((item) => (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    onClick={() => setMenuOpen(false)}
-                    className="group flex items-center justify-between py-4 sm:py-5 text-white hover:text-sky-300 transition-colors"
-                  >
-                    <span className="font-serif text-2xl sm:text-4xl font-light tracking-tight">
-                      {item.label}
-                    </span>
-                    <ChevronRight
-                      size={20}
-                      className="text-[#64748B] group-hover:text-sky-300 group-hover:translate-x-1.5 transition-all"
-                    />
-                  </Link>
-                ))}
-              </nav>
-
-              {/* 3 Secondary Columns: EXPLORE, ABOUT, CONNECT (Screenshot 1) */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 py-8 border-t border-white/10">
-                {/* EXPLORE */}
-                <div className="flex flex-col gap-3">
-                  <span className="font-mono text-[11px] tracking-[0.25em] text-[#64748B] uppercase font-semibold">
-                    EXPLORE
-                  </span>
-                  <div className="flex flex-col gap-2 text-xs sm:text-sm text-[#CBD5E1] font-light">
-                    <Link href="/#launches" onClick={() => setMenuOpen(false)} className="hover:text-sky-300 transition-colors">
-                      New launches
-                    </Link>
-                    <Link href="/#communities" onClick={() => setMenuOpen(false)} className="hover:text-sky-300 transition-colors">
-                      Communities
-                    </Link>
-                    <Link href="/collection" onClick={() => setMenuOpen(false)} className="hover:text-sky-300 transition-colors">
-                      Residences
-                    </Link>
-                    <Link href="/services/luxury-villas" onClick={() => setMenuOpen(false)} className="hover:text-sky-300 transition-colors">
-                      Luxury Villas
-                    </Link>
-                    <Link href="/services/sky-residences" onClick={() => setMenuOpen(false)} className="hover:text-sky-300 transition-colors">
-                      Sky Residences
-                    </Link>
-                    <Link href="/services/commercial-properties" onClick={() => setMenuOpen(false)} className="hover:text-sky-300 transition-colors">
-                      Commercial Properties
-                    </Link>
-                  </div>
-                </div>
-
-                {/* ABOUT */}
-                <div className="flex flex-col gap-3">
-                  <span className="font-mono text-[11px] tracking-[0.25em] text-[#64748B] uppercase font-semibold">
-                    ABOUT
-                  </span>
-                  <div className="flex flex-col gap-2 text-xs sm:text-sm text-[#CBD5E1] font-light">
-                    <Link href="/#about" onClick={() => setMenuOpen(false)} className="hover:text-sky-300 transition-colors">
-                      Who we are
-                    </Link>
-                    <Link href="/#about" onClick={() => setMenuOpen(false)} className="hover:text-sky-300 transition-colors">
-                      Heritage &amp; Craft
-                    </Link>
-                    <Link href="/#portfolio" onClick={() => setMenuOpen(false)} className="hover:text-sky-300 transition-colors">
-                      Disciplined Practice
-                    </Link>
-                    <Link href="/#communities" onClick={() => setMenuOpen(false)} className="hover:text-sky-300 transition-colors">
-                      Global Footprint
-                    </Link>
-                    <Link href="/#contact" onClick={(e) => openContactModal(e)} className="hover:text-sky-300 transition-colors">
-                      Confidential Advisory
-                    </Link>
-                  </div>
-                </div>
-
-                {/* CONNECT */}
-                <div className="flex flex-col gap-3">
-                  <span className="font-mono text-[11px] tracking-[0.25em] text-[#64748B] uppercase font-semibold">
-                    CONNECT
-                  </span>
-                  <div className="flex flex-col gap-2 text-xs sm:text-sm text-[#CBD5E1] font-light">
-                    <Link href="/#contact" onClick={(e) => openContactModal(e)} className="hover:text-sky-300 transition-colors">
-                      Get in touch
-                    </Link>
-                    <a href="https://wa.me/" target="_blank" rel="noopener noreferrer" className="hover:text-sky-300 transition-colors">
-                      WhatsApp Advisory
-                    </a>
-                    <Link href="/#contact" onClick={(e) => openContactModal(e)} className="hover:text-sky-300 transition-colors">
-                      Client Advisory
-                    </Link>
-                    <Link href="/#contact" onClick={(e) => openContactModal(e)} className="hover:text-sky-300 transition-colors">
-                      Concierge Support
-                    </Link>
-                    <Link href="/#contact" onClick={(e) => openContactModal(e)} className="hover:text-sky-300 transition-colors">
-                      Contact Us
-                    </Link>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom Box: EXPLORE ALL OF APEX PACIFIC HOLDINGS -> (Screenshot 1) */}
-              <div className="pt-6 border-t border-white/10">
+          {/* Menu Body */}
+          <div className="flex-1 max-w-5xl w-full mx-auto px-6 sm:px-12 py-8 sm:py-10 flex flex-col justify-between">
+            {/* Primary Nav List (Home, New Launches, Residences, About Apex) */}
+            <nav aria-label="Main Navigation Menu" className="divide-y divide-white/[0.08] mb-10">
+              {primaryNavLinks.map((item) => (
                 <Link
-                  href="/collection"
-                  onClick={() => setMenuOpen(false)}
-                  className="w-full flex items-center justify-between p-4 sm:p-5 rounded-lg border border-sky-400/30 hover:border-sky-400 bg-sky-400/[0.04] hover:bg-sky-400/10 transition-colors group"
+                  key={item.label}
+                  href={item.href}
+                  onClick={(e) => {
+                    if (item.id) {
+                      navigateToSection(e, item.id)
+                    } else {
+                      closeMenu()
+                    }
+                  }}
+                  className="group flex items-center justify-between py-4 sm:py-5 text-white hover:text-sky-300 transition-colors cursor-pointer"
                 >
-                  <span className="font-mono text-xs sm:text-sm tracking-[0.2em] uppercase text-white group-hover:text-sky-200">
-                    EXPLORE ALL OF APEX PACIFIC HOLDINGS
+                  <span className="font-serif text-2xl sm:text-4xl font-light tracking-tight">
+                    {item.label}
                   </span>
-                  <ArrowRight size={16} className="text-sky-400 group-hover:translate-x-1 transition-transform" />
+                  <ChevronRight
+                    size={20}
+                    className="text-[#64748B] group-hover:text-sky-300 group-hover:translate-x-1.5 transition-all"
+                  />
                 </Link>
+              ))}
+            </nav>
+
+            {/* 3 Secondary Columns: EXPLORE, ABOUT, CONNECT */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 py-8 border-t border-white/10">
+              {/* EXPLORE */}
+              <div className="flex flex-col gap-3">
+                <span className="font-mono text-[11px] tracking-[0.25em] text-[#64748B] uppercase font-semibold">
+                  EXPLORE
+                </span>
+                <div className="flex flex-col gap-2 text-xs sm:text-sm text-[#CBD5E1] font-light">
+                  <Link href="/#launches" onClick={(e) => navigateToSection(e, 'launches')} className="hover:text-sky-300 transition-colors cursor-pointer">
+                    New launches
+                  </Link>
+                  <Link href="/#collection" onClick={(e) => navigateToSection(e, 'collection')} className="hover:text-sky-300 transition-colors cursor-pointer">
+                    Residences
+                  </Link>
+                  <Link href="/services/luxury-villas" onClick={closeMenu} className="hover:text-sky-300 transition-colors cursor-pointer">
+                    Luxury Villas
+                  </Link>
+                  <Link href="/services/sky-residences" onClick={closeMenu} className="hover:text-sky-300 transition-colors cursor-pointer">
+                    Sky Residences
+                  </Link>
+                  <Link href="/services/commercial-properties" onClick={closeMenu} className="hover:text-sky-300 transition-colors cursor-pointer">
+                    Commercial Properties
+                  </Link>
+                </div>
               </div>
 
-              {/* Sub-footer details */}
-              <div className="mt-6 pt-4 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-mono tracking-widest uppercase text-[#64748B]">
-                <span>UAE · THAILAND · MALAYSIA · AUSTRALIA · GEORGIA</span>
-                <span>CONFIDENTIAL ADVISORY</span>
+              {/* ABOUT */}
+              <div className="flex flex-col gap-3">
+                <span className="font-mono text-[11px] tracking-[0.25em] text-[#64748B] uppercase font-semibold">
+                  ABOUT
+                </span>
+                <div className="flex flex-col gap-2 text-xs sm:text-sm text-[#CBD5E1] font-light">
+                  <Link href="/#about" onClick={(e) => navigateToSection(e, 'about')} className="hover:text-sky-300 transition-colors cursor-pointer">
+                    Who we are
+                  </Link>
+                  <Link href="/#about" onClick={(e) => navigateToSection(e, 'about')} className="hover:text-sky-300 transition-colors cursor-pointer">
+                    Heritage &amp; Craft
+                  </Link>
+                  <Link href="/#portfolio" onClick={(e) => navigateToSection(e, 'portfolio')} className="hover:text-sky-300 transition-colors cursor-pointer">
+                    Disciplined Practice
+                  </Link>
+                  <Link href="/#collection" onClick={(e) => navigateToSection(e, 'collection')} className="hover:text-sky-300 transition-colors cursor-pointer">
+                    Global Footprint
+                  </Link>
+                  <button type="button" onClick={(e) => openContactModal(e)} className="text-left hover:text-sky-300 transition-colors cursor-pointer">
+                    Confidential Advisory
+                  </button>
+                </div>
+              </div>
+
+              {/* CONNECT */}
+              <div className="flex flex-col gap-3">
+                <span className="font-mono text-[11px] tracking-[0.25em] text-[#64748B] uppercase font-semibold">
+                  CONNECT
+                </span>
+                <div className="flex flex-col gap-2 text-xs sm:text-sm text-[#CBD5E1] font-light">
+                  <button type="button" onClick={(e) => openContactModal(e)} className="text-left hover:text-sky-300 transition-colors cursor-pointer">
+                    Get in touch
+                  </button>
+                  <a href="https://wa.me/" target="_blank" rel="noopener noreferrer" onClick={closeMenu} className="hover:text-sky-300 transition-colors cursor-pointer">
+                    WhatsApp Advisory
+                  </a>
+                  <button type="button" onClick={(e) => openContactModal(e)} className="text-left hover:text-sky-300 transition-colors cursor-pointer">
+                    Client Advisory
+                  </button>
+                  <button type="button" onClick={(e) => openContactModal(e)} className="text-left hover:text-sky-300 transition-colors cursor-pointer">
+                    Concierge Support
+                  </button>
+                  <button type="button" onClick={(e) => openContactModal(e)} className="text-left hover:text-sky-300 transition-colors cursor-pointer">
+                    Contact Us
+                  </button>
+                </div>
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
+            {/* Bottom Box: EXPLORE ALL OF APEX PACIFIC HOLDINGS */}
+            <div className="pt-6 border-t border-white/10">
+              <Link
+                href="/#collection"
+                onClick={(e) => navigateToSection(e, 'collection')}
+                className="w-full flex items-center justify-between p-4 sm:p-5 rounded-lg border border-sky-400/30 hover:border-sky-400 bg-sky-400/[0.04] hover:bg-sky-400/10 transition-colors group cursor-pointer"
+              >
+                <span className="font-mono text-xs sm:text-sm tracking-[0.2em] uppercase text-white group-hover:text-sky-200">
+                  EXPLORE ALL OF APEX PACIFIC HOLDINGS
+                </span>
+                <ArrowRight size={16} className="text-sky-400 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+
+            {/* Sub-footer details */}
+            <div className="mt-6 pt-4 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-mono tracking-widest uppercase text-[#64748B]">
+              <span>UAE · THAILAND · MALAYSIA · AUSTRALIA · GEORGIA</span>
+              <span>CONFIDENTIAL ADVISORY</span>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
