@@ -1,6 +1,9 @@
 'use client'
 
-import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react'
+import React, { useRef, useEffect, useLayoutEffect, useState, useCallback, useMemo } from 'react'
+import { createPortal } from 'react-dom'
+
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -278,7 +281,7 @@ export function LaunchesCinematicStack({
     if (typeof window === 'undefined') return 0
     const hash = window.location.hash.replace('#', '').toLowerCase()
     if (hash === 'launches') return 1
-    if (hash === 'collection') return 5
+    if (hash === 'collection' || hash === 'communities' || hash === 'residences') return 5
     if (hash === 'spaces') return 8
     if (hash === 'services') return 7
     return 0
@@ -288,10 +291,36 @@ export function LaunchesCinematicStack({
   const [colSearchQuery, setColSearchQuery] = useState('')
   const [selectedCountry, setSelectedCountry] = useState('All')
   const [activeColIndex, setActiveColIndex] = useState(0)
-  const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 768 : false))
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768)
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+  const [isGsapReady, setIsGsapReady] = useState(false)
+
+  // Safety fallback timer ensuring loading overlay always dismisses cleanly
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsGsapReady(true)
+    }, 3000)
+    return () => clearTimeout(timer)
+  }, [])
   const [navigatingHref, setNavigatingHref] = useState<string | null>(null)
   const [roundVisitingHref, setRoundVisitingHref] = useState<string | null>(null)
   const [navigatingMessage, setNavigatingMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    return () => {
+      setNavigatingHref(null)
+      setRoundVisitingHref(null)
+    }
+  }, [])
 
   const handleExploreCountry = (e: React.MouseEvent, href: string, title?: string) => {
     e.preventDefault()
@@ -619,7 +648,10 @@ export function LaunchesCinematicStack({
     const apexText = apexTextRef.current
     const logoScale = logoScaleWrapRef.current
 
-    if (!container || !pinEl || !l0 || !l1 || !l2 || !l3 || !l4 || !l5 || !l6 || !l7 || !l8 || !l9) return
+    if (!container || !pinEl || !l0 || !l1 || !l2 || !l3 || !l4 || !l5 || !l6 || !l7 || !l8 || !l9) {
+      setIsGsapReady(true)
+      return
+    }
 
     const ctx = gsap.context(() => {
       const isMob = window.innerWidth < 768
@@ -639,15 +671,16 @@ export function LaunchesCinematicStack({
       if (topTiles) gsap.set(topTiles, { yPercent: isMob ? -160 : -140, opacity: 0 })
       if (bottomTiles) gsap.set(bottomTiles, { yPercent: isMob ? 160 : 140, opacity: 0 })
       if (videoWrap) gsap.set(videoWrap, { scale: 1.0 })
+      if (heroContent) gsap.set(heroContent, { opacity: 1 })
 
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: container,
           start: 'top top',
-          end: isMob ? '+=3800vh' : '+=4800vh',
+          end: isMob ? '+=1800vh' : '+=2400vh',
           pin: pinEl,
           pinSpacing: true,
-          scrub: isMob ? 0.3 : 0.6, // Fast, crisp scrub so dragging the scrollbar or swiping updates instantly
+          scrub: isMob ? 0.3 : 0.5,
           anticipatePin: 1,
           invalidateOnRefresh: true,
           onUpdate: (self) => {
@@ -656,33 +689,35 @@ export function LaunchesCinematicStack({
               window.dispatchEvent(new CustomEvent('hero-in-view', { detail: { isHero: p < 0.032 } }))
               window.dispatchEvent(new CustomEvent('apex-step-change', { detail: { progress: p } }))
             }
+            let nextStep = 0
             if (p < 0.030) {
-              setActiveStep(0) // Hero
+              nextStep = 0
               playSafely(heroVideoRef.current)
             } else if (p < 0.127) {
-              setActiveStep(1) // New Launches Intro
+              nextStep = 1
             } else if (p < 0.224) {
-              setActiveStep(2) // Video 1: The Meridian
+              nextStep = 2
               playSafely(launch1VideoRef.current)
             } else if (p < 0.321) {
-              setActiveStep(3) // Video 2: Aurelia Villa
+              nextStep = 3
               playSafely(launch2VideoRef.current)
             } else if (p < 0.418) {
-              setActiveStep(4) // Video 3: The Peninsula Reserve
+              nextStep = 4
               playSafely(launch3VideoRef.current)
             } else if (p < 0.515) {
-              setActiveStep(5) // The Collection Section
+              nextStep = 5
             } else if (p < 0.612) {
-              setActiveStep(6) // One Team Text Page
+              nextStep = 6
             } else if (p < 0.806) {
-              setActiveStep(7) // One Team Media Stage (First scroll: Video solo, Second scroll: 4 images)
+              nextStep = 7
               playSafely(oneTeamVideoRef.current)
             } else if (p < 0.903) {
-              setActiveStep(8) // Spaces in the round
+              nextStep = 8
             } else {
-              setActiveStep(9) // Private Advisory
+              nextStep = 9
               playSafely(advisoryVideoRef.current)
             }
+            setActiveStep((prev) => (prev !== nextStep ? nextStep : prev))
           },
         },
       })
@@ -901,11 +936,11 @@ export function LaunchesCinematicStack({
       const getProgressForTarget = (targetName: string): number | null => {
         const clean = (targetName || '').replace('#', '').toLowerCase()
         if (clean === 'home' || clean === '') return 0.0
-        if (clean === 'launches') return 0.10
-        if (clean === 'collection') return 0.496
-        if (clean === 'services' || clean === 'about' || clean === 'portfolio') return 0.74
-        if (clean === 'spaces') return 0.88
-        if (clean === 'contact' || clean === 'advisory' || clean === 'speak-with-us') return 0.98
+        if (clean === 'launches') return 0.108
+        if (clean === 'collection' || clean === 'communities' || clean === 'residences') return 0.496
+        if (clean === 'services' || clean === 'about' || clean === 'portfolio') return 0.690
+        if (clean === 'spaces') return 0.884
+        if (clean === 'contact' || clean === 'advisory' || clean === 'speak-with-us' || clean === 'enquiry') return 0.981
         return null
       }
 
@@ -914,15 +949,35 @@ export function LaunchesCinematicStack({
         history.scrollRestoration = 'manual'
       }
 
-      // Synchronous initial placement if arriving with hash (ZERO flash of home, ZERO auto-scroll)
+      const computeTargetY = (targetProgress: number): number => {
+        const isMob = window.innerWidth < 768
+        const fallbackDist = (isMob ? 18 : 24) * window.innerHeight
+        const st = tl.scrollTrigger
+        const start = (st && typeof st.start === 'number') ? st.start : 0
+        const end = (st && typeof st.end === 'number' && st.end > start) ? st.end : (start + fallbackDist)
+        return start + (end - start) * targetProgress
+      }
+
+      const applyScroll = (targetY: number, immediate = true) => {
+        const lenis = (window as unknown as { __lenis?: { resize: () => void; scrollTo: (target: number, opts?: { immediate?: boolean; duration?: number }) => void } }).__lenis
+        if (lenis) {
+          lenis.resize()
+          lenis.scrollTo(targetY, { immediate, duration: immediate ? 0 : 0.85 })
+        } else {
+          window.scrollTo({ top: targetY, behavior: immediate ? 'auto' : 'smooth' })
+        }
+      }
+
+      ScrollTrigger.refresh()
+      // Synchronous initial placement if arriving with hash
       const initialProgress = typeof window !== 'undefined' ? getProgressForTarget(window.location.hash) : null
       if (initialProgress !== null && initialProgress > 0) {
         tl.progress(initialProgress)
-        const st = tl.scrollTrigger
-        if (st) {
-          const targetY = st.start + (st.end - st.start) * initialProgress
-          window.scrollTo(0, targetY)
-        }
+        const targetY = computeTargetY(initialProgress)
+        applyScroll(targetY, true)
+      } else {
+        tl.progress(0)
+        applyScroll(0, true)
       }
 
       const handleNavigateTarget = (targetName: string, immediate = true) => {
@@ -930,27 +985,34 @@ export function LaunchesCinematicStack({
         const targetProgress = getProgressForTarget(targetName)
         if (targetProgress === null) return
 
-        // Always ensure body overflow is uninhibited
         document.body.style.overflow = ''
 
-        const applyTarget = () => {
-          const st = tl.scrollTrigger
-          if (!st) return
-          const targetY = st.start + (st.end - st.start) * targetProgress
+        ScrollTrigger.refresh()
+        const targetY = computeTargetY(targetProgress)
+        const lenis = (window as unknown as { __lenis?: { resize: () => void; scrollTo: (target: number, opts?: { immediate?: boolean; duration?: number }) => void } }).__lenis
 
+        if (immediate) {
           tl.progress(targetProgress)
-          window.scrollTo(0, targetY)
-
-          const lenis = (window as unknown as { __lenis?: { scrollTo: (target: number, opts?: { duration?: number; immediate?: boolean }) => void } }).__lenis
           if (lenis) {
-            lenis.scrollTo(targetY, immediate ? { immediate: true, duration: 0 } : { duration: 0.8 })
+            lenis.resize()
+            lenis.scrollTo(targetY, { immediate: true })
           } else {
-            window.scrollTo({ top: targetY, behavior: immediate ? 'auto' : 'smooth' })
+            window.scrollTo({ top: targetY, behavior: 'auto' })
+          }
+        } else {
+          gsap.to(tl, {
+            progress: targetProgress,
+            duration: 0.85,
+            ease: 'power2.out',
+            overwrite: 'auto',
+          })
+          if (lenis) {
+            lenis.resize()
+            lenis.scrollTo(targetY, { immediate: false, duration: 0.85 })
+          } else {
+            window.scrollTo({ top: targetY, behavior: 'smooth' })
           }
         }
-
-        applyTarget()
-        requestAnimationFrame(applyTarget)
       }
 
       const onApexNavigate = (e: Event) => {
@@ -966,6 +1028,7 @@ export function LaunchesCinematicStack({
 
       window.addEventListener('apex-navigate', onApexNavigate)
       window.addEventListener('hashchange', onHashChange)
+      window.addEventListener('popstate', onHashChange)
 
       // On mount with hash: apply target immediately
       if (window.location.hash) {
@@ -978,9 +1041,11 @@ export function LaunchesCinematicStack({
       return () => {
         window.removeEventListener('apex-navigate', onApexNavigate)
         window.removeEventListener('hashchange', onHashChange)
+        window.removeEventListener('popstate', onHashChange)
       }
     }, container)
 
+    setIsGsapReady(true)
     return () => ctx.revert()
   }, [])
 
@@ -1553,6 +1618,7 @@ export function LaunchesCinematicStack({
 
                 return (
                   <motion.div
+                    suppressHydrationWarning
                     key={item.id}
                     onClick={(e) => {
                       if (isActive) {
@@ -1587,11 +1653,9 @@ export function LaunchesCinematicStack({
                     }}
                     style={{
                       zIndex,
-                      width: `${cardWidth}px`,
-                      height: `${cardHeight}px`,
                     }}
                     className={cn(
-                      'absolute rounded-2xl overflow-hidden shadow-2xl transition-shadow cursor-pointer will-change-transform group',
+                      'absolute w-[260px] h-[180px] md:w-[500px] md:h-[330px] rounded-2xl overflow-hidden shadow-2xl transition-shadow cursor-pointer will-change-transform group',
                       isActive
                         ? 'border border-sky-400/60 shadow-[0_20px_50px_rgba(0,0,0,0.95)]'
                         : 'border border-white/10 hover:opacity-70'
@@ -2186,23 +2250,26 @@ export function LaunchesCinematicStack({
       />
 
       {/* Cinematic Transition Overlay with OrbitalLoader */}
-      <AnimatePresence>
-        {(navigatingHref || roundVisitingHref) && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="fixed inset-0 z-[150] bg-[#040810]/80 backdrop-blur-md flex flex-col items-center justify-center pointer-events-auto select-none"
-          >
-            <OrbitalLoader
-              size="md"
-              message={navigatingMessage || "Entering Residence..."}
-              messagePlacement="bottom"
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {mounted && createPortal(
+        <AnimatePresence>
+          {(!isGsapReady || navigatingHref || roundVisitingHref) && (
+            <motion.div
+              initial={{ opacity: 1 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+              className="fixed inset-0 z-[9999] bg-[#040810] flex flex-col items-center justify-center pointer-events-auto select-none"
+            >
+              <OrbitalLoader
+                size="md"
+                message={navigatingMessage || (!isGsapReady ? "Apex Pacific Holdings" : "Entering Residence...")}
+                messagePlacement="bottom"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </section>
   )
 }

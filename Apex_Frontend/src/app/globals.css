@@ -354,14 +354,3 @@ nextjs-portal,
   opacity: 0 !important;
   pointer-events: none !important;
 }
-
-/* ============================================
-   HIDE NEXT.JS DEV PORTAL (Prevents overlay on mobile bottom navigation)
-   ============================================ */
-nextjs-portal,
-#__next-build-watcher {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}

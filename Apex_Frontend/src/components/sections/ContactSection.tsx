@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Check,
@@ -39,6 +40,12 @@ export function ContactSection({ isOpen, onClose }: ContactSectionProps) {
   // Modal visibility state (click-to-open only)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const activeOpen = isOpen !== undefined ? isOpen : isModalOpen
+  const pathname = usePathname()
+
+  // Ensure modal closes on route change
+  useEffect(() => {
+    setIsModalOpen(false)
+  }, [pathname])
 
   // Form field states
   const [fullName, setFullName] = useState('')
@@ -76,16 +83,10 @@ export function ContactSection({ isOpen, onClose }: ContactSectionProps) {
     }
   }, [onClose])
 
-  // Listen for open events ('open-contact'), hash changes (#contact), and Escape key
+  // Listen for open events ('open-contact') and Escape key
   useEffect(() => {
     const handleOpenEvent = () => {
       setIsModalOpen(true)
-    }
-
-    const handleHash = () => {
-      if (typeof window !== 'undefined' && window.location.hash === '#contact') {
-        setIsModalOpen(true)
-      }
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -94,19 +95,29 @@ export function ContactSection({ isOpen, onClose }: ContactSectionProps) {
       }
     }
 
-    window.addEventListener('open-contact', handleOpenEvent)
-    window.addEventListener('hashchange', handleHash)
-    window.addEventListener('keydown', handleKeyDown)
+    const handleCloseEvent = () => {
+      setIsModalOpen(false)
+    }
 
-    // Check initial hash on mount
-    handleHash()
+    const handleApexNavigate = (e: Event) => {
+      const ce = e as CustomEvent<{ target: string }>
+      if (ce.detail?.target && ce.detail.target !== 'contact' && ce.detail.target !== 'enquiry') {
+        setIsModalOpen(false)
+      }
+    }
+
+    window.addEventListener('open-contact', handleOpenEvent)
+    window.addEventListener('close-contact', handleCloseEvent)
+    window.addEventListener('apex-navigate', handleApexNavigate)
+    window.addEventListener('keydown', handleKeyDown)
 
     return () => {
       window.removeEventListener('open-contact', handleOpenEvent)
-      window.removeEventListener('hashchange', handleHash)
+      window.removeEventListener('close-contact', handleCloseEvent)
+      window.removeEventListener('apex-navigate', handleApexNavigate)
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [activeOpen, handleClose])
+  }, [activeOpen, handleClose, isModalOpen])
 
   // Synchronize Lenis and Body Scroll when modal opens/closes
   useEffect(() => {

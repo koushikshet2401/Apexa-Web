@@ -1,11 +1,16 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react'
+import { createPortal } from 'react-dom'
+import { OrbitalLoader } from '@/components/ui/orbital-loader'
+
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft,
   ArrowDown,
@@ -56,6 +61,7 @@ export interface CinematicPropertyDetailProps {
 }
 
 export function CinematicPropertyDetail({ property, backHref }: CinematicPropertyDetailProps) {
+  const router = useRouter()
   const containerRef = useRef<HTMLDivElement>(null)
   const pinRef = useRef<HTMLDivElement>(null)
   const section1Ref = useRef<HTMLElement>(null)
@@ -190,14 +196,27 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
   const [formLoading, setFormLoading] = useState(false)
   const [formSubmitted, setFormSubmitted] = useState(false)
   const [enquiryRef, setEnquiryRef] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+  const [isGsapReady, setIsGsapReady] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+
+  // Safety fallback timer ensuring loading overlay always dismisses cleanly
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsGsapReady(true)
+    }, 150)
+    return () => clearTimeout(timer)
+  }, [])
 
   // GSAP ScrollTrigger Master Pinned Overlay Stack
   // Section 1: Hero Video (pinned at top: 0)
   // Section 2: Property Details (slides up as card overlay over Section 1, pinned)
   // Section 3: Architectural Spaces & Finishes (slides up as card overlay over Section 2, pinned)
   // Section 4: Enquiry About This Property (slides up as card overlay over Section 3, pinned)
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     gsap.registerPlugin(ScrollTrigger)
 
     const container = containerRef.current
@@ -207,7 +226,10 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
     const s3 = section3Ref.current
     const s4 = section4Ref.current
 
-    if (!container || !pinEl || !s1 || !s2 || !s3 || !s4) return
+    if (!container || !pinEl || !s1 || !s2 || !s3 || !s4) {
+      setIsGsapReady(true)
+      return
+    }
 
     const ctx = gsap.context(() => {
       const isMob = window.innerWidth < 768
@@ -255,8 +277,12 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
         ease: 'power2.out',
       })
       tl.to({}, { duration: 0.15 })
+
+      ScrollTrigger.refresh()
+      setIsGsapReady(true)
     })
 
+    setIsGsapReady(true)
     return () => ctx.revert()
   }, [])
 
@@ -357,7 +383,7 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
                 onClick={(e) => {
                   e.preventDefault()
                   if (typeof window !== 'undefined') {
-                    window.location.href = targetBackHref
+                    router.push(targetBackHref)
                   }
                 }}
                 className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/60 hover:bg-black/90 backdrop-blur-md border border-white/20 text-[11px] font-mono uppercase tracking-[0.2em] text-[#7DD3FC] hover:text-white transition-all shadow-lg cursor-pointer group"
@@ -753,6 +779,27 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
       <div className="relative z-20 bg-[#040810] border-t border-white/10">
         <Footer />
       </div>
+
+      {/* Luxury Loading Transition Overlay */}
+      {mounted && createPortal(
+        <AnimatePresence>
+          {!isGsapReady && (
+            <motion.div
+              initial={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+              className="fixed inset-0 z-[9999] bg-[#040810] flex flex-col items-center justify-center pointer-events-auto select-none"
+            >
+              <OrbitalLoader
+                size="md"
+                message={`Entering ${property.name}...`}
+                messagePlacement="bottom"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   )
 }

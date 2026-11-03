@@ -1,6 +1,11 @@
 'use client'
 
-import React, { useRef, useState, useEffect } from 'react'
+import React, { useRef, useState, useEffect, useLayoutEffect } from 'react'
+import { createPortal } from 'react-dom'
+import { motion, AnimatePresence } from 'framer-motion'
+import { OrbitalLoader } from '@/components/ui/orbital-loader'
+
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 import Link from 'next/link'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -88,6 +93,19 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
   const [formSubmitted, setFormSubmitted] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [enquiryRef, setEnquiryRef] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+  const [isGsapReady, setIsGsapReady] = useState(false)
+
+  // Safety fallback timer ensuring loading overlay always dismisses cleanly
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsGsapReady(true)
+    }, 150)
+    return () => clearTimeout(timer)
+  }, [])
 
   // GSAP ScrollTrigger Master Pinned Stack
   // 1. Hero Section: video expands from scale 0.84 -> 1.0, brief pause.
@@ -98,7 +116,7 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
   //    Continues for all properties in sequence.
   //    Scrolling upward smoothly reverses the sequence (cards enter from left to right).
   // 4. Section 3 (Register Interest Inquiry Form) slides up over Section 2 once all cards are viewed.
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     gsap.registerPlugin(ScrollTrigger)
 
     const container = containerRef.current
@@ -108,7 +126,10 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
     const s2 = section2Ref.current
     const s3 = section3Ref.current
 
-    if (!container || !pinEl || !s1 || !videoWrap || !s2 || !s3) return
+    if (!container || !pinEl || !s1 || !videoWrap || !s2 || !s3) {
+      setIsGsapReady(true)
+      return
+    }
 
     const ctx = gsap.context(() => {
       const isMob = window.innerWidth < 768
@@ -220,6 +241,8 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
 
       // STAGE 7: Brief hold on inquiry form before page unpins to footer
       tl.to({}, { duration: 0.3 })
+      ScrollTrigger.refresh()
+      setIsGsapReady(true)
     })
 
     return () => ctx.revert()
@@ -753,6 +776,27 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
       <div className="relative z-40 w-full bg-[#040810] border-t border-white/10">
         <Footer />
       </div>
+
+      {/* Luxury Loading Transition Overlay */}
+      {mounted && createPortal(
+        <AnimatePresence>
+          {!isGsapReady && (
+            <motion.div
+              initial={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+              className="fixed inset-0 z-[9999] bg-[#040810] flex flex-col items-center justify-center pointer-events-auto select-none"
+            >
+              <OrbitalLoader
+                size="md"
+                message={`Loading ${country.displayName || country.name} Collection...`}
+                messagePlacement="bottom"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   )
 }

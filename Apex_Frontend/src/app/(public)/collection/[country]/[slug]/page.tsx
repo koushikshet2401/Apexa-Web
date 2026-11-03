@@ -37,27 +37,25 @@ export async function generateMetadata({
   const { country, slug } = await params
   const resolvedSlug = SLUG_ALIASES[slug] || slug
 
-  let unpublished: any = null
   let dbProperty: any = null
 
   try {
-    unpublished = await db.property.findFirst({
-      where: { slug: resolvedSlug, isPublished: false },
-      select: { id: true },
-    })
-    if (unpublished) notFound()
-
-    dbProperty = await db.property.findFirst({
-      where: {
-        slug: resolvedSlug,
+    const record = await db.property.findUnique({
+      where: { slug: resolvedSlug },
+      select: {
         isPublished: true,
-        OR: [
-          { country: { slug: country } },
-          { countryId: null },
-        ],
+        name: true,
+        cityName: true,
+        description: true,
+        shortDescription: true,
+        mainImage: true,
+        images: { take: 1, select: { url: true } },
       },
-      include: { country: true, images: true },
     })
+    if (record) {
+      if (!record.isPublished) notFound()
+      dbProperty = record
+    }
   } catch {
     // Database connection offline or failed, seamlessly fall back to static data
   }
@@ -104,33 +102,24 @@ export default async function CollectionPropertyPage({
   const { country, slug } = await params
   const resolvedSlug = SLUG_ALIASES[slug] || slug
 
-  let unpublished: any = null
   let dbProperty: any = null
 
   try {
-    unpublished = await db.property.findFirst({
-      where: { slug: resolvedSlug, isPublished: false },
-      select: { id: true },
-    })
-    if (unpublished) {
-      notFound()
-    }
-
-    dbProperty = await db.property.findFirst({
-      where: {
-        slug: resolvedSlug,
-        isPublished: true,
-        OR: [
-          { country: { slug: country } },
-          { countryId: null },
-        ],
-      },
+    const record = await db.property.findUnique({
+      where: { slug: resolvedSlug },
       include: {
         country: true,
         images: { orderBy: { order: 'asc' } },
         services: { include: { service: true } },
       },
     })
+
+    if (record) {
+      if (!record.isPublished) {
+        notFound()
+      }
+      dbProperty = record
+    }
   } catch {
     // Database connection offline or failed, seamlessly fall back to static data
   }

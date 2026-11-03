@@ -1,7 +1,13 @@
 "use client"
 
-import React, { useEffect, useRef } from "react"
+import React, { useEffect, useRef, useState, useLayoutEffect } from "react"
+import { createPortal } from "react-dom"
+import { motion, AnimatePresence } from "framer-motion"
+import { OrbitalLoader } from "@/components/ui/orbital-loader"
+
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import Image from "next/image"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
@@ -20,17 +26,31 @@ export function ServiceDetailClient({
   nextService,
   properties,
 }: ServiceDetailClientProps) {
+  const router = useRouter()
   const containerRef = useRef<HTMLDivElement>(null)
   const pinRef = useRef<HTMLDivElement>(null)
   const section1Ref = useRef<HTMLElement>(null)
   const section2Ref = useRef<HTMLElement>(null)
   const section3Ref = useRef<HTMLElement>(null)
   const cardRefs = useRef<(HTMLDivElement | null)[]>([])
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+  const [isGsapReady, setIsGsapReady] = useState(false)
+
+  // Safety fallback timer ensuring loading overlay always dismisses cleanly
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsGsapReady(true)
+    }, 150)
+    return () => clearTimeout(timer)
+  }, [])
 
   const handleBackToServices = (e: React.MouseEvent) => {
     e.preventDefault()
     if (typeof window !== "undefined") {
-      window.location.href = "/#services"
+      router.push('/#services')
     }
   }
 
@@ -38,7 +58,7 @@ export function ServiceDetailClient({
   cardRefs.current = cardRefs.current.slice(0, properties.length)
 
   // Master GSAP ScrollTrigger Pinned Stack & Vertical Overlapping Cards Reveal
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     gsap.registerPlugin(ScrollTrigger)
 
     const container = containerRef.current
@@ -47,7 +67,10 @@ export function ServiceDetailClient({
     const s2 = section2Ref.current
     const s3 = section3Ref.current
 
-    if (!container || !pinEl || !s1 || !s2 || !s3) return
+    if (!container || !pinEl || !s1 || !s2 || !s3) {
+      setIsGsapReady(true)
+      return
+    }
 
     const ctx = gsap.context(() => {
       const isMob = window.innerWidth < 768
@@ -157,6 +180,8 @@ export function ServiceDetailClient({
 
       // ─── STAGE 7: Hold Section 3 pinned for reading & clicking Enquire / Next ───
       tl.to({}, { duration: 0.3 })
+      ScrollTrigger.refresh()
+      setIsGsapReady(true)
     }, container)
 
     return () => ctx.revert()
@@ -497,6 +522,27 @@ export function ServiceDetailClient({
           </div>
         </section>
       </div>
+
+      {/* Luxury Loading Transition Overlay */}
+      {mounted && createPortal(
+        <AnimatePresence>
+          {!isGsapReady && (
+            <motion.div
+              initial={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+              className="fixed inset-0 z-[9999] bg-[#040810] flex flex-col items-center justify-center pointer-events-auto select-none"
+            >
+              <OrbitalLoader
+                size="md"
+                message={`Loading ${service.title}...`}
+                messagePlacement="bottom"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   )
 }

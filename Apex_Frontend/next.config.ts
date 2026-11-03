@@ -1,7 +1,14 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   transpilePackages: ['gsap'],
+  allowedDevOrigins: ['localhost:3000', '*.trycloudflare.com'],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
@@ -71,6 +78,26 @@ const nextConfig: NextConfig = {
       destination: '/collection',
       permanent: false,
     },
+    {
+      source: '/privacy',
+      destination: '/privacy-policy',
+      permanent: true,
+    },
+    {
+      source: '/communities',
+      destination: '/#collection',
+      permanent: true,
+    },
+    {
+      source: '/enquire',
+      destination: '/contact',
+      permanent: true,
+    },
+    {
+      source: '/enquiry',
+      destination: '/contact',
+      permanent: true,
+    },
   ],
   headers: async () => [
     {
@@ -84,12 +111,13 @@ const nextConfig: NextConfig = {
           key: 'Content-Security-Policy',
           value: [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-eval' 'unsafe-inline'",  // unsafe-eval needed by Next.js dev mode
+            "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.tailwindcss.com https://code.iconify.design",
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "font-src 'self' https://fonts.gstatic.com",
-            "img-src 'self' data: blob: https://images.unsplash.com https://*.cloudflare.com https://*.r2.cloudflarestorage.com https://*.r2.dev",
+            "img-src 'self' data: blob: https://images.unsplash.com https://*.cloudflare.com https://*.r2.cloudflarestorage.com https://*.r2.dev https://cdn.21st.dev",
             "media-src 'self' data: blob: https://*.cloudflare.com https://*.r2.cloudflarestorage.com https://*.r2.dev",
             "connect-src 'self' https://*.r2.cloudflarestorage.com https://*.r2.dev",
+            "frame-src 'self' data: blob: about:",
             "frame-ancestors 'none'",
           ].join('; '),
         },

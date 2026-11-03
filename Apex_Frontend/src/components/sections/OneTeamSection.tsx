@@ -58,17 +58,28 @@ export function OneTeamSection() {
   const [navigatingHref, setNavigatingHref] = useState<string | null>(null)
   const [navigatingMessage, setNavigatingMessage] = useState<string | null>(null)
 
+  useEffect(() => {
+    return () => {
+      setNavigatingHref(null)
+    }
+  }, [])
+
   const handleServiceCardClick = (e: React.MouseEvent, href: string, title: string) => {
     e.preventDefault()
     e.stopPropagation()
+    if (navigatingHref) return
     setNavigatingHref(href)
     setNavigatingMessage(`Opening ${title}...`)
+
+    try {
+      sessionStorage.setItem('last_section', 'services')
+    } catch {}
     router.push(href)
-    setTimeout(() => {
-      if (typeof window !== 'undefined' && window.location.pathname !== href) {
-        window.location.href = href
-      }
-    }, 450)
+
+
+
+
+
   }
 
   // Safe video autoplay

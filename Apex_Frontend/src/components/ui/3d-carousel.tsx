@@ -25,30 +25,18 @@ export function useMediaQuery(
   query: string,
   {
     defaultValue = false,
-    initializeWithValue = true,
   }: UseMediaQueryOptions = {}
 ): boolean {
-  const getMatches = (query: string): boolean => {
-    if (IS_SERVER) {
-      return defaultValue
-    }
-    return window.matchMedia(query).matches
-  }
+  const [matches, setMatches] = useState<boolean>(defaultValue)
 
-  const [matches, setMatches] = useState<boolean>(() => {
-    if (initializeWithValue) {
-      return getMatches(query)
-    }
-    return defaultValue
-  })
-
-  const handleChange = () => {
-    setMatches(getMatches(query))
-  }
-
-  useIsomorphicLayoutEffect(() => {
+  useEffect(() => {
+    if (typeof window === "undefined") return
     const matchMedia = window.matchMedia(query)
-    handleChange()
+    setMatches(matchMedia.matches)
+
+    const handleChange = () => {
+      setMatches(matchMedia.matches)
+    }
 
     matchMedia.addEventListener("change", handleChange)
 
@@ -146,6 +134,7 @@ const CarouselCard = memo(
 
     return (
       <motion.div
+        suppressHydrationWarning
         key={`key-${imgUrl}-${index}`}
         className="absolute flex h-full origin-center items-center justify-center rounded-xl p-1 sm:p-2"
         style={{
@@ -188,9 +177,14 @@ const Carousel = memo(
     autoRotateSpeed = 0,
     onRotateRef,
   }: CarouselProps) => {
+    const [isMounted, setIsMounted] = useState(false)
+    useEffect(() => {
+      setIsMounted(true)
+    }, [])
     const isScreenSizeSm = useMediaQuery("(max-width: 640px)")
+    const effectiveScreenSizeSm = isMounted ? isScreenSizeSm : false
     // Tuned cylinder widths: on mobile 880px allows 3 cards (~146px each) to fit cleanly without edge clipping
-    const cylinderWidth = isScreenSizeSm ? 880 : 1500
+    const cylinderWidth = effectiveScreenSizeSm ? 880 : 1500
     const faceCount = Math.max(cards.length, 1)
     const faceWidth = cylinderWidth / faceCount
     const radius = cylinderWidth / (2 * Math.PI)
@@ -241,9 +235,10 @@ const Carousel = memo(
 
     return (
       <div
+        suppressHydrationWarning
         className="flex h-full items-center justify-center bg-transparent"
         style={{
-          perspective: isScreenSizeSm ? "850px" : "1200px",
+          perspective: effectiveScreenSizeSm ? "850px" : "1200px",
           transformStyle: "preserve-3d",
           willChange: "transform",
         }}

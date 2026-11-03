@@ -2,17 +2,31 @@
 
 import React from 'react'
 import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { ArrowUpRight } from 'lucide-react'
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
+  const pathname = usePathname()
+  const router = useRouter()
 
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (href === '/#contact') {
       e.preventDefault()
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('open-contact'))
+      if (pathname === '/') {
+        if (typeof window !== 'undefined') {
+  
+          window.dispatchEvent(new CustomEvent('open-contact'))
+          try {
+            history.pushState(null, '', '/#contact')
+          } catch {}
+        }
+      } else {
+        router.push('/contact')
+
+
+
       }
     }
   }

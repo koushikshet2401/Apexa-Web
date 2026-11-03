@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import Image from 'next/image'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Home,
@@ -28,6 +28,7 @@ const primaryNavLinks = [
 
 export function Navigation({ hasHero }: { hasHero?: boolean }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [mounted, setMounted] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -42,7 +43,15 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
   useEffect(() => {
     const isHome = pathname === '/'
 
-    if (pathname?.startsWith('/collection')) {
+    if (!isHome) {
+      if (pathname?.startsWith('/collection')) {
+        setActiveBottomNav('residences')
+      } else if (pathname === '/contact') {
+        setActiveBottomNav('enquiry')
+      } else if (pathname?.startsWith('/services')) {
+        setActiveBottomNav('residences')
+      }
+    } else if (pathname?.startsWith('/collection')) {
       setActiveBottomNav('residences')
     }
 
@@ -86,7 +95,8 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
         }
       } else {
         // On non-home pages (e.g. collection country pages), keep bottom nav hidden on top hero
-        if (window.scrollY < window.innerHeight * 0.75) {
+        setShowBottomNav(true)
+        if (false && window.scrollY < window.innerHeight * 0.75) {
           setShowBottomNav(false)
         } else {
           setShowBottomNav(true)
@@ -97,10 +107,29 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('hero-in-view', handleHeroInView)
+    const handleHashSync = () => {
+      if (isHome) {
+        const hash = (window.location.hash || '').replace('#', '').toLowerCase()
+        if (hash === 'home' || hash === '') {
+          setActiveBottomNav('home')
+        } else if (hash === 'launches') {
+          setActiveBottomNav('launches')
+        } else if (hash === 'collection' || hash === 'communities' || hash === 'residences') {
+          setActiveBottomNav('residences')
+        } else if (hash === 'contact' || hash === 'enquiry' || hash === 'enquire') {
+          setActiveBottomNav('enquiry')
+        }
+      }
+    }
+    handleHashSync()
+    window.addEventListener('hashchange', handleHashSync)
+    window.addEventListener('popstate', handleHashSync)
     window.addEventListener('apex-step-change', handleStepChange)
     return () => {
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('hero-in-view', handleHeroInView)
+      window.removeEventListener('hashchange', handleHashSync)
+      window.removeEventListener('popstate', handleHashSync)
       window.removeEventListener('apex-step-change', handleStepChange)
     }
   }, [pathname])
@@ -152,7 +181,14 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
     }
     closeMenu()
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('open-contact'))
+      if (pathname === '/') {
+        window.dispatchEvent(new CustomEvent('open-contact'))
+        try {
+          history.pushState(null, '', '/#contact')
+        } catch {}
+      } else {
+        router.push('/contact')
+      }
     }
   }
 
@@ -162,7 +198,15 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
     closeMenu()
 
     if (id === 'contact' || id === 'enquiry') {
-      openContactModal()
+      if (pathname === '/') {
+        window.dispatchEvent(new CustomEvent('close-contact'))
+        window.dispatchEvent(new CustomEvent('apex-navigate', { detail: { target: 'contact', immediate: false } }))
+        try {
+          history.pushState(null, '', '/#contact')
+        } catch {}
+      } else {
+        router.push('/contact')
+      }
       return
     }
 
@@ -170,29 +214,29 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
       if (pathname === '/') {
         const lenis = (window as unknown as { __lenis?: { scrollTo: (target: number, opts?: { duration?: number; immediate?: boolean }) => void } }).__lenis
         if (lenis) {
-          lenis.scrollTo(0, { duration: 0, immediate: true })
+          lenis.scrollTo(0, { duration: 0.8, immediate: false })
         } else {
-          window.scrollTo({ top: 0, behavior: 'auto' })
+          window.scrollTo({ top: 0, behavior: 'smooth' })
         }
-        window.dispatchEvent(new CustomEvent('apex-navigate', { detail: { target: 'home', immediate: true } }))
+        window.dispatchEvent(new CustomEvent('close-contact'))
+        window.dispatchEvent(new CustomEvent('apex-navigate', { detail: { target: 'home', immediate: false } }))
         try {
-          history.replaceState(null, '', '/#home')
+          history.pushState(null, '', '/#home')
         } catch {}
       } else {
-        window.location.href = '/#home'
+        router.push('/#home')
       }
       return
     }
 
     if (pathname === '/') {
-      setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('apex-navigate', { detail: { target: id, immediate: true } }))
-      }, 20)
+      window.dispatchEvent(new CustomEvent('close-contact'))
+      window.dispatchEvent(new CustomEvent('apex-navigate', { detail: { target: id, immediate: false } }))
       try {
-        history.replaceState(null, '', `/#${id}`)
+        history.pushState(null, '', `/#${id}`)
       } catch {}
     } else {
-      window.location.href = `/#${id}`
+      router.push(`/#${id}`)
     }
   }
 
@@ -330,7 +374,7 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
             type="button"
             onClick={(e) => {
               setActiveBottomNav('enquiry')
-              openContactModal(e)
+              navigateToSection(e, 'contact')
             }}
             className={`flex flex-col items-center justify-center py-1 transition-colors cursor-pointer ${activeBottomNav === 'enquiry' ? 'text-sky-400 font-medium' : 'text-[#94A3B8] hover:text-white'
               }`}

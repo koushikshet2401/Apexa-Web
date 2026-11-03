@@ -7,28 +7,53 @@ import {
 import { PropertyItem } from '@/data/properties'
 
 export async function LaunchesCinematicStackServer() {
-  // 1. Fetch top 3 featured launches
-  const dbLaunches = await db.property.findMany({
-    where: {
-      isPublished: true,
-      isFeaturedLaunch: true,
-    },
-    orderBy: [
-      { launchOrder: 'asc' },
-      { launchDate: 'desc' },
-      { createdAt: 'desc' },
-    ],
-    take: 3,
-    include: {
-      country: {
-        select: {
-          slug: true,
-          displayName: true,
-          name: true,
+  // Parallel database fetch for maximum performance and instant load
+  const [dbLaunches, dbCountries, dbSpaceProps, dbHomepageContent] = await Promise.all([
+    // 1. Fetch top 3 featured launches
+    db.property.findMany({
+      where: {
+        isPublished: true,
+        isFeaturedLaunch: true,
+      },
+      orderBy: [
+        { launchOrder: 'asc' },
+        { launchDate: 'desc' },
+        { createdAt: 'desc' },
+      ],
+      take: 3,
+      include: {
+        country: {
+          select: {
+            slug: true,
+            displayName: true,
+            name: true,
+          },
         },
       },
-    },
-  })
+    }),
+
+    // 2. Fetch collection countries
+    db.country.findMany({
+      where: { isPublished: true },
+      orderBy: { displayOrder: 'asc' },
+    }),
+
+    // 3. Fetch space in round properties
+    db.property.findMany({
+      where: {
+        isPublished: true,
+        isSpaceInRound: true,
+      },
+      orderBy: { spaceOrder: 'asc' },
+      include: {
+        country: true,
+        images: { orderBy: { order: 'asc' } },
+      },
+    }),
+
+    // 4. Fetch homepage content
+    db.homepageContent.findFirst(),
+  ])
 
   const launches: VideoLaunch[] = dbLaunches.map((p, idx) => {
     const countrySlug = p.country?.slug || 'dubai'
@@ -44,12 +69,6 @@ export async function LaunchesCinematicStackServer() {
       videoSrc: p.mainVideoUrl || '/videos/luxury-palm-beach.mp4',
       href: `/collection/${countrySlug}/${p.slug}`,
     }
-  })
-
-  // 2. Fetch collection countries
-  const dbCountries = await db.country.findMany({
-    where: { isPublished: true },
-    orderBy: { displayOrder: 'asc' },
   })
 
   const countries: CollectionCountry[] = dbCountries.map((c) => {
@@ -75,19 +94,6 @@ export async function LaunchesCinematicStackServer() {
       cities: c.cities,
       description: c.description || '',
     }
-  })
-
-  // 3. Fetch space in round properties
-  const dbSpaceProps = await db.property.findMany({
-    where: {
-      isPublished: true,
-      isSpaceInRound: true,
-    },
-    orderBy: { spaceOrder: 'asc' },
-    include: {
-      country: true,
-      images: { orderBy: { order: 'asc' } },
-    },
   })
 
   const spaceProperties: PropertyItem[] = dbSpaceProps.map((p) => {
@@ -118,9 +124,6 @@ export async function LaunchesCinematicStackServer() {
       href: `/collection/${countrySlug}/${p.slug}`,
     } as PropertyItem
   })
-
-  // 4. Fetch homepage content
-  const dbHomepageContent = await db.homepageContent.findFirst()
 
   return (
     <LaunchesCinematicStack

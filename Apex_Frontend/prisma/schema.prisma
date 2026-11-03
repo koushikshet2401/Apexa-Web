@@ -33,6 +33,8 @@ model Country {
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
   properties     Property[]
+
+  @@index([isPublished, displayOrder])
 }
 
 model ServiceCategory {
@@ -50,6 +52,8 @@ model ServiceCategory {
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   properties      PropertyService[]
+
+  @@index([isPublished, displayOrder])
 }
 
 model Property {
@@ -86,6 +90,12 @@ model Property {
   images           PropertyImage[]
   services         PropertyService[]
   enquiries        Enquiry[]
+
+  @@index([isPublished, isFeaturedLaunch, launchOrder])
+  @@index([isPublished, countryId])
+  @@index([isPublished, isSpaceInRound, spaceOrder])
+  @@index([countryId])
+  @@index([createdAt])
 }
 
 model PropertyImage {
@@ -95,6 +105,8 @@ model PropertyImage {
   order      Int      @default(0)
   propertyId String
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, order])
 }
 
 model PropertyService {
@@ -130,4 +142,7 @@ model Enquiry {
   status          String    @default("new")   // "new", "read", "replied"
   submittedAt     DateTime  @default(now())
   ipAddress       String?
+
+  @@index([status, submittedAt])
+  @@index([propertyId])
 }
