@@ -2,9 +2,13 @@
 
 import { useRef, useEffect, useState } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ArrowUpRight } from 'lucide-react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { OrbitalLoader } from '@/components/ui/orbital-loader'
+import { cn } from '@/lib/utils'
 
 interface MediaTile {
   id: string
@@ -41,6 +45,7 @@ const TILES: MediaTile[] = [
 ]
 
 export function OneTeamSection() {
+  const router = useRouter()
   const rootRef = useRef<HTMLDivElement>(null)
   const pinRef = useRef<HTMLDivElement>(null)
   const textLayerRef = useRef<HTMLDivElement>(null)
@@ -50,6 +55,21 @@ export function OneTeamSection() {
   const topTilesRef = useRef<HTMLDivElement>(null)
   const bottomTilesRef = useRef<HTMLDivElement>(null)
   const [videoLoaded, setVideoLoaded] = useState(false)
+  const [navigatingHref, setNavigatingHref] = useState<string | null>(null)
+  const [navigatingMessage, setNavigatingMessage] = useState<string | null>(null)
+
+  const handleServiceCardClick = (e: React.MouseEvent, href: string, title: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setNavigatingHref(href)
+    setNavigatingMessage(`Opening ${title}...`)
+    router.push(href)
+    setTimeout(() => {
+      if (typeof window !== 'undefined' && window.location.pathname !== href) {
+        window.location.href = href
+      }
+    }, 450)
+  }
 
   // Safe video autoplay
   useEffect(() => {
@@ -244,46 +264,106 @@ export function OneTeamSection() {
               className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 will-change-[transform,opacity]"
             >
               {/* Top-Left: Luxury Villas */}
-              <Link
-                href={topLeft.href}
-                className="relative h-20 sm:h-28 md:h-36 lg:h-40 rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 hover:border-sky-400/50 transition-all duration-300 group shadow-xl"
+              <div
+                role="link"
+                tabIndex={0}
+                onClick={(e) => handleServiceCardClick(e, topLeft.href, topLeft.title)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleServiceCardClick(e as unknown as React.MouseEvent, topLeft.href, topLeft.title)
+                  }
+                }}
+                className={cn(
+                  "relative h-20 sm:h-28 md:h-36 lg:h-40 rounded-xl sm:rounded-2xl overflow-hidden border transition-all duration-300 group shadow-xl cursor-pointer select-none",
+                  navigatingHref === topLeft.href
+                    ? "border-sky-400 ring-2 ring-sky-400/50 shadow-[0_0_30px_rgba(56,189,248,0.4)]"
+                    : "border-white/10 hover:border-sky-400/50"
+                )}
               >
                 <Image
                   src={topLeft.image}
                   alt={topLeft.title}
                   fill
-                  className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                  className={cn(
+                    "object-cover object-center transition-transform duration-700 group-hover:scale-105",
+                    navigatingHref === topLeft.href && "scale-105 filter brightness-75"
+                  )}
                   sizes="(max-width: 768px) 50vw, 30vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
-                <div className="absolute bottom-2 sm:bottom-3 left-2.5 sm:left-4 right-2.5 sm:right-4 z-10 flex flex-col">
-                  <span className="w-3.5 h-px bg-sky-400/60 block mb-1" />
-                  <span className="font-serif text-xs sm:text-base md:text-lg font-light text-white group-hover:text-sky-200 transition-colors truncate">
-                    {topLeft.title}
-                  </span>
+                <div className="absolute bottom-2 sm:bottom-3 left-2.5 sm:left-4 right-2.5 sm:right-4 z-10 flex items-end justify-between gap-2">
+                  <div className="flex flex-col min-w-0 pr-1">
+                    <span className="w-3.5 h-px bg-sky-400/60 block mb-1" />
+                    <span className="font-serif text-xs sm:text-base md:text-lg font-light text-white group-hover:text-sky-200 transition-colors truncate">
+                      {topLeft.title}
+                    </span>
+                  </div>
+                  <div className="shrink-0 pointer-events-none">
+                    {navigatingHref === topLeft.href ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-400 text-black text-[9px] sm:text-[10px] font-mono uppercase tracking-wider font-semibold shadow-lg">
+                        <OrbitalLoader size="xs" className="w-3 h-3 text-black" />
+                        <span>Loading...</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full bg-black/60 group-hover:bg-white text-white/80 group-hover:text-black border border-white/20 group-hover:border-white font-mono text-[8px] sm:text-[9px] uppercase tracking-wider transition-all duration-300">
+                        <span className="hidden sm:inline">Explore</span>
+                        <ArrowUpRight size={11} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </Link>
+              </div>
 
               {/* Top-Right: Commercial Properties */}
-              <Link
-                href={topRight.href}
-                className="relative h-20 sm:h-28 md:h-36 lg:h-40 rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 hover:border-sky-400/50 transition-all duration-300 group shadow-xl"
+              <div
+                role="link"
+                tabIndex={0}
+                onClick={(e) => handleServiceCardClick(e, topRight.href, topRight.title)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleServiceCardClick(e as unknown as React.MouseEvent, topRight.href, topRight.title)
+                  }
+                }}
+                className={cn(
+                  "relative h-20 sm:h-28 md:h-36 lg:h-40 rounded-xl sm:rounded-2xl overflow-hidden border transition-all duration-300 group shadow-xl cursor-pointer select-none",
+                  navigatingHref === topRight.href
+                    ? "border-sky-400 ring-2 ring-sky-400/50 shadow-[0_0_30px_rgba(56,189,248,0.4)]"
+                    : "border-white/10 hover:border-sky-400/50"
+                )}
               >
                 <Image
                   src={topRight.image}
                   alt={topRight.title}
                   fill
-                  className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                  className={cn(
+                    "object-cover object-center transition-transform duration-700 group-hover:scale-105",
+                    navigatingHref === topRight.href && "scale-105 filter brightness-75"
+                  )}
                   sizes="(max-width: 768px) 50vw, 30vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
-                <div className="absolute bottom-2 sm:bottom-3 left-2.5 sm:left-4 right-2.5 sm:right-4 z-10 flex flex-col">
-                  <span className="w-3.5 h-px bg-sky-400/60 block mb-1" />
-                  <span className="font-serif text-xs sm:text-base md:text-lg font-light text-white group-hover:text-sky-200 transition-colors truncate">
-                    {topRight.title}
-                  </span>
+                <div className="absolute bottom-2 sm:bottom-3 left-2.5 sm:left-4 right-2.5 sm:right-4 z-10 flex items-end justify-between gap-2">
+                  <div className="flex flex-col min-w-0 pr-1">
+                    <span className="w-3.5 h-px bg-sky-400/60 block mb-1" />
+                    <span className="font-serif text-xs sm:text-base md:text-lg font-light text-white group-hover:text-sky-200 transition-colors truncate">
+                      {topRight.title}
+                    </span>
+                  </div>
+                  <div className="shrink-0 pointer-events-none">
+                    {navigatingHref === topRight.href ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-400 text-black text-[9px] sm:text-[10px] font-mono uppercase tracking-wider font-semibold shadow-lg">
+                        <OrbitalLoader size="xs" className="w-3 h-3 text-black" />
+                        <span>Loading...</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full bg-black/60 group-hover:bg-white text-white/80 group-hover:text-black border border-white/20 group-hover:border-white font-mono text-[8px] sm:text-[9px] uppercase tracking-wider transition-all duration-300">
+                        <span className="hidden sm:inline">Explore</span>
+                        <ArrowUpRight size={11} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </Link>
+              </div>
             </div>
 
             {/* ─── ROW 2: CENTRAL PINNED VIDEO (Rises from bottom first) ─── */}
@@ -323,50 +403,129 @@ export function OneTeamSection() {
               className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 will-change-[transform,opacity]"
             >
               {/* Bottom-Left: Sky Residences */}
-              <Link
-                href={bottomLeft.href}
-                className="relative h-20 sm:h-28 md:h-36 lg:h-40 rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 hover:border-sky-400/50 transition-all duration-300 group shadow-xl"
+              <div
+                role="link"
+                tabIndex={0}
+                onClick={(e) => handleServiceCardClick(e, bottomLeft.href, bottomLeft.title)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleServiceCardClick(e as unknown as React.MouseEvent, bottomLeft.href, bottomLeft.title)
+                  }
+                }}
+                className={cn(
+                  "relative h-20 sm:h-28 md:h-36 lg:h-40 rounded-xl sm:rounded-2xl overflow-hidden border transition-all duration-300 group shadow-xl cursor-pointer select-none",
+                  navigatingHref === bottomLeft.href
+                    ? "border-sky-400 ring-2 ring-sky-400/50 shadow-[0_0_30px_rgba(56,189,248,0.4)]"
+                    : "border-white/10 hover:border-sky-400/50"
+                )}
               >
                 <Image
                   src={bottomLeft.image}
                   alt={bottomLeft.title}
                   fill
-                  className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                  className={cn(
+                    "object-cover object-center transition-transform duration-700 group-hover:scale-105",
+                    navigatingHref === bottomLeft.href && "scale-105 filter brightness-75"
+                  )}
                   sizes="(max-width: 768px) 50vw, 30vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
-                <div className="absolute bottom-2 sm:bottom-3 left-2.5 sm:left-4 right-2.5 sm:right-4 z-10 flex flex-col">
-                  <span className="w-3.5 h-px bg-sky-400/60 block mb-1" />
-                  <span className="font-serif text-xs sm:text-base md:text-lg font-light text-white group-hover:text-sky-200 transition-colors truncate">
-                    {bottomLeft.title}
-                  </span>
+                <div className="absolute bottom-2 sm:bottom-3 left-2.5 sm:left-4 right-2.5 sm:right-4 z-10 flex items-end justify-between gap-2">
+                  <div className="flex flex-col min-w-0 pr-1">
+                    <span className="w-3.5 h-px bg-sky-400/60 block mb-1" />
+                    <span className="font-serif text-xs sm:text-base md:text-lg font-light text-white group-hover:text-sky-200 transition-colors truncate">
+                      {bottomLeft.title}
+                    </span>
+                  </div>
+                  <div className="shrink-0 pointer-events-none">
+                    {navigatingHref === bottomLeft.href ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-400 text-black text-[9px] sm:text-[10px] font-mono uppercase tracking-wider font-semibold shadow-lg">
+                        <OrbitalLoader size="xs" className="w-3 h-3 text-black" />
+                        <span>Loading...</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full bg-black/60 group-hover:bg-white text-white/80 group-hover:text-black border border-white/20 group-hover:border-white font-mono text-[8px] sm:text-[9px] uppercase tracking-wider transition-all duration-300">
+                        <span className="hidden sm:inline">Explore</span>
+                        <ArrowUpRight size={11} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </Link>
+              </div>
 
               {/* Bottom-Right: Waterfront Residences */}
-              <Link
-                href={bottomRight.href}
-                className="relative h-20 sm:h-28 md:h-36 lg:h-40 rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 hover:border-sky-400/50 transition-all duration-300 group shadow-xl"
+              <div
+                role="link"
+                tabIndex={0}
+                onClick={(e) => handleServiceCardClick(e, bottomRight.href, bottomRight.title)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleServiceCardClick(e as unknown as React.MouseEvent, bottomRight.href, bottomRight.title)
+                  }
+                }}
+                className={cn(
+                  "relative h-20 sm:h-28 md:h-36 lg:h-40 rounded-xl sm:rounded-2xl overflow-hidden border transition-all duration-300 group shadow-xl cursor-pointer select-none",
+                  navigatingHref === bottomRight.href
+                    ? "border-sky-400 ring-2 ring-sky-400/50 shadow-[0_0_30px_rgba(56,189,248,0.4)]"
+                    : "border-white/10 hover:border-sky-400/50"
+                )}
               >
                 <Image
                   src={bottomRight.image}
                   alt={bottomRight.title}
                   fill
-                  className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                  className={cn(
+                    "object-cover object-center transition-transform duration-700 group-hover:scale-105",
+                    navigatingHref === bottomRight.href && "scale-105 filter brightness-75"
+                  )}
                   sizes="(max-width: 768px) 50vw, 30vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
-                <div className="absolute bottom-2 sm:bottom-3 left-2.5 sm:left-4 right-2.5 sm:right-4 z-10 flex flex-col">
-                  <span className="w-3.5 h-px bg-sky-400/60 block mb-1" />
-                  <span className="font-serif text-xs sm:text-base md:text-lg font-light text-white group-hover:text-sky-200 transition-colors truncate">
-                    {bottomRight.title}
-                  </span>
+                <div className="absolute bottom-2 sm:bottom-3 left-2.5 sm:left-4 right-2.5 sm:right-4 z-10 flex items-end justify-between gap-2">
+                  <div className="flex flex-col min-w-0 pr-1">
+                    <span className="w-3.5 h-px bg-sky-400/60 block mb-1" />
+                    <span className="font-serif text-xs sm:text-base md:text-lg font-light text-white group-hover:text-sky-200 transition-colors truncate">
+                      {bottomRight.title}
+                    </span>
+                  </div>
+                  <div className="shrink-0 pointer-events-none">
+                    {navigatingHref === bottomRight.href ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-400 text-black text-[9px] sm:text-[10px] font-mono uppercase tracking-wider font-semibold shadow-lg">
+                        <OrbitalLoader size="xs" className="w-3 h-3 text-black" />
+                        <span>Loading...</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full bg-black/60 group-hover:bg-white text-white/80 group-hover:text-black border border-white/20 group-hover:border-white font-mono text-[8px] sm:text-[9px] uppercase tracking-wider transition-all duration-300">
+                        <span className="hidden sm:inline">Explore</span>
+                        <ArrowUpRight size={11} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </Link>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Cinematic Transition Overlay with OrbitalLoader */}
+      <AnimatePresence>
+        {navigatingHref && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[150] bg-[#040810]/80 backdrop-blur-md flex flex-col items-center justify-center pointer-events-auto select-none"
+          >
+            <OrbitalLoader
+              size="md"
+              message={navigatingMessage || "Opening Architectural Advisory..."}
+              messagePlacement="bottom"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   )
 }

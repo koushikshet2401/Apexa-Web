@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
@@ -15,6 +16,7 @@ import {
   X,
   ArrowRight,
 } from 'lucide-react'
+import CinematicThemeSwitcher from '@/components/ui/cinematic-theme-switcher'
 
 // Primary links matching luxury editorial layout
 const primaryNavLinks = [
@@ -26,11 +28,16 @@ const primaryNavLinks = [
 
 export function Navigation({ hasHero }: { hasHero?: boolean }) {
   const pathname = usePathname()
+  const [mounted, setMounted] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [showBottomNav, setShowBottomNav] = useState(false)
   const [activeBottomNav, setActiveBottomNav] = useState('home')
   const closeRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     const isHome = pathname === '/'
@@ -117,18 +124,24 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
     if (typeof document !== 'undefined') {
       document.body.style.overflow = ''
     }
+    const lenis = (window as unknown as { __lenis?: { start: () => void } }).__lenis
+    lenis?.start()
   }
 
   // Lock body scroll when menu is open and guarantee cleanup
   useEffect(() => {
+    const lenis = (window as unknown as { __lenis?: { stop: () => void; start: () => void } }).__lenis
     if (menuOpen) {
       document.body.style.overflow = 'hidden'
+      lenis?.stop()
       closeRef.current?.focus()
     } else {
       document.body.style.overflow = ''
+      lenis?.start()
     }
     return () => {
       document.body.style.overflow = ''
+      lenis?.start()
     }
   }, [menuOpen])
 
@@ -172,7 +185,9 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
     }
 
     if (pathname === '/') {
-      window.dispatchEvent(new CustomEvent('apex-navigate', { detail: { target: id, immediate: true } }))
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('apex-navigate', { detail: { target: id, immediate: true } }))
+      }, 20)
       try {
         history.replaceState(null, '', `/#${id}`)
       } catch {}
@@ -242,8 +257,8 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
             </span>
           </Link>
 
-          {/* RIGHT: Register Interest / Contact CTA */}
-          <div className="flex items-center gap-4">
+          {/* RIGHT: Register Interest / Contact CTA + Theme Switcher */}
+          <div className="flex items-center gap-3 sm:gap-4">
             <Link
               href="/#contact"
               onClick={(e) => scrollToSection(e, 'contact')}
@@ -252,6 +267,7 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
             >
               <span>ENQUIRE</span>
             </Link>
+            <CinematicThemeSwitcher />
           </div>
         </div>
       </motion.header>
@@ -337,13 +353,17 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
       </nav>
 
       {/* ─── FULL-SCREEN NAVIGATION OVERLAY ───────────────────────────────── */}
-      {menuOpen && (
+      {menuOpen && mounted && createPortal(
         <div
           role="dialog"
           aria-modal="true"
           aria-label="Navigation Menu"
           data-lenis-prevent
-          className="fixed inset-0 z-50 bg-[#040810] text-[#F8FAFC] flex flex-col overflow-y-auto animate-in fade-in duration-150"
+          className="fixed inset-0 z-[200] bg-[#040810] text-[#F8FAFC] flex flex-col overflow-y-auto overscroll-contain animate-in fade-in duration-150"
+          style={{
+            WebkitOverflowScrolling: 'touch',
+            touchAction: 'pan-y',
+          }}
         >
           {/* Top Bar */}
           <div className="flex items-center justify-between px-6 sm:px-12 py-6 border-b border-white/10 shrink-0">
@@ -484,7 +504,8 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
               <span>CONFIDENTIAL ADVISORY</span>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )

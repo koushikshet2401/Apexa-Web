@@ -67,6 +67,7 @@ export const CircularTestimonials = ({
   const [activeIndex, setActiveIndex] = useState(0);
   const [hoverPrev, setHoverPrev] = useState(false);
   const [hoverNext, setHoverNext] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const [containerWidth, setContainerWidth] = useState(1200);
 
   const imageContainerRef = useRef<HTMLDivElement>(null);
@@ -92,9 +93,9 @@ export const CircularTestimonials = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Autoplay
+  // Autoplay (pauses smoothly when user hovers over the cards or text)
   useEffect(() => {
-    if (autoplay && testimonialsLength > 1) {
+    if (autoplay && testimonialsLength > 1 && !isHovered) {
       autoplayIntervalRef.current = setInterval(() => {
         setActiveIndex((prev) => (prev + 1) % testimonialsLength);
       }, 5500);
@@ -102,7 +103,7 @@ export const CircularTestimonials = ({
     return () => {
       if (autoplayIntervalRef.current) clearInterval(autoplayIntervalRef.current);
     };
-  }, [autoplay, testimonialsLength]);
+  }, [autoplay, testimonialsLength, isHovered]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -190,7 +191,11 @@ export const CircularTestimonials = ({
   }
 
   return (
-    <div className="w-full max-w-6xl px-4 sm:px-6 py-4 sm:py-8 mx-auto">
+    <div
+      className="w-full max-w-6xl px-4 sm:px-6 py-4 sm:py-8 mx-auto"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10 md:gap-16 items-center">
         {/* Images 3D Container with Touch Swiping and Mobile Floating Arrow Controls */}
         <div

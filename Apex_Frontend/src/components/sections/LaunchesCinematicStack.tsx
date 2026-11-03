@@ -291,11 +291,17 @@ export function LaunchesCinematicStack({
   const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 768 : false))
   const [navigatingHref, setNavigatingHref] = useState<string | null>(null)
   const [roundVisitingHref, setRoundVisitingHref] = useState<string | null>(null)
+  const [navigatingMessage, setNavigatingMessage] = useState<string | null>(null)
 
-  const handleExploreCountry = (e: React.MouseEvent, href: string) => {
+  const handleExploreCountry = (e: React.MouseEvent, href: string, title?: string) => {
     e.preventDefault()
     e.stopPropagation()
     setNavigatingHref(href)
+    if (title) {
+      setNavigatingMessage(`Opening ${title}...`)
+    } else {
+      setNavigatingMessage('Entering Destination...')
+    }
     router.push(href)
     setTimeout(() => {
       if (typeof window !== 'undefined' && window.location.pathname !== href) {
@@ -304,10 +310,24 @@ export function LaunchesCinematicStack({
     }, 450)
   }
 
-  const handleExploreLaunch = (e: React.MouseEvent, href: string) => {
+  const handleExploreLaunch = (e: React.MouseEvent, href: string, title?: string) => {
     e.preventDefault()
     e.stopPropagation()
     setNavigatingHref(href)
+    setNavigatingMessage(title ? `Entering ${title}...` : 'Entering Residence...')
+    router.push(href)
+    setTimeout(() => {
+      if (typeof window !== 'undefined' && window.location.pathname !== href) {
+        window.location.href = href
+      }
+    }, 450)
+  }
+
+  const handleServiceCardClick = (e: React.MouseEvent, href: string, title: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setNavigatingHref(href)
+    setNavigatingMessage(`Opening ${title}...`)
     router.push(href)
     setTimeout(() => {
       if (typeof window !== 'undefined' && window.location.pathname !== href) {
@@ -889,6 +909,11 @@ export function LaunchesCinematicStack({
         return null
       }
 
+      // Enforce manual scroll restoration so browser does not snap back to (0,0) before our target
+      if (typeof window !== 'undefined' && 'scrollRestoration' in history) {
+        history.scrollRestoration = 'manual'
+      }
+
       // Synchronous initial placement if arriving with hash (ZERO flash of home, ZERO auto-scroll)
       const initialProgress = typeof window !== 'undefined' ? getProgressForTarget(window.location.hash) : null
       if (initialProgress !== null && initialProgress > 0) {
@@ -911,7 +936,6 @@ export function LaunchesCinematicStack({
         const applyTarget = () => {
           const st = tl.scrollTrigger
           if (!st) return
-          st.refresh()
           const targetY = st.start + (st.end - st.start) * targetProgress
 
           tl.progress(targetProgress)
@@ -919,7 +943,7 @@ export function LaunchesCinematicStack({
 
           const lenis = (window as unknown as { __lenis?: { scrollTo: (target: number, opts?: { duration?: number; immediate?: boolean }) => void } }).__lenis
           if (lenis) {
-            lenis.scrollTo(targetY, { duration: immediate ? 0 : 0.8, immediate })
+            lenis.scrollTo(targetY, immediate ? { immediate: true, duration: 0 } : { duration: 0.8 })
           } else {
             window.scrollTo({ top: targetY, behavior: immediate ? 'auto' : 'smooth' })
           }
@@ -943,26 +967,15 @@ export function LaunchesCinematicStack({
       window.addEventListener('apex-navigate', onApexNavigate)
       window.addEventListener('hashchange', onHashChange)
 
-      // On mount/refresh with hash: enforce INSTANT positioning (immediate = true) without scrolling down through hero
-      const timer1 = setTimeout(() => {
-        if (window.location.hash) {
+      // On mount with hash: apply target immediately
+      if (window.location.hash) {
+        handleNavigateTarget(window.location.hash, true)
+        requestAnimationFrame(() => {
           handleNavigateTarget(window.location.hash, true)
-        }
-      }, 50)
-      const timer2 = setTimeout(() => {
-        if (window.location.hash) {
-          handleNavigateTarget(window.location.hash, true)
-        }
-      }, 250)
-      const timer3 = setTimeout(() => {
-        if (window.location.hash) {
-          handleNavigateTarget(window.location.hash, true)
-        }
-      }, 600)
+        })
+      }
+
       return () => {
-        clearTimeout(timer1)
-        clearTimeout(timer2)
-        clearTimeout(timer3)
         window.removeEventListener('apex-navigate', onApexNavigate)
         window.removeEventListener('hashchange', onHashChange)
       }
@@ -1070,7 +1083,7 @@ export function LaunchesCinematicStack({
             </div>
 
             {/* Bottom Search Bar — Elevated on mobile so it sits comfortably upside with generous clearance */}
-            <div className="absolute bottom-36 sm:bottom-12 md:bottom-14 lg:bottom-16 left-1/2 -translate-x-1/2 w-[calc(100%-2.5rem)] sm:w-[calc(100%-4rem)] max-w-xl z-30 pointer-events-auto pb-[calc(env(safe-area-inset-bottom,0px)+1rem)]">
+            <div className="absolute bottom-28 sm:bottom-14 md:bottom-16 left-1/2 -translate-x-1/2 w-[calc(100%-2.5rem)] sm:w-[calc(100%-4rem)] max-w-xl z-30 pointer-events-auto">
               <div
                 onClick={() => setIsSearchOpen(true)}
                 role="button"
@@ -1735,46 +1748,106 @@ export function LaunchesCinematicStack({
               className="grid grid-cols-2 gap-2 sm:gap-3.5 md:gap-4 will-change-[transform,opacity]"
             >
               {/* Top-Left: Luxury Villas */}
-              <Link
-                href="/services/luxury-villas"
-                className="relative h-28 sm:h-36 md:h-44 lg:h-52 rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 hover:border-sky-400/50 transition-all duration-300 group shadow-xl"
+              <div
+                role="link"
+                tabIndex={0}
+                onClick={(e) => handleServiceCardClick(e, '/services/luxury-villas', 'Luxury Villas')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleServiceCardClick(e as unknown as React.MouseEvent, '/services/luxury-villas', 'Luxury Villas')
+                  }
+                }}
+                className={cn(
+                  "relative h-28 sm:h-36 md:h-44 lg:h-52 rounded-xl sm:rounded-2xl overflow-hidden border transition-all duration-300 group shadow-xl cursor-pointer select-none",
+                  navigatingHref === '/services/luxury-villas'
+                    ? "border-sky-400 ring-2 ring-sky-400/50 shadow-[0_0_30px_rgba(56,189,248,0.4)]"
+                    : "border-white/10 hover:border-sky-400/50"
+                )}
               >
                 <Image
                   src="/images/laxuryVillaImage.png"
                   alt="Luxury Villas"
                   fill
-                  className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                  className={cn(
+                    "object-cover object-center transition-transform duration-700 group-hover:scale-105",
+                    navigatingHref === '/services/luxury-villas' && "scale-105 filter brightness-75"
+                  )}
                   sizes="(max-width: 768px) 50vw, 30vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
-                <div className="absolute bottom-2 sm:bottom-3 left-2.5 sm:left-4 right-2.5 sm:right-4 z-10 flex flex-col">
-                  <span className="w-3.5 h-px bg-sky-400/60 block mb-1" />
-                  <span className="font-serif text-xs sm:text-base md:text-lg font-light text-white group-hover:text-sky-200 transition-colors truncate">
-                    Luxury Villas
-                  </span>
+                <div className="absolute bottom-2 sm:bottom-3 left-2.5 sm:left-4 right-2.5 sm:right-4 z-10 flex items-end justify-between gap-2">
+                  <div className="flex flex-col min-w-0 pr-1">
+                    <span className="w-3.5 h-px bg-sky-400/60 block mb-1" />
+                    <span className="font-serif text-xs sm:text-base md:text-lg font-light text-white group-hover:text-sky-200 transition-colors truncate">
+                      Luxury Villas
+                    </span>
+                  </div>
+                  <div className="shrink-0 pointer-events-none">
+                    {navigatingHref === '/services/luxury-villas' ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-400 text-black text-[9px] sm:text-[10px] font-mono uppercase tracking-wider font-semibold shadow-lg">
+                        <OrbitalLoader size="xs" className="w-3 h-3 text-black" />
+                        <span>Loading...</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full bg-black/60 group-hover:bg-white text-white/80 group-hover:text-black border border-white/20 group-hover:border-white font-mono text-[8px] sm:text-[9px] uppercase tracking-wider transition-all duration-300">
+                        <span className="hidden sm:inline">Explore</span>
+                        <ArrowUpRight size={11} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </Link>
+              </div>
 
               {/* Top-Right: Commercial Properties */}
-              <Link
-                href="/services/commercial-properties"
-                className="relative h-28 sm:h-36 md:h-44 lg:h-52 rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 hover:border-sky-400/50 transition-all duration-300 group shadow-xl"
+              <div
+                role="link"
+                tabIndex={0}
+                onClick={(e) => handleServiceCardClick(e, '/services/commercial-properties', 'Commercial Properties')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleServiceCardClick(e as unknown as React.MouseEvent, '/services/commercial-properties', 'Commercial Properties')
+                  }
+                }}
+                className={cn(
+                  "relative h-28 sm:h-36 md:h-44 lg:h-52 rounded-xl sm:rounded-2xl overflow-hidden border transition-all duration-300 group shadow-xl cursor-pointer select-none",
+                  navigatingHref === '/services/commercial-properties'
+                    ? "border-sky-400 ring-2 ring-sky-400/50 shadow-[0_0_30px_rgba(56,189,248,0.4)]"
+                    : "border-white/10 hover:border-sky-400/50"
+                )}
               >
                 <Image
                   src="/images/commercialimage.png"
                   alt="Commercial Properties"
                   fill
-                  className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                  className={cn(
+                    "object-cover object-center transition-transform duration-700 group-hover:scale-105",
+                    navigatingHref === '/services/commercial-properties' && "scale-105 filter brightness-75"
+                  )}
                   sizes="(max-width: 768px) 50vw, 30vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
-                <div className="absolute bottom-2 sm:bottom-3 left-2.5 sm:left-4 right-2.5 sm:right-4 z-10 flex flex-col">
-                  <span className="w-3.5 h-px bg-sky-400/60 block mb-1" />
-                  <span className="font-serif text-xs sm:text-base md:text-lg font-light text-white group-hover:text-sky-200 transition-colors truncate">
-                    Commercial Properties
-                  </span>
+                <div className="absolute bottom-2 sm:bottom-3 left-2.5 sm:left-4 right-2.5 sm:right-4 z-10 flex items-end justify-between gap-2">
+                  <div className="flex flex-col min-w-0 pr-1">
+                    <span className="w-3.5 h-px bg-sky-400/60 block mb-1" />
+                    <span className="font-serif text-xs sm:text-base md:text-lg font-light text-white group-hover:text-sky-200 transition-colors truncate">
+                      Commercial Properties
+                    </span>
+                  </div>
+                  <div className="shrink-0 pointer-events-none">
+                    {navigatingHref === '/services/commercial-properties' ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-400 text-black text-[9px] sm:text-[10px] font-mono uppercase tracking-wider font-semibold shadow-lg">
+                        <OrbitalLoader size="xs" className="w-3 h-3 text-black" />
+                        <span>Loading...</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full bg-black/60 group-hover:bg-white text-white/80 group-hover:text-black border border-white/20 group-hover:border-white font-mono text-[8px] sm:text-[9px] uppercase tracking-wider transition-all duration-300">
+                        <span className="hidden sm:inline">Explore</span>
+                        <ArrowUpRight size={11} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </Link>
+              </div>
             </div>
 
             {/* ─── ROW 2: CENTRAL PINNED VIDEO (Rises from bottom first) ─── */}
@@ -1817,46 +1890,106 @@ export function LaunchesCinematicStack({
               className="grid grid-cols-2 gap-2 sm:gap-3.5 md:gap-4 will-change-[transform,opacity]"
             >
               {/* Bottom-Left: Sky Residences */}
-              <Link
-                href="/services/sky-residences"
-                className="relative h-28 sm:h-36 md:h-44 lg:h-52 rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 hover:border-sky-400/50 transition-all duration-300 group shadow-xl"
+              <div
+                role="link"
+                tabIndex={0}
+                onClick={(e) => handleServiceCardClick(e, '/services/sky-residences', 'Sky Residences')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleServiceCardClick(e as unknown as React.MouseEvent, '/services/sky-residences', 'Sky Residences')
+                  }
+                }}
+                className={cn(
+                  "relative h-28 sm:h-36 md:h-44 lg:h-52 rounded-xl sm:rounded-2xl overflow-hidden border transition-all duration-300 group shadow-xl cursor-pointer select-none",
+                  navigatingHref === '/services/sky-residences'
+                    ? "border-sky-400 ring-2 ring-sky-400/50 shadow-[0_0_30px_rgba(56,189,248,0.4)]"
+                    : "border-white/10 hover:border-sky-400/50"
+                )}
               >
                 <Image
                   src="/images/skyResidenceImage.png"
                   alt="Sky Residences"
                   fill
-                  className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                  className={cn(
+                    "object-cover object-center transition-transform duration-700 group-hover:scale-105",
+                    navigatingHref === '/services/sky-residences' && "scale-105 filter brightness-75"
+                  )}
                   sizes="(max-width: 768px) 50vw, 30vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
-                <div className="absolute bottom-2 sm:bottom-3 left-2.5 sm:left-4 right-2.5 sm:right-4 z-10 flex flex-col">
-                  <span className="w-3.5 h-px bg-sky-400/60 block mb-1" />
-                  <span className="font-serif text-xs sm:text-base md:text-lg font-light text-white group-hover:text-sky-200 transition-colors truncate">
-                    Sky Residences
-                  </span>
+                <div className="absolute bottom-2 sm:bottom-3 left-2.5 sm:left-4 right-2.5 sm:right-4 z-10 flex items-end justify-between gap-2">
+                  <div className="flex flex-col min-w-0 pr-1">
+                    <span className="w-3.5 h-px bg-sky-400/60 block mb-1" />
+                    <span className="font-serif text-xs sm:text-base md:text-lg font-light text-white group-hover:text-sky-200 transition-colors truncate">
+                      Sky Residences
+                    </span>
+                  </div>
+                  <div className="shrink-0 pointer-events-none">
+                    {navigatingHref === '/services/sky-residences' ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-400 text-black text-[9px] sm:text-[10px] font-mono uppercase tracking-wider font-semibold shadow-lg">
+                        <OrbitalLoader size="xs" className="w-3 h-3 text-black" />
+                        <span>Loading...</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full bg-black/60 group-hover:bg-white text-white/80 group-hover:text-black border border-white/20 group-hover:border-white font-mono text-[8px] sm:text-[9px] uppercase tracking-wider transition-all duration-300">
+                        <span className="hidden sm:inline">Explore</span>
+                        <ArrowUpRight size={11} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </Link>
+              </div>
 
               {/* Bottom-Right: Waterfront Residences */}
-              <Link
-                href="/services/waterfront-residences"
-                className="relative h-28 sm:h-36 md:h-44 lg:h-52 rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 hover:border-sky-400/50 transition-all duration-300 group shadow-xl"
+              <div
+                role="link"
+                tabIndex={0}
+                onClick={(e) => handleServiceCardClick(e, '/services/waterfront-residences', 'Waterfront Residences')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleServiceCardClick(e as unknown as React.MouseEvent, '/services/waterfront-residences', 'Waterfront Residences')
+                  }
+                }}
+                className={cn(
+                  "relative h-28 sm:h-36 md:h-44 lg:h-52 rounded-xl sm:rounded-2xl overflow-hidden border transition-all duration-300 group shadow-xl cursor-pointer select-none",
+                  navigatingHref === '/services/waterfront-residences'
+                    ? "border-sky-400 ring-2 ring-sky-400/50 shadow-[0_0_30px_rgba(56,189,248,0.4)]"
+                    : "border-white/10 hover:border-sky-400/50"
+                )}
               >
                 <Image
                   src="/images/waterFrontResidenceImage.png"
                   alt="Waterfront Residences"
                   fill
-                  className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                  className={cn(
+                    "object-cover object-center transition-transform duration-700 group-hover:scale-105",
+                    navigatingHref === '/services/waterfront-residences' && "scale-105 filter brightness-75"
+                  )}
                   sizes="(max-width: 768px) 50vw, 30vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
-                <div className="absolute bottom-2 sm:bottom-3 left-2.5 sm:left-4 right-2.5 sm:right-4 z-10 flex flex-col">
-                  <span className="w-3.5 h-px bg-sky-400/60 block mb-1" />
-                  <span className="font-serif text-xs sm:text-base md:text-lg font-light text-white group-hover:text-sky-200 transition-colors truncate">
-                    Waterfront Residences
-                  </span>
+                <div className="absolute bottom-2 sm:bottom-3 left-2.5 sm:left-4 right-2.5 sm:right-4 z-10 flex items-end justify-between gap-2">
+                  <div className="flex flex-col min-w-0 pr-1">
+                    <span className="w-3.5 h-px bg-sky-400/60 block mb-1" />
+                    <span className="font-serif text-xs sm:text-base md:text-lg font-light text-white group-hover:text-sky-200 transition-colors truncate">
+                      Waterfront Residences
+                    </span>
+                  </div>
+                  <div className="shrink-0 pointer-events-none">
+                    {navigatingHref === '/services/waterfront-residences' ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-400 text-black text-[9px] sm:text-[10px] font-mono uppercase tracking-wider font-semibold shadow-lg">
+                        <OrbitalLoader size="xs" className="w-3 h-3 text-black" />
+                        <span>Loading...</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full bg-black/60 group-hover:bg-white text-white/80 group-hover:text-black border border-white/20 group-hover:border-white font-mono text-[8px] sm:text-[9px] uppercase tracking-wider transition-all duration-300">
+                        <span className="hidden sm:inline">Explore</span>
+                        <ArrowUpRight size={11} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -1888,16 +2021,20 @@ export function LaunchesCinematicStack({
           </div>
 
           {/* 2. 3D Rotating Circular Carousel Stage using Framer Motion 3D Physics */}
-          <div className="relative w-full flex-1 flex items-center justify-center pointer-events-auto my-auto overflow-hidden">
+          <div className="relative w-full flex-1 flex items-center justify-center pointer-events-auto my-auto overflow-visible">
             <ThreeDPhotoCarousel
               cards={roundCarouselCards}
               showControls={true}
               enableLightbox={false}
               autoRotateSpeed={10}
-              heightClassName="h-[360px] sm:h-[460px]"
+              heightClassName="h-[320px] sm:h-[460px]"
               renderItem={(item) => (
                 <div
-                  className="relative w-full h-[250px] sm:h-[390px] rounded-2xl overflow-hidden border border-white/20 hover:border-sky-400/60 transition-all duration-300 group shadow-[0_20px_50px_rgba(0,0,0,0.9)] bg-[#070E1C]"
+                  className="relative w-full h-[220px] sm:h-[390px] rounded-2xl overflow-hidden border border-white/20 hover:border-sky-400/60 transition-all duration-300 group shadow-[0_20px_50px_rgba(0,0,0,0.9)] bg-[#070E1C]"
+                  style={{
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                  }}
                 >
                   <img
                     src={item.image}
@@ -1906,13 +2043,13 @@ export function LaunchesCinematicStack({
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent pointer-events-none" />
 
-                  <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-4 flex items-center justify-between gap-1.5 sm:gap-2 z-20">
+                  <div className="absolute inset-x-0 bottom-0 p-2 sm:p-4 flex items-center justify-between gap-1 sm:gap-2 z-20">
                     <div className="flex flex-col min-w-0 flex-1">
-                      <span className="font-mono text-[9px] sm:text-xs uppercase tracking-[0.16em] text-white font-medium drop-shadow-md truncate">
+                      <span className="font-mono text-[8px] sm:text-xs uppercase tracking-[0.14em] sm:tracking-[0.16em] text-white font-medium drop-shadow-md truncate">
                         {item.title}
                       </span>
                       {item.subtitle && (
-                        <span className="font-mono text-[8px] sm:text-[9px] uppercase tracking-wider text-[#7DD3FC]/80 truncate">
+                        <span className="font-mono text-[7px] sm:text-[9px] uppercase tracking-wider text-[#7DD3FC]/80 truncate">
                           {item.subtitle}
                         </span>
                       )}
@@ -1929,7 +2066,7 @@ export function LaunchesCinematicStack({
                       }}
                       disabled={roundVisitingHref === item.href}
                       className={cn(
-                        "pointer-events-auto inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full font-mono text-[8px] sm:text-[10px] uppercase tracking-[0.14em] sm:tracking-[0.18em] transition-all duration-300 shadow-md backdrop-blur-md cursor-pointer shrink-0",
+                        "pointer-events-auto inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full font-mono text-[7px] sm:text-[10px] uppercase tracking-[0.12em] sm:tracking-[0.18em] transition-all duration-300 shadow-md backdrop-blur-md cursor-pointer shrink-0",
                         roundVisitingHref === item.href
                           ? "bg-sky-400 text-black border-sky-400 font-semibold shadow-[0_0_15px_rgba(56,189,248,0.5)] cursor-wait"
                           : "bg-black/70 hover:bg-white text-white hover:text-black border border-white/25 hover:border-white group/btn"
@@ -2060,7 +2197,7 @@ export function LaunchesCinematicStack({
           >
             <OrbitalLoader
               size="md"
-              message="Entering Residence..."
+              message={navigatingMessage || "Entering Residence..."}
               messagePlacement="bottom"
             />
           </motion.div>

@@ -37,24 +37,30 @@ export async function generateMetadata({
   const { country, slug } = await params
   const resolvedSlug = SLUG_ALIASES[slug] || slug
 
-  // If unpublished in DB, trigger notFound
-  const unpublished = await db.property.findFirst({
-    where: { slug: resolvedSlug, isPublished: false },
-    select: { id: true },
-  })
-  if (unpublished) notFound()
+  let unpublished: any = null
+  let dbProperty: any = null
 
-  const dbProperty = await db.property.findFirst({
-    where: {
-      slug: resolvedSlug,
-      isPublished: true,
-      OR: [
-        { country: { slug: country } },
-        { countryId: null },
-      ],
-    },
-    include: { country: true, images: true },
-  })
+  try {
+    unpublished = await db.property.findFirst({
+      where: { slug: resolvedSlug, isPublished: false },
+      select: { id: true },
+    })
+    if (unpublished) notFound()
+
+    dbProperty = await db.property.findFirst({
+      where: {
+        slug: resolvedSlug,
+        isPublished: true,
+        OR: [
+          { country: { slug: country } },
+          { countryId: null },
+        ],
+      },
+      include: { country: true, images: true },
+    })
+  } catch {
+    // Database connection offline or failed, seamlessly fall back to static data
+  }
 
   if (dbProperty) {
     return {
@@ -98,30 +104,36 @@ export default async function CollectionPropertyPage({
   const { country, slug } = await params
   const resolvedSlug = SLUG_ALIASES[slug] || slug
 
-  // If explicitly unpublished in database, trigger 404
-  const unpublished = await db.property.findFirst({
-    where: { slug: resolvedSlug, isPublished: false },
-    select: { id: true },
-  })
-  if (unpublished) {
-    notFound()
-  }
+  let unpublished: any = null
+  let dbProperty: any = null
 
-  const dbProperty = await db.property.findFirst({
-    where: {
-      slug: resolvedSlug,
-      isPublished: true,
-      OR: [
-        { country: { slug: country } },
-        { countryId: null },
-      ],
-    },
-    include: {
-      country: true,
-      images: { orderBy: { order: 'asc' } },
-      services: { include: { service: true } },
-    },
-  })
+  try {
+    unpublished = await db.property.findFirst({
+      where: { slug: resolvedSlug, isPublished: false },
+      select: { id: true },
+    })
+    if (unpublished) {
+      notFound()
+    }
+
+    dbProperty = await db.property.findFirst({
+      where: {
+        slug: resolvedSlug,
+        isPublished: true,
+        OR: [
+          { country: { slug: country } },
+          { countryId: null },
+        ],
+      },
+      include: {
+        country: true,
+        images: { orderBy: { order: 'asc' } },
+        services: { include: { service: true } },
+      },
+    })
+  } catch {
+    // Database connection offline or failed, seamlessly fall back to static data
+  }
 
   let property: any = null
 
@@ -143,11 +155,11 @@ export default async function CollectionPropertyPage({
       description: dbProperty.description || '',
       highlights: dbProperty.highlights || [],
       image: dbProperty.mainImage || dbProperty.images[0]?.url || '',
-      gallery: dbProperty.images.map((img) => img.url),
+      gallery: dbProperty.images.map((img: any) => img.url),
       mainVideoUrl: dbProperty.mainVideoUrl,
       mainVideoThumb: dbProperty.mainVideoThumb,
       layoutVariant: dbProperty.layoutVariant || 1,
-      services: dbProperty.services.map((ps) => ps.service),
+      services: dbProperty.services.map((ps: any) => ps.service),
     }
   } else {
     const fallback = getPropertyBySlug(resolvedSlug)

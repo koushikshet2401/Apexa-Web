@@ -101,6 +101,83 @@ export interface CarouselProps {
   onRotateRef?: React.MutableRefObject<((delta: number) => void) | null>
 }
 
+interface CarouselCardProps {
+  card: string | CarouselCardItem
+  index: number
+  faceCount: number
+  faceWidth: number
+  radius: number
+  rotation: any
+  handleClick: (imgUrl: string, index: number, item?: CarouselCardItem) => void
+  renderItem?: (item: CarouselCardItem, index: number, radius: number) => React.ReactNode
+}
+
+const CarouselCard = memo(
+  ({
+    card,
+    index,
+    faceCount,
+    faceWidth,
+    radius,
+    rotation,
+    handleClick,
+    renderItem,
+  }: CarouselCardProps) => {
+    const imgUrl = typeof card === "string" ? card : card.image
+    const itemObj: CarouselCardItem =
+      typeof card === "string" ? { image: card } : card
+    const angleBase = index * (360 / faceCount)
+
+    // Calculate dynamic visibility and opacity based on angle from camera
+    // Any card whose angle is > 85 deg or < -85 deg is facing away and completely culled
+    const cardOpacity = useTransform(rotation, (rot: number) => {
+      let angle = (angleBase + rot) % 360
+      if (angle > 180) angle -= 360
+      if (angle < -180) angle += 360
+      const absAngle = Math.abs(angle)
+      if (absAngle >= 84) return 0
+      if (absAngle <= 65) return 1
+      return (84 - absAngle) / 19
+    })
+
+    const pointerEvents = useTransform(cardOpacity, (op: number) =>
+      op > 0.4 ? "auto" : "none"
+    )
+
+    return (
+      <motion.div
+        key={`key-${imgUrl}-${index}`}
+        className="absolute flex h-full origin-center items-center justify-center rounded-xl p-1 sm:p-2"
+        style={{
+          width: `${faceWidth}px`,
+          transform: `rotateY(${angleBase}deg) translateZ(${radius}px)`,
+          backfaceVisibility: "hidden",
+          WebkitBackfaceVisibility: "hidden",
+          opacity: cardOpacity,
+          pointerEvents,
+        }}
+        onClick={() => handleClick(imgUrl, index, itemObj)}
+      >
+        {renderItem ? (
+          renderItem(itemObj, index, radius)
+        ) : (
+          <motion.img
+            src={imgUrl}
+            alt={itemObj.title || `keyword_${index} ${imgUrl}`}
+            layoutId={`img-${imgUrl}`}
+            className="pointer-events-none w-full rounded-xl object-cover aspect-square shadow-xl select-none"
+            initial={{ filter: "blur(4px)" }}
+            layout="position"
+            animate={{ filter: "blur(0px)" }}
+            transition={transition}
+          />
+        )}
+      </motion.div>
+    )
+  }
+)
+CarouselCard.displayName = "CarouselCard"
+
 const Carousel = memo(
   ({
     handleClick,
@@ -112,8 +189,8 @@ const Carousel = memo(
     onRotateRef,
   }: CarouselProps) => {
     const isScreenSizeSm = useMediaQuery("(max-width: 640px)")
-    // Tuned cylinder widths for fluid proportion and responsiveness
-    const cylinderWidth = isScreenSizeSm ? 1000 : 1600
+    // Tuned cylinder widths: on mobile 880px allows 3 cards (~146px each) to fit cleanly without edge clipping
+    const cylinderWidth = isScreenSizeSm ? 880 : 1500
     const faceCount = Math.max(cards.length, 1)
     const faceWidth = cylinderWidth / faceCount
     const radius = cylinderWidth / (2 * Math.PI)
@@ -182,7 +259,6 @@ const Carousel = memo(
           className="relative flex h-full origin-center cursor-grab justify-center active:cursor-grabbing"
           style={{
             transform,
-            rotateY: rotation,
             width: cylinderWidth,
             transformStyle: "preserve-3d",
           }}
@@ -209,40 +285,19 @@ const Carousel = memo(
           }}
           animate={controls}
         >
-          {cards.map((card, i) => {
-            const imgUrl = typeof card === "string" ? card : card.image
-            const itemObj: CarouselCardItem =
-              typeof card === "string" ? { image: card } : card
-
-            return (
-              <motion.div
-                key={`key-${imgUrl}-${i}`}
-                className="absolute flex h-full origin-center items-center justify-center rounded-xl p-1.5 sm:p-2"
-                style={{
-                  width: `${faceWidth}px`,
-                  transform: `rotateY(${
-                    i * (360 / faceCount)
-                  }deg) translateZ(${radius}px)`,
-                }}
-                onClick={() => handleClick(imgUrl, i, itemObj)}
-              >
-                {renderItem ? (
-                  renderItem(itemObj, i, radius)
-                ) : (
-                  <motion.img
-                    src={imgUrl}
-                    alt={itemObj.title || `keyword_${i} ${imgUrl}`}
-                    layoutId={`img-${imgUrl}`}
-                    className="pointer-events-none w-full rounded-xl object-cover aspect-square shadow-xl select-none"
-                    initial={{ filter: "blur(4px)" }}
-                    layout="position"
-                    animate={{ filter: "blur(0px)" }}
-                    transition={transition}
-                  />
-                )}
-              </motion.div>
-            )
-          })}
+          {cards.map((card, i) => (
+            <CarouselCard
+              key={`card-${typeof card === "string" ? card : card.image}-${i}`}
+              card={card}
+              index={i}
+              faceCount={faceCount}
+              faceWidth={faceWidth}
+              radius={radius}
+              rotation={rotation}
+              handleClick={handleClick}
+              renderItem={renderItem}
+            />
+          ))}
         </motion.div>
       </div>
     )
@@ -301,12 +356,12 @@ function ThreeDPhotoCarousel({
 
   const handlePrev = () => {
     const angleStep = 360 / Math.max(cards.length, 1)
-    rotateRef.current?.(angleStep)
+    rotateRef.current?.(-angleStep)
   }
 
   const handleNext = () => {
     const angleStep = 360 / Math.max(cards.length, 1)
-    rotateRef.current?.(-angleStep)
+    rotateRef.current?.(angleStep)
   }
 
   return (
@@ -343,7 +398,7 @@ function ThreeDPhotoCarousel({
         )}
       </AnimatePresence>
 
-      <div className={`relative ${heightClassName} w-full overflow-hidden`}>
+      <div className={`relative ${heightClassName} w-full overflow-visible`}>
         <Carousel
           handleClick={handleClick}
           controls={controls}

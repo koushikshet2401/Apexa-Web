@@ -63,8 +63,16 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
   const section3Ref = useRef<HTMLElement>(null)
   const section4Ref = useRef<HTMLElement>(null)
 
+  // Check if this property is one of the 3 featured launches
+  const isFeaturedLaunch =
+    property.slug === 'the-meridian' ||
+    property.slug === 'aurelia-villa' ||
+    property.slug === 'the-peninsula-reserve'
+
   // Context-aware origin detection for reverse routing
-  const [originSection, setOriginSection] = useState<'launches' | 'spaces' | 'collection' | 'services' | null>(null)
+  const [originSection, setOriginSection] = useState<'launches' | 'spaces' | 'collection' | 'services' | null>(
+    isFeaturedLaunch ? 'launches' : 'collection'
+  )
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -80,14 +88,14 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
         const stored = sessionStorage.getItem('apex_from_section') as any
         if (stored) {
           setOriginSection(stored)
-        } else if (document.referrer.includes('launches')) {
+        } else if (document.referrer.includes('launches') || isFeaturedLaunch) {
           setOriginSection('launches')
         } else if (document.referrer.includes('spaces')) {
           setOriginSection('spaces')
         }
       } catch {}
     }
-  }, [])
+  }, [isFeaturedLaunch])
 
   // Calculate dynamic back route based on where user actually came from
   let targetBackHref = backHref || '/#collection'
@@ -101,7 +109,7 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
     targetBackLabel = 'Spaces'
   } else if (originSection === 'collection') {
     targetBackHref = backHref || '/#collection'
-    targetBackLabel = 'Collection'
+    targetBackLabel = 'Residences'
   } else if (originSection === 'services') {
     targetBackHref = '/#services'
     targetBackLabel = 'Services'
@@ -203,6 +211,7 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
 
     const ctx = gsap.context(() => {
       const isMob = window.innerWidth < 768
+      const scrollDist = isMob ? 600 : 900
 
       // Set initial state
       gsap.set(s1, { yPercent: 0, opacity: 1 })
@@ -214,44 +223,38 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
         scrollTrigger: {
           trigger: container,
           start: 'top top',
-          end: isMob ? '+=850' : '+=1600',
+          end: `+=${scrollDist}`,
           pin: pinEl,
           pinSpacing: true,
-          scrub: isMob ? 0.25 : 0.35,
-          snap: {
-            snapTo: [0, 0.333, 0.666, 1],
-            duration: { min: 0.15, max: 0.35 },
-            delay: 0.05,
-            ease: 'power1.out',
-          },
+          scrub: isMob ? 0.2 : 0.25,
           anticipatePin: 1,
           invalidateOnRefresh: true,
         },
       })
 
-      // STAGE 1 (0 to 0.333): Section 2 (Property Specs, Price, Highlights) slides up over Section 1 & holds
+      // STAGE 1: Section 2 (Property Specs, Price, Highlights) slides up over Section 1
       tl.to(s2, {
         yPercent: 0,
-        duration: 0.7,
+        duration: 0.8,
         ease: 'power2.out',
       })
-      tl.to({}, { duration: 0.3 })
+      tl.to({}, { duration: 0.15 })
 
-      // STAGE 2 (0.333 to 0.666): Section 3 (Architectural Spaces & Finishes) slides up over Section 2 & holds
+      // STAGE 2: Section 3 (Architectural Spaces & Finishes) slides up over Section 2
       tl.to(s3, {
         yPercent: 0,
-        duration: 0.7,
+        duration: 0.8,
         ease: 'power2.out',
       })
-      tl.to({}, { duration: 0.3 })
+      tl.to({}, { duration: 0.15 })
 
-      // STAGE 3 (0.666 to 1.0): Section 4 (Enquiry Form) slides up over Section 3 & holds
+      // STAGE 3: Section 4 (Enquiry Form) slides up over Section 3
       tl.to(s4, {
         yPercent: 0,
-        duration: 0.7,
+        duration: 0.8,
         ease: 'power2.out',
       })
-      tl.to({}, { duration: 0.3 })
+      tl.to({}, { duration: 0.15 })
     })
 
     return () => ctx.revert()
@@ -351,6 +354,12 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
             <div className="absolute top-24 left-6 sm:left-12 z-20">
               <Link
                 href={targetBackHref}
+                onClick={(e) => {
+                  e.preventDefault()
+                  if (typeof window !== 'undefined') {
+                    window.location.href = targetBackHref
+                  }
+                }}
                 className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/60 hover:bg-black/90 backdrop-blur-md border border-white/20 text-[11px] font-mono uppercase tracking-[0.2em] text-[#7DD3FC] hover:text-white transition-all shadow-lg cursor-pointer group"
               >
                 <ArrowLeft size={12} className="group-hover:-translate-x-0.5 transition-transform" />
@@ -401,11 +410,14 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
                     onClick={() => {
                       if (containerRef.current) {
                         const isMob = window.innerWidth < 768
-                        const total = isMob ? 1500 : 2600
-                        window.scrollTo({
-                          top: containerRef.current.offsetTop + total * 0.65,
-                          behavior: 'smooth',
-                        })
+                        const scrollDist = isMob ? 600 : 900
+                        const targetY = containerRef.current.offsetTop + scrollDist * 0.63
+                        const lenis = (window as unknown as { __lenis?: { scrollTo: (target: number, opts?: { duration?: number }) => void } }).__lenis
+                        if (lenis) {
+                          lenis.scrollTo(targetY, { duration: 1.0 })
+                        } else {
+                          window.scrollTo({ top: targetY, behavior: 'smooth' })
+                        }
                       }
                     }}
                     className="w-full inline-flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white text-white hover:text-black border border-white/20 hover:border-white font-mono text-[10px] sm:text-[11px] tracking-[0.16em] uppercase transition-all duration-300 shadow-md group cursor-pointer"
@@ -521,7 +533,7 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
           <section
             ref={section3Ref}
             id="property-images-section"
-            className="absolute inset-0 w-full h-full z-30 overflow-hidden bg-[#060D1A] shadow-[0_-35px_80px_rgba(0,0,0,0.95)] border-t border-white/10 flex flex-col justify-center items-center relative py-6 sm:py-10 px-4 sm:px-8"
+            className="absolute inset-0 w-full h-full z-30 overflow-hidden bg-[#060D1A] shadow-[0_-35px_80px_rgba(0,0,0,0.95)] border-t border-white/10 flex flex-col justify-center items-center py-6 sm:py-10 px-4 sm:px-8"
           >
             {/* Subtle Ambient Background Gradients */}
             <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-[#040810] to-transparent pointer-events-none" />
@@ -738,7 +750,7 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
       {/* =========================================================================
           FOOTER (Follows the 4 stacked pinned sections)
       ========================================================================= */}
-      <div className="relative z-50 bg-[#040810] border-t border-white/10">
+      <div className="relative z-20 bg-[#040810] border-t border-white/10">
         <Footer />
       </div>
     </div>
