@@ -7,53 +7,70 @@ import {
 import { PropertyItem } from '@/data/properties'
 
 export async function LaunchesCinematicStackServer() {
-  // Parallel database fetch for maximum performance and instant load
-  const [dbLaunches, dbCountries, dbSpaceProps, dbHomepageContent] = await Promise.all([
-    // 1. Fetch top 3 featured launches
-    db.property.findMany({
-      where: {
-        isPublished: true,
-        isFeaturedLaunch: true,
-      },
-      orderBy: [
-        { launchOrder: 'asc' },
-        { launchDate: 'desc' },
-        { createdAt: 'desc' },
-      ],
-      take: 3,
-      include: {
-        country: {
-          select: {
-            slug: true,
-            displayName: true,
-            name: true,
+  let dbLaunches: any[] = []
+  let dbCountries: any[] = []
+  let dbSpaceProps: any[] = []
+  let dbHomepageContent: any = null
+
+  try {
+    const results = await Promise.all([
+      // 1. Fetch top 3 featured launches
+      db.property.findMany({
+        where: {
+          isPublished: true,
+          isFeaturedLaunch: true,
+        },
+        orderBy: [
+          { launchOrder: 'asc' },
+          { launchDate: 'desc' },
+          { createdAt: 'desc' },
+        ],
+        take: 3,
+        include: {
+          country: {
+            select: {
+              slug: true,
+              displayName: true,
+              name: true,
+            },
           },
         },
-      },
-    }),
+      }),
 
-    // 2. Fetch collection countries
-    db.country.findMany({
-      where: { isPublished: true },
-      orderBy: { displayOrder: 'asc' },
-    }),
+      // 2. Fetch collection countries
+      db.country.findMany({
+        where: { isPublished: true },
+        orderBy: { displayOrder: 'asc' },
+      }),
 
-    // 3. Fetch space in round properties
-    db.property.findMany({
-      where: {
-        isPublished: true,
-        isSpaceInRound: true,
-      },
-      orderBy: { spaceOrder: 'asc' },
-      include: {
-        country: true,
-        images: { orderBy: { order: 'asc' } },
-      },
-    }),
+      // 3. Fetch space in round properties
+      db.property.findMany({
+        where: {
+          isPublished: true,
+          isSpaceInRound: true,
+        },
+        orderBy: { spaceOrder: 'asc' },
+        include: {
+          country: true,
+          images: { orderBy: { order: 'asc' } },
+        },
+      }),
 
-    // 4. Fetch homepage content
-    db.homepageContent.findFirst(),
-  ])
+      // 4. Fetch homepage content
+      db.homepageContent.findFirst(),
+    ])
+
+    dbLaunches = results[0]
+    dbCountries = results[1]
+    dbSpaceProps = results[2]
+    dbHomepageContent = results[3]
+  } catch (error) {
+    // Database connection offline or credentials not set; seamlessly fall back to static data
+    console.warn(
+      '[LaunchesCinematicStackServer] Database query failed, falling back to static data:',
+      error instanceof Error ? error.message : error
+    )
+  }
 
   const launches: VideoLaunch[] = dbLaunches.map((p, idx) => {
     const countrySlug = p.country?.slug || 'dubai'

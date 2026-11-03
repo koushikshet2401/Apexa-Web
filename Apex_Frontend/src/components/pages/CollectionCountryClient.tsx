@@ -94,16 +94,29 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
   const [formError, setFormError] = useState<string | null>(null)
   const [enquiryRef, setEnquiryRef] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
+  const [videoLoaded, setVideoLoaded] = useState(false)
+  const [isGsapReady, setIsGsapReady] = useState(false)
+  const [isPageReady, setIsPageReady] = useState(false)
+
   useEffect(() => {
     setMounted(true)
-  }, [])
-  const [isGsapReady, setIsGsapReady] = useState(false)
+    console.log('[Apex Lifecycle] Mounted CollectionCountryClient for:', country.slug)
+  }, [country.slug])
 
-  // Safety fallback timer ensuring loading overlay always dismisses cleanly
+  // Mark collection page ready when both GSAP is initialized and hero video/fallback has loaded
+  useEffect(() => {
+    if (isGsapReady && videoLoaded) {
+      console.log('[Apex Lifecycle] Collection page ready (GSAP + Hero Video). Dismissing loader.')
+      setIsPageReady(true)
+    }
+  }, [isGsapReady, videoLoaded])
+
+  // Safety fallback timer ensuring loading overlay dismisses cleanly after at most 1800ms
   useEffect(() => {
     const timer = setTimeout(() => {
-      setIsGsapReady(true)
-    }, 150)
+      console.log('[Apex Lifecycle] Collection safety fallback triggered, dismissing loader.')
+      setIsPageReady(true)
+    }, 1800)
     return () => clearTimeout(timer)
   }, [])
 
@@ -377,6 +390,10 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
                     muted
                     playsInline
                     preload="auto"
+                    onLoadedData={() => {
+                      console.log('[Apex Lifecycle] Hero video loaded for:', country.slug)
+                      setVideoLoaded(true)
+                    }}
                     className="w-full h-full object-cover object-center pointer-events-none"
                   />
 
@@ -778,25 +795,23 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
       </div>
 
       {/* Luxury Loading Transition Overlay */}
-      {mounted && createPortal(
-        <AnimatePresence>
-          {!isGsapReady && (
-            <motion.div
-              initial={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.35, ease: 'easeOut' }}
-              className="fixed inset-0 z-[9999] bg-[#040810] flex flex-col items-center justify-center pointer-events-auto select-none"
-            >
-              <OrbitalLoader
-                size="md"
-                message={`Loading ${country.displayName || country.name} Collection...`}
-                messagePlacement="bottom"
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>,
-        document.body
-      )}
+      <AnimatePresence>
+        {!isPageReady && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.45, ease: 'easeOut' }}
+            className="fixed inset-0 z-[9999] bg-[#040810] flex flex-col items-center justify-center pointer-events-auto select-none"
+          >
+            <OrbitalLoader
+              size="md"
+              message={`Loading ${country.displayName || country.name} Collection...`}
+              messagePlacement="bottom"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

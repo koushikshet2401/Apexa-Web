@@ -299,16 +299,28 @@ export function LaunchesCinematicStack({
     return () => window.removeEventListener('resize', handleResize)
   }, [])
   const [mounted, setMounted] = useState(false)
+  const [isGsapReady, setIsGsapReady] = useState(false)
+  const [isPageReady, setIsPageReady] = useState(false)
+
   useEffect(() => {
     setMounted(true)
+    console.log('[Apex Lifecycle] Mounted LaunchesCinematicStack')
   }, [])
-  const [isGsapReady, setIsGsapReady] = useState(false)
 
-  // Safety fallback timer ensuring loading overlay always dismisses cleanly
+  // Mark homepage ready when both GSAP is initialized and hero video has loaded
+  useEffect(() => {
+    if (isGsapReady && videoLoaded) {
+      console.log('[Apex Lifecycle] Homepage ready (GSAP + Hero Video). Dismissing loader.')
+      setIsPageReady(true)
+    }
+  }, [isGsapReady, videoLoaded])
+
+  // Safety fallback timer ensuring loading overlay dismisses cleanly after at most 2500ms
   useEffect(() => {
     const timer = setTimeout(() => {
-      setIsGsapReady(true)
-    }, 3000)
+      console.log('[Apex Lifecycle] Homepage safety fallback triggered, dismissing loader.')
+      setIsPageReady(true)
+    }, 2500)
     return () => clearTimeout(timer)
   }, [])
   const [navigatingHref, setNavigatingHref] = useState<string | null>(null)
@@ -325,6 +337,7 @@ export function LaunchesCinematicStack({
   const handleExploreCountry = (e: React.MouseEvent, href: string, title?: string) => {
     e.preventDefault()
     e.stopPropagation()
+    console.log('[Apex Navigation] Navigating to collection:', href, title || '')
     setNavigatingHref(href)
     if (title) {
       setNavigatingMessage(`Opening ${title}...`)
@@ -332,37 +345,24 @@ export function LaunchesCinematicStack({
       setNavigatingMessage('Entering Destination...')
     }
     router.push(href)
-    setTimeout(() => {
-      if (typeof window !== 'undefined' && window.location.pathname !== href) {
-        window.location.href = href
-      }
-    }, 450)
   }
 
   const handleExploreLaunch = (e: React.MouseEvent, href: string, title?: string) => {
     e.preventDefault()
     e.stopPropagation()
+    console.log('[Apex Navigation] Navigating to launch:', href, title || '')
     setNavigatingHref(href)
     setNavigatingMessage(title ? `Entering ${title}...` : 'Entering Residence...')
     router.push(href)
-    setTimeout(() => {
-      if (typeof window !== 'undefined' && window.location.pathname !== href) {
-        window.location.href = href
-      }
-    }, 450)
   }
 
   const handleServiceCardClick = (e: React.MouseEvent, href: string, title: string) => {
     e.preventDefault()
     e.stopPropagation()
+    console.log('[Apex Navigation] Navigating to service:', href, title)
     setNavigatingHref(href)
     setNavigatingMessage(`Opening ${title}...`)
     router.push(href)
-    setTimeout(() => {
-      if (typeof window !== 'undefined' && window.location.pathname !== href) {
-        window.location.href = href
-      }
-    }, 450)
   }
 
   useEffect(() => {
@@ -592,13 +592,9 @@ export function LaunchesCinematicStack({
     e.stopPropagation()
     if (!href) return
     const targetHref = href.includes('?') ? href : `${href}?from=spaces`
+    console.log('[Apex Navigation] Visiting round property:', targetHref)
     setRoundVisitingHref(targetHref)
     router.push(targetHref)
-    setTimeout(() => {
-      if (typeof window !== 'undefined' && window.location.pathname !== targetHref) {
-        window.location.href = targetHref
-      }
-    }, 400)
   }
 
   const handleRoundCardClick = (cardIndex: number, prop: PropertyItem, relAngle: number) => {
@@ -608,13 +604,9 @@ export function LaunchesCinematicStack({
     // Clicking any card directly navigates to that property's details page with ?from=spaces
     if (prop?.href) {
       const targetHref = prop.href.includes('?') ? prop.href : `${prop.href}?from=spaces`
+      console.log('[Apex Navigation] Clicked round card:', targetHref)
       setRoundVisitingHref(targetHref)
       router.push(targetHref)
-      setTimeout(() => {
-        if (typeof window !== 'undefined' && window.location.pathname !== targetHref) {
-          window.location.href = targetHref
-        }
-      }, 400)
     }
   }
 
@@ -1045,6 +1037,7 @@ export function LaunchesCinematicStack({
       }
     }, container)
 
+    ScrollTrigger.refresh()
     setIsGsapReady(true)
     return () => ctx.revert()
   }, [])
@@ -1081,6 +1074,7 @@ export function LaunchesCinematicStack({
               playsInline
               preload="auto"
               onLoadedData={() => {
+                console.log('[Apex Lifecycle] Homepage hero video loaded successfully')
                 setVideoLoaded(true)
                 playSafely(heroVideoRef.current)
               }}
@@ -2250,26 +2244,23 @@ export function LaunchesCinematicStack({
       />
 
       {/* Cinematic Transition Overlay with OrbitalLoader */}
-      {mounted && createPortal(
-        <AnimatePresence>
-          {(!isGsapReady || navigatingHref || roundVisitingHref) && (
-            <motion.div
-              initial={{ opacity: 1 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.35, ease: 'easeOut' }}
-              className="fixed inset-0 z-[9999] bg-[#040810] flex flex-col items-center justify-center pointer-events-auto select-none"
-            >
-              <OrbitalLoader
-                size="md"
-                message={navigatingMessage || (!isGsapReady ? "Apex Pacific Holdings" : "Entering Residence...")}
-                messagePlacement="bottom"
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>,
-        document.body
-      )}
+      <AnimatePresence>
+        {(!isPageReady || navigatingHref || roundVisitingHref) && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.45, ease: 'easeOut' }}
+            className="fixed inset-0 z-[9999] bg-[#040810] flex flex-col items-center justify-center pointer-events-auto select-none"
+          >
+            <OrbitalLoader
+              size="md"
+              message={navigatingMessage || (!isPageReady ? "Apex Pacific Holdings" : "Entering Residence...")}
+              messagePlacement="bottom"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   )
 }

@@ -270,6 +270,7 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
           <div className="flex items-center gap-3">
             <button
               id="nav-hamburger"
+              suppressHydrationWarning
               onClick={() => setMenuOpen(true)}
               aria-label="Open navigation menu"
               aria-expanded={menuOpen}
