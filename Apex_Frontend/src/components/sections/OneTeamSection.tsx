@@ -143,10 +143,10 @@ export function OneTeamSection() {
         scrollTrigger: {
           trigger: root,
           start: 'top top',
-          end: isMobile ? '+=2400vh' : '+=2800vh',
+          end: () => `+=${Math.round(window.innerHeight * (window.innerWidth < 768 ? 3.5 : 4.5))}`,
           pin: pinEl,
           pinSpacing: true,
-          scrub: 1.2, // Cinematic dampening
+          scrub: isMobile ? 0.75 : 0.85,
           anticipatePin: 1,
           invalidateOnRefresh: true,
         },

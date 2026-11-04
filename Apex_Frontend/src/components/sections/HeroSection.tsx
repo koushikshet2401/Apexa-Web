@@ -98,10 +98,10 @@ export function HeroSection() {
         scrollTrigger: {
           trigger: heroRoot,
           start: 'top top',
-          end: isMobile ? '+=80vh' : '+=110vh',
+          end: () => `+=${Math.round(window.innerHeight * (window.innerWidth < 768 ? 1.0 : 1.3))}`,
           pin: true,
           pinSpacing: true,
-          scrub: 0.35,
+          scrub: isMobile ? 0.75 : 0.85,
           anticipatePin: 1,
           invalidateOnRefresh: true,
           onUpdate: (self) => {

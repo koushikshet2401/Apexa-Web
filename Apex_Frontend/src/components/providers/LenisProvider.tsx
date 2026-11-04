@@ -12,8 +12,9 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
 
   useEffect(() => {
-    // Register GSAP ScrollTrigger plugin
+    // Register GSAP ScrollTrigger plugin & configure mobile stability
     gsap.registerPlugin(ScrollTrigger)
+    ScrollTrigger.config({ ignoreMobileResize: true })
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (prefersReducedMotion) return
@@ -29,7 +30,7 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
       syncTouch: true, // Smooth, controlled touch momentum on mobile screens
       syncTouchLerp: 0.08, // Soft, cushioned deceleration on finger release
       touchInertiaExponent: 1.25, // Natural touch inertia preventing explosive over-scroll
-      touchMultiplier: 0.85, // Balanced finger tracking distance
+      touchMultiplier: 0.9, // Balanced finger tracking distance
       wheelMultiplier: 0.85, // Softens notch-wheel steps on desktop mice
       infinite: false,
     })

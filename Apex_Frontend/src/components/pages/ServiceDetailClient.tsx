@@ -64,6 +64,7 @@ export function ServiceDetailClient({
   // Master GSAP ScrollTrigger Pinned Stack & Vertical Overlapping Cards Reveal
   useIsomorphicLayoutEffect(() => {
     gsap.registerPlugin(ScrollTrigger)
+    ScrollTrigger.config({ ignoreMobileResize: true })
 
     const container = containerRef.current
     const pinEl = pinRef.current

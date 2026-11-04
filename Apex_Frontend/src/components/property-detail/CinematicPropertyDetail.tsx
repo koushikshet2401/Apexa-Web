@@ -222,6 +222,7 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
   // Section 4: Enquiry About This Property (slides up as card overlay over Section 3, pinned)
   useIsomorphicLayoutEffect(() => {
     gsap.registerPlugin(ScrollTrigger)
+    ScrollTrigger.config({ ignoreMobileResize: true })
 
     const container = containerRef.current
     const pinEl = pinRef.current

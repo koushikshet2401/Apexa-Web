@@ -69,6 +69,7 @@ export function FeaturedVideoStackingSection() {
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger)
+    ScrollTrigger.config({ ignoreMobileResize: true })
 
     const container = containerRef.current
     const pinEl = pinRef.current
@@ -90,10 +91,10 @@ export function FeaturedVideoStackingSection() {
         scrollTrigger: {
           trigger: container,
           start: 'top top',
-          end: isMobile ? '+=130vh' : '+=230vh',
+          end: () => `+=${Math.round(window.innerHeight * (window.innerWidth < 768 ? 2.2 : 2.8))}`,
           pin: pinEl,
           pinSpacing: true,
-          scrub: 0.35,
+          scrub: isMobile ? 0.75 : 0.85,
           anticipatePin: 1,
           invalidateOnRefresh: true,
           onUpdate: (self) => {

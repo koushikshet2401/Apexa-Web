@@ -218,6 +218,7 @@ export function LaunchesCinematicStack({
   const { isLight } = useTheme()
   const containerRef = useRef<HTMLDivElement>(null)
   const pinRef = useRef<HTMLDivElement>(null)
+  const lastStepRef = useRef<number>(-1)
 
   // 8 Stacked Layer Refs
   const layer0Ref = useRef<HTMLDivElement>(null) // Pinned Hero Video & UI
@@ -623,6 +624,7 @@ export function LaunchesCinematicStack({
   // Layer 5: The Collection overlay (smoothly covers Video 3, occupies 100vh, holds pinned)
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger)
+    ScrollTrigger.config({ ignoreMobileResize: true })
 
     const container = containerRef.current
     const pinEl = pinRef.current
@@ -653,15 +655,7 @@ export function LaunchesCinematicStack({
 
       // Initial States:
       gsap.set(l0, { yPercent: 0, opacity: 1 })
-      gsap.set(l1, { yPercent: 100, opacity: 1 })
-      gsap.set(l2, { yPercent: 100, opacity: 1 })
-      gsap.set(l3, { yPercent: 100, opacity: 1 })
-      gsap.set(l4, { yPercent: 100, opacity: 1 })
-      gsap.set(l5, { yPercent: 100, opacity: 1 })
-      gsap.set(l6, { yPercent: 100, opacity: 1 })
-      gsap.set(l7, { yPercent: 100, opacity: 1 })
-      gsap.set(l8, { yPercent: 100, opacity: 1 })
-      gsap.set(l9, { yPercent: 100, opacity: 1 })
+      gsap.set([l1, l2, l3, l4, l5, l6, l7, l8, l9], { yPercent: 100, opacity: 1 })
       if (apexText && apexText.style.visibility !== 'hidden') gsap.set(apexText, { y: 0, scale: 1.0, opacity: 0.95 })
       if (topTiles) gsap.set(topTiles, { yPercent: isMob ? -160 : -140, opacity: 0 })
       if (bottomTiles) gsap.set(bottomTiles, { yPercent: isMob ? 160 : 140, opacity: 0 })
@@ -672,53 +666,55 @@ export function LaunchesCinematicStack({
         scrollTrigger: {
           trigger: container,
           start: 'top top',
-          end: isMob ? '+=2000vh' : '+=2400vh',
+          end: () => `+=${Math.round(window.innerHeight * (window.innerWidth < 768 ? 9.5 : 12.0))}`,
           pin: pinEl,
           pinSpacing: true,
-          scrub: isMob ? 0.8 : 0.9,
+          scrub: isMob ? 0.8 : 0.85,
           anticipatePin: 1,
           invalidateOnRefresh: true,
           onUpdate: (self) => {
             const p = self.progress
             if (typeof window !== 'undefined') {
-              window.dispatchEvent(new CustomEvent('hero-in-view', { detail: { isHero: p < 0.032 } }))
+              window.dispatchEvent(new CustomEvent('hero-in-view', { detail: { isHero: p < 0.03 } }))
               window.dispatchEvent(new CustomEvent('apex-step-change', { detail: { progress: p } }))
             }
             let nextStep = 0
-            if (p < 0.030) {
+            if (p < 0.03) {
               nextStep = 0
-              playSafely(heroVideoRef.current)
-            } else if (p < 0.127) {
+            } else if (p < 0.125) {
               nextStep = 1
-            } else if (p < 0.224) {
+            } else if (p < 0.220) {
               nextStep = 2
-              playSafely(launch1VideoRef.current)
-            } else if (p < 0.321) {
+            } else if (p < 0.315) {
               nextStep = 3
-              playSafely(launch2VideoRef.current)
-            } else if (p < 0.418) {
+            } else if (p < 0.405) {
               nextStep = 4
-              playSafely(launch3VideoRef.current)
             } else if (p < 0.515) {
               nextStep = 5
-            } else if (p < 0.612) {
+            } else if (p < 0.615) {
               nextStep = 6
-            } else if (p < 0.806) {
+            } else if (p < 0.790) {
               nextStep = 7
-              playSafely(oneTeamVideoRef.current)
-            } else if (p < 0.903) {
+            } else if (p < 0.895) {
               nextStep = 8
             } else {
               nextStep = 9
-              playSafely(advisoryVideoRef.current)
             }
-            setActiveStep((prev) => (prev !== nextStep ? nextStep : prev))
+
+            if (nextStep !== lastStepRef.current) {
+              lastStepRef.current = nextStep
+              if (nextStep === 0) playSafely(heroVideoRef.current)
+              else if (nextStep === 2) playSafely(launch1VideoRef.current)
+              else if (nextStep === 3) playSafely(launch2VideoRef.current)
+              else if (nextStep === 4) playSafely(launch3VideoRef.current)
+              else if (nextStep === 7) playSafely(oneTeamVideoRef.current)
+              else if (nextStep === 9) playSafely(advisoryVideoRef.current)
+            }
           },
         },
       })
 
-      // ─── STAGE 0: HERO PINNED (0.0 to 2.0) ───
-      // 1. APEX text smoothly pops up with upward movement, scale, and full brilliance
+      // ─── STAGE 0: HERO PINNED (0.0 to 2.5) ───
       if (apexText && apexText.style.visibility !== 'hidden') {
         tl.to(
           apexText,
@@ -731,28 +727,26 @@ export function LaunchesCinematicStack({
           },
           0.1
         )
-        // Remains firmly in intended animated position
         tl.to(
           apexText,
           {
             y: isMob ? -24 : -38,
             scale: isMob ? 1.05 : 1.08,
             opacity: 1,
-            duration: 0.8,
+            duration: 1.0,
             ease: 'none',
           },
           0.9
         )
-        // Cleanly transitions as Stage 1 (New Launches) overlays the Hero
         tl.to(
           apexText,
           {
             opacity: 0,
             y: isMob ? -42 : -60,
-            duration: 0.4,
+            duration: 0.5,
             ease: 'power1.in',
           },
-          1.7
+          2.0
         )
       }
 
@@ -767,175 +761,174 @@ export function LaunchesCinematicStack({
           { scale: 1.0, opacity: 1, duration: 0.8, ease: 'power2.out' },
           0.2
         )
-        tl.to(logoScale, { scale: 1.05, opacity: 1, duration: 0.6, ease: 'none' }, 1.0)
+        tl.to(logoScale, { scale: 1.05, opacity: 1, duration: 0.8, ease: 'none' }, 1.0)
         tl.to(
           logoScale,
-          { scale: 14.0, opacity: 0, duration: 0.6, ease: 'power2.in' },
-          1.6
+          { scale: 14.0, opacity: 0, duration: 0.7, ease: 'power2.in' },
+          1.8
         )
       }
 
-      // ─── STAGE 1: NEW LAUNCHES OVERLAYS PINNED HERO VIDEO (2.0 to 6.0) ───
+      // ─── STAGE 1: NEW LAUNCHES OVERLAYS PINNED HERO VIDEO (2.5 to 6.0, duration 3.5) ───
       tl.to(
         l1,
-        { yPercent: 0, duration: 4.0, ease: 'none' },
-        2.0
+        { yPercent: 0, duration: 3.5, ease: 'none' },
+        2.5
       )
 
-      // ─── STAGE 1 HOLD: NEW LAUNCHES PINNED (6.0 to 8.5) ───
+      // ─── STAGE 1 HOLD: NEW LAUNCHES PINNED (6.0 to 10.5, duration 4.5) ───
       tl.to(
         l1,
-        { yPercent: 0, duration: 2.5, ease: 'none' },
+        { yPercent: 0, duration: 4.5, ease: 'none' },
         6.0
       )
 
-      // ─── STAGE 2: VIDEO 1 (THE MERIDIAN) OVERLAYS NEW LAUNCHES (8.5 to 12.5) ───
+      // ─── STAGE 2: VIDEO 1 (THE MERIDIAN) OVERLAYS NEW LAUNCHES (10.5 to 14.0, duration 3.5) ───
       tl.to(
         l2,
-        { yPercent: 0, duration: 4.0, ease: 'none' },
-        8.5
+        { yPercent: 0, duration: 3.5, ease: 'none' },
+        10.5
       )
 
-      // ─── STAGE 2 HOLD: VIDEO 1 PINNED (12.5 to 15.0) ───
+      // ─── STAGE 2 HOLD: VIDEO 1 PINNED (14.0 to 18.5, duration 4.5) ───
       tl.to(
         l2,
-        { yPercent: 0, duration: 2.5, ease: 'none' },
-        12.5
+        { yPercent: 0, duration: 4.5, ease: 'none' },
+        14.0
       )
 
-      // ─── STAGE 3: VIDEO 2 (AURELIA VILLA) OVERLAYS VIDEO 1 (15.0 to 19.0) ───
+      // ─── STAGE 3: VIDEO 2 (AURELIA VILLA) OVERLAYS VIDEO 1 (18.5 to 22.0, duration 3.5) ───
       tl.to(
         l3,
-        { yPercent: 0, duration: 4.0, ease: 'none' },
-        15.0
+        { yPercent: 0, duration: 3.5, ease: 'none' },
+        18.5
       )
 
-      // ─── STAGE 3 HOLD: VIDEO 2 PINNED (19.0 to 21.5) ───
+      // ─── STAGE 3 HOLD: VIDEO 2 PINNED (22.0 to 26.5, duration 4.5) ───
       tl.to(
         l3,
-        { yPercent: 0, duration: 2.5, ease: 'none' },
-        19.0
+        { yPercent: 0, duration: 4.5, ease: 'none' },
+        22.0
       )
 
-      // ─── STAGE 4: VIDEO 3 (THE PENINSULA RESERVE) OVERLAYS VIDEO 2 (21.5 to 25.5) ───
+      // ─── STAGE 4: VIDEO 3 (THE PENINSULA RESERVE) OVERLAYS VIDEO 2 (26.5 to 30.0, duration 3.5) ───
       tl.to(
         l4,
-        { yPercent: 0, duration: 4.0, ease: 'none' },
-        21.5
+        { yPercent: 0, duration: 3.5, ease: 'none' },
+        26.5
       )
 
-      // ─── STAGE 4 HOLD: VIDEO 3 PINNED (25.5 to 28.0) ───
+      // ─── STAGE 4 HOLD: VIDEO 3 PINNED (30.0 to 34.5, duration 4.5) ───
       tl.to(
         l4,
-        { yPercent: 0, duration: 2.5, ease: 'none' },
-        25.5
+        { yPercent: 0, duration: 4.5, ease: 'none' },
+        30.0
       )
 
-      // ─── STAGE 5: THE COLLECTION OVERLAYS VIDEO 3 (28.0 to 32.0) ───
-      // Smooth, natural rise matching the Launches pacing
+      // ─── STAGE 5: THE COLLECTION OVERLAYS VIDEO 3 (34.5 to 38.0, duration 3.5) ───
       tl.to(
         l5,
-        { yPercent: 0, duration: 4.0, ease: 'none' },
-        28.0
-      )
-
-      // ─── STAGE 5 HOLD: THE COLLECTION PINNED (32.0 to 34.5) ───
-      // Crisp 2.5 unit hold — identical to Launches, advances on a single natural swipe
-      tl.to(
-        l5,
-        { yPercent: 0, duration: 2.5, ease: 'none' },
-        32.0
-      )
-
-      // ─── STAGE 6: "ONE TEAM, END TO END" TEXT PAGE OVERLAYS THE COLLECTION (34.5 to 38.5) ───
-      tl.to(
-        l6,
-        { yPercent: 0, duration: 4.0, ease: 'none' },
+        { yPercent: 0, duration: 3.5, ease: 'none' },
         34.5
       )
 
-      // ─── STAGE 6 HOLD: TEXT PAGE (38.5 to 41.0) ───
+      // ─── STAGE 5 HOLD: THE COLLECTION PINNED (38.0 to 44.0, duration 6.0) ───
+      // Generous hold allowing full browsing of destination cards & filters
+      tl.to(
+        l5,
+        { yPercent: 0, duration: 6.0, ease: 'none' },
+        38.0
+      )
+
+      // ─── STAGE 6: "ONE TEAM, END TO END" TEXT PAGE OVERLAYS THE COLLECTION (44.0 to 47.5, duration 3.5) ───
       tl.to(
         l6,
-        { yPercent: 0, duration: 2.5, ease: 'none' },
-        38.5
+        { yPercent: 0, duration: 3.5, ease: 'none' },
+        44.0
       )
 
-      // ─── STAGE 7: FIRST SCROLL — PINNED VIDEO RISES ALONE TO CENTER (41.0 to 45.0) ───
-      // Top and bottom tiles stay completely off-screen above/below so ONLY the video rises to center!
+      // ─── STAGE 6 HOLD: TEXT PAGE (47.5 to 52.5, duration 5.0) ───
+      tl.to(
+        l6,
+        { yPercent: 0, duration: 5.0, ease: 'none' },
+        47.5
+      )
+
+      // ─── STAGE 7: ONE TEAM PINNED VIDEO RISES TO CENTER (52.5 to 56.0, duration 3.5) ───
       tl.to(
         l7,
-        { yPercent: 0, duration: 4.0, ease: 'none' },
-        41.0
+        { yPercent: 0, duration: 3.5, ease: 'none' },
+        52.5
       )
 
-      // ─── STAGE 7 HOLD: PINNED VIDEO HOLDS CENTERED ALONE (45.0 to 47.5) ───
+      // ─── STAGE 7 HOLD: PINNED VIDEO HOLDS CENTERED ALONE (56.0 to 59.5, duration 3.5) ───
       tl.to(
         l7,
-        { yPercent: 0, duration: 2.5, ease: 'none' },
-        45.0
+        { yPercent: 0, duration: 3.5, ease: 'none' },
+        56.0
       )
 
-      // ─── STAGE 8: SECOND SCROLL — 4 IMAGES REVEAL AROUND THE VIDEO (47.5 to 51.5) ───
-      // Top 2 tiles slide down from top, bottom 2 tiles slide up from bottom
+      // ─── STAGE 8: 4 SERVICE TILES REVEAL AROUND CENTRAL VIDEO (59.5 to 63.0, duration 3.5) ───
       if (topTiles) {
         tl.to(
           topTiles,
-          { yPercent: 0, opacity: 1, duration: 4.0, ease: 'none' },
-          47.5
+          { yPercent: 0, opacity: 1, duration: 3.5, ease: 'none' },
+          59.5
         )
       }
       if (bottomTiles) {
         tl.to(
           bottomTiles,
-          { yPercent: 0, opacity: 1, duration: 4.0, ease: 'none' },
-          47.5
+          { yPercent: 0, opacity: 1, duration: 3.5, ease: 'none' },
+          59.5
         )
       }
 
-      // ─── STAGE 8 HOLD: COMPLETE 5-PANEL COMPOSITION (51.5 to 54.0) ───
+      // ─── STAGE 8 HOLD: COMPLETE 5-PANEL COMPOSITION (63.0 to 68.0, duration 5.0) ───
       tl.to(
         l7,
-        { yPercent: 0, duration: 2.5, ease: 'none' },
-        51.5
+        { yPercent: 0, duration: 5.0, ease: 'none' },
+        63.0
       )
 
-      // ─── STAGE 9: "SPACES IN THE ROUND" OVERLAYS ONE TEAM (54.0 to 58.0) ───
+      // ─── STAGE 9: "SPACES IN THE ROUND" OVERLAYS ONE TEAM (68.0 to 71.5, duration 3.5) ───
       tl.to(
         l8,
-        { yPercent: 0, duration: 4.0, ease: 'none' },
-        54.0
+        { yPercent: 0, duration: 3.5, ease: 'none' },
+        68.0
       )
 
-      // ─── STAGE 9 HOLD: "SPACES IN THE ROUND" (58.0 to 60.5) ───
+      // ─── STAGE 9 HOLD: "SPACES IN THE ROUND" (71.5 to 77.5, duration 6.0) ───
+      // Generous hold allowing interactive exploration of 3D rotating carousel
       tl.to(
         l8,
-        { yPercent: 0, duration: 2.5, ease: 'none' },
-        58.0
+        { yPercent: 0, duration: 6.0, ease: 'none' },
+        71.5
       )
 
-      // ─── STAGE 10: "PRIVATE ADVISORY" OVERLAYS "SPACES IN THE ROUND" (60.5 to 64.5) ───
+      // ─── STAGE 10: "PRIVATE ADVISORY" OVERLAYS "SPACES IN THE ROUND" (77.5 to 81.0, duration 3.5) ───
       tl.to(
         l9,
-        { yPercent: 0, duration: 4.0, ease: 'none' },
-        60.5
+        { yPercent: 0, duration: 3.5, ease: 'none' },
+        77.5
       )
 
-      // ─── STAGE 10 HOLD: "PRIVATE ADVISORY" (64.5 to 67.0) ───
+      // ─── STAGE 10 HOLD: "PRIVATE ADVISORY" (81.0 to 87.0, duration 6.0) ───
+      // Generous hold allowing full appreciation of advisory invitation before natural footer unpin
       tl.to(
         l9,
-        { yPercent: 0, duration: 2.5, ease: 'none' },
-        64.5
+        { yPercent: 0, duration: 6.0, ease: 'none' },
+        81.0
       )
 
       const getProgressForTarget = (targetName: string): number | null => {
         const clean = (targetName || '').replace('#', '').toLowerCase()
         if (clean === 'home' || clean === '') return 0.0
-        if (clean === 'launches') return 0.108
-        if (clean === 'collection' || clean === 'communities' || clean === 'residences') return 0.496
-        if (clean === 'services' || clean === 'about' || clean === 'portfolio') return 0.690
-        if (clean === 'spaces') return 0.884
-        if (clean === 'contact' || clean === 'advisory' || clean === 'speak-with-us' || clean === 'enquiry') return 0.981
+        if (clean === 'launches') return 8.25 / 87.0
+        if (clean === 'collection' || clean === 'communities' || clean === 'residences') return 41.0 / 87.0
+        if (clean === 'services' || clean === 'about' || clean === 'portfolio') return 50.0 / 87.0
+        if (clean === 'spaces') return 74.5 / 87.0
+        if (clean === 'contact' || clean === 'advisory' || clean === 'speak-with-us' || clean === 'enquiry') return 84.0 / 87.0
         return null
       }
 
@@ -946,7 +939,7 @@ export function LaunchesCinematicStack({
 
       const computeTargetY = (targetProgress: number): number => {
         const isMob = window.innerWidth < 768
-        const fallbackDist = (isMob ? 20 : 24) * window.innerHeight
+        const fallbackDist = (isMob ? 9.5 : 12.0) * window.innerHeight
         const st = tl.scrollTrigger
         const start = (st && typeof st.start === 'number') ? st.start : 0
         const end = (st && typeof st.end === 'number' && st.end > start) ? st.end : (start + fallbackDist)
@@ -957,7 +950,7 @@ export function LaunchesCinematicStack({
         const lenis = (window as unknown as { __lenis?: { resize: () => void; scrollTo: (target: number, opts?: { immediate?: boolean; duration?: number }) => void } }).__lenis
         if (lenis) {
           lenis.resize()
-          lenis.scrollTo(targetY, { immediate, duration: immediate ? 0 : 1.0 })
+          lenis.scrollTo(targetY, { immediate, duration: immediate ? 0 : 1.1 })
         } else {
           window.scrollTo({ top: targetY, behavior: immediate ? 'auto' : 'smooth' })
         }
@@ -970,9 +963,6 @@ export function LaunchesCinematicStack({
         tl.progress(initialProgress)
         const targetY = computeTargetY(initialProgress)
         applyScroll(targetY, true)
-      } else {
-        tl.progress(0)
-        applyScroll(0, true)
       }
 
       const handleNavigateTarget = (targetName: string, immediate = true) => {
@@ -982,7 +972,6 @@ export function LaunchesCinematicStack({
 
         document.body.style.overflow = ''
 
-        ScrollTrigger.refresh()
         const targetY = computeTargetY(targetProgress)
         const lenis = (window as unknown as { __lenis?: { resize: () => void; scrollTo: (target: number, opts?: { immediate?: boolean; duration?: number }) => void } }).__lenis
 
@@ -995,15 +984,9 @@ export function LaunchesCinematicStack({
             window.scrollTo({ top: targetY, behavior: 'auto' })
           }
         } else {
-          gsap.to(tl, {
-            progress: targetProgress,
-            duration: 1.0,
-            ease: 'power2.out',
-            overwrite: 'auto',
-          })
           if (lenis) {
             lenis.resize()
-            lenis.scrollTo(targetY, { immediate: false, duration: 1.0 })
+            lenis.scrollTo(targetY, { immediate: false, duration: 1.1 })
           } else {
             window.scrollTo({ top: targetY, behavior: 'smooth' })
           }
@@ -1013,7 +996,7 @@ export function LaunchesCinematicStack({
       const onApexNavigate = (e: Event) => {
         const ce = e as CustomEvent<{ target: string; immediate?: boolean }>
         if (ce.detail?.target) {
-          handleNavigateTarget(ce.detail.target, ce.detail.immediate ?? true)
+          handleNavigateTarget(ce.detail.target, ce.detail.immediate ?? false)
         }
       }
 
@@ -1265,7 +1248,7 @@ export function LaunchesCinematicStack({
           data-section="launches"
           style={{ zIndex: 20 }}
           className={cn(
-            "absolute inset-0 w-full h-full flex flex-col items-center justify-center text-center px-6 sm:px-12 z-20 will-change-[transform,filter] transition-colors duration-300",
+            "absolute inset-0 w-full h-full flex flex-col items-center justify-center text-center px-6 sm:px-12 z-20 will-change-transform transition-colors duration-300",
             isLight
               ? "bg-[#FBF9F6] shadow-[0_-25px_60px_rgba(0,0,0,0.06)]"
               : "bg-[#040810] shadow-[0_-25px_60px_rgba(0,0,0,0.95)]"
@@ -1335,7 +1318,7 @@ export function LaunchesCinematicStack({
         <div
           ref={layer2Ref}
           style={{ zIndex: 30 }}
-          className="absolute inset-0 w-full h-full will-change-[transform,filter] z-30 bg-black shadow-[0_-25px_60px_rgba(0,0,0,0.95)] overflow-hidden"
+          className="absolute inset-0 w-full h-full will-change-transform z-30 bg-black shadow-[0_-25px_60px_rgba(0,0,0,0.95)] overflow-hidden"
         >
           <video
             ref={launch1VideoRef}
@@ -1441,7 +1424,7 @@ export function LaunchesCinematicStack({
         <div
           ref={layer3Ref}
           style={{ zIndex: 40 }}
-          className="absolute inset-0 w-full h-full will-change-[transform,filter] z-40 bg-black shadow-[0_-25px_60px_rgba(0,0,0,0.95)] overflow-hidden"
+          className="absolute inset-0 w-full h-full will-change-transform z-40 bg-black shadow-[0_-25px_60px_rgba(0,0,0,0.95)] overflow-hidden"
         >
           <video
             ref={launch2VideoRef}
@@ -1547,7 +1530,7 @@ export function LaunchesCinematicStack({
         <div
           ref={layer4Ref}
           style={{ zIndex: 50 }}
-          className="absolute inset-0 w-full h-full will-change-[transform,filter] z-50 bg-black shadow-[0_-25px_60px_rgba(0,0,0,0.95)] overflow-hidden"
+          className="absolute inset-0 w-full h-full will-change-transform z-50 bg-black shadow-[0_-25px_60px_rgba(0,0,0,0.95)] overflow-hidden"
         >
           <video
             ref={launch3VideoRef}
@@ -1656,7 +1639,7 @@ export function LaunchesCinematicStack({
           data-section="collection"
           style={{ zIndex: 60 }}
           className={cn(
-            "absolute inset-0 w-full h-[100dvh] max-h-[100dvh] will-change-[transform,filter] z-[60] flex flex-col justify-between pt-[calc(env(safe-area-inset-top)+84px)] sm:pt-24 md:pt-28 px-4 sm:px-8 md:px-12 pb-[calc(env(safe-area-inset-bottom)+76px)] sm:pb-8 border-t overflow-hidden transition-colors duration-300",
+            "absolute inset-0 w-full h-[100dvh] max-h-[100dvh] will-change-transform z-[60] flex flex-col justify-between pt-[calc(env(safe-area-inset-top)+84px)] sm:pt-24 md:pt-28 px-4 sm:px-8 md:px-12 pb-[calc(env(safe-area-inset-bottom)+76px)] sm:pb-8 border-t overflow-hidden transition-colors duration-300",
             themeTokens.collection.container(isLight)
           )}
         >
@@ -1908,7 +1891,7 @@ export function LaunchesCinematicStack({
           ref={layer6Ref}
           style={{ zIndex: 70 }}
           className={cn(
-            "absolute inset-0 w-full h-[100dvh] max-h-[100dvh] will-change-[transform,filter] z-[70] flex flex-col items-center justify-center text-center px-6 sm:px-12 border-t overflow-hidden transition-colors duration-300",
+            "absolute inset-0 w-full h-[100dvh] max-h-[100dvh] will-change-transform z-[70] flex flex-col items-center justify-center text-center px-6 sm:px-12 border-t overflow-hidden transition-colors duration-300",
             themeTokens.oneTeam.container(isLight)
           )}
         >
@@ -1963,7 +1946,7 @@ export function LaunchesCinematicStack({
           data-section="services"
           style={{ zIndex: 80 }}
           className={cn(
-            "absolute inset-0 w-full h-[100dvh] max-h-[100dvh] will-change-[transform,filter] z-[80] flex flex-col justify-center items-center px-3 sm:px-6 md:px-8 lg:px-12 pb-[calc(env(safe-area-inset-bottom)+70px)] sm:pb-8 pt-4 sm:pt-6 overflow-hidden border-t transition-colors duration-300",
+            "absolute inset-0 w-full h-[100dvh] max-h-[100dvh] will-change-transform z-[80] flex flex-col justify-center items-center px-3 sm:px-6 md:px-8 lg:px-12 pb-[calc(env(safe-area-inset-bottom)+70px)] sm:pb-8 pt-4 sm:pt-6 overflow-hidden border-t transition-colors duration-300",
             themeTokens.oneTeam.container(isLight)
           )}
         >
@@ -2244,7 +2227,7 @@ export function LaunchesCinematicStack({
           ref={layer8Ref}
           style={{ zIndex: 90 }}
           className={cn(
-            "absolute inset-0 w-full h-[100dvh] max-h-[100dvh] will-change-[transform,filter] z-[90] flex flex-col justify-between px-4 sm:px-8 lg:px-12 pt-16 sm:pt-20 pb-[calc(env(safe-area-inset-bottom)+75px)] sm:pb-8 border-t overflow-hidden select-none transition-colors duration-300",
+            "absolute inset-0 w-full h-[100dvh] max-h-[100dvh] will-change-transform z-[90] flex flex-col justify-between px-4 sm:px-8 lg:px-12 pt-16 sm:pt-20 pb-[calc(env(safe-area-inset-bottom)+75px)] sm:pb-8 border-t overflow-hidden select-none transition-colors duration-300",
             themeTokens.spacesInTheRound.container(isLight)
           )}
         >
@@ -2359,7 +2342,7 @@ export function LaunchesCinematicStack({
           data-section="speak-with-us"
           style={{ zIndex: 100 }}
           className={cn(
-            "absolute inset-0 w-full h-[100dvh] max-h-[100dvh] will-change-[transform,filter] z-[100] flex flex-col items-center justify-center text-center px-6 sm:px-12 pb-[calc(env(safe-area-inset-bottom)+70px)] sm:pb-0 border-t overflow-hidden select-none pointer-events-auto transition-colors duration-300",
+            "absolute inset-0 w-full h-[100dvh] max-h-[100dvh] will-change-transform z-[100] flex flex-col items-center justify-center text-center px-6 sm:px-12 pb-[calc(env(safe-area-inset-bottom)+70px)] sm:pb-0 border-t overflow-hidden select-none pointer-events-auto transition-colors duration-300",
             themeTokens.privateAdvisory.container(isLight)
           )}
           aria-label="Private Advisory"

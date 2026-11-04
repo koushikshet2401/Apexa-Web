@@ -135,6 +135,7 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
   // 4. Section 3 (Register Interest Inquiry Form) slides up over Section 2 once all cards are viewed.
   useIsomorphicLayoutEffect(() => {
     gsap.registerPlugin(ScrollTrigger)
+    ScrollTrigger.config({ ignoreMobileResize: true })
 
     const container = containerRef.current
     const pinEl = pinRef.current

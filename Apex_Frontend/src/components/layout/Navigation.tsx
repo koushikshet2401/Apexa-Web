@@ -74,11 +74,11 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
       const customEvent = e as CustomEvent<{ progress?: number; step?: number }>
       if (isHome && customEvent.detail?.progress !== undefined) {
         const p = customEvent.detail.progress
-        if (p < 0.05) {
+        if (p < 0.04) {
           setActiveBottomNav('home')
-        } else if (p < 0.42) {
+        } else if (p < 0.40) {
           setActiveBottomNav('launches')
-        } else if (p < 0.82) {
+        } else if (p < 0.90) {
           setActiveBottomNav('residences')
         } else {
           setActiveBottomNav('enquiry')
@@ -92,7 +92,7 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
       // Hide mobile bottom nav strictly on the hero section.
       // Show ONLY once the user scrolls into the "New Launches" section.
       if (isHome) {
-        if (window.scrollY < window.innerHeight * 1.2) {
+        if (window.scrollY < window.innerHeight * 0.35) {
           setShowBottomNav(false)
         } else {
           setShowBottomNav(true)
