@@ -14,7 +14,7 @@ export default function ContactPage() {
   return (
     <>
       <Navigation />
-      <main className="min-h-screen bg-[#040810] text-[#F8FAFC] pt-32 pb-24 relative overflow-hidden">
+      <main className="min-h-screen bg-[#FBF9F6] text-[#0B1325] dark:bg-[#040810] dark:text-[#F8FAFC] pt-32 pb-24 relative overflow-hidden">
         {/* Background Video */}
         <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
           <video
@@ -24,9 +24,9 @@ export default function ContactPage() {
             muted
             playsInline
             preload="auto"
-            className="w-full h-full object-cover object-center opacity-30"
+            className="w-full h-full object-cover object-center opacity-20 dark:opacity-30"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#040810] via-transparent to-[#040810]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#FBF9F6] via-[#FBF9F6]/80 to-[#FBF9F6] dark:from-[#040810] dark:via-transparent dark:to-[#040810]" />
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-8">

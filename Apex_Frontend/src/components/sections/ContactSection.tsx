@@ -21,6 +21,7 @@ import {
   formatPhoneNumber,
 } from '@/data/countries'
 import { ApexMonogram } from '@/components/ui/ApexMonogram'
+import { useTheme } from '@/components/providers/ThemeProvider'
 import { cn } from '@/lib/utils'
 
 // Verified practice categories
@@ -37,6 +38,7 @@ export interface ContactSectionProps {
 }
 
 export function ContactSection({ isOpen, onClose }: ContactSectionProps) {
+  const { isLight } = useTheme()
   // Modal visibility state (click-to-open only)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const activeOpen = isOpen !== undefined ? isOpen : isModalOpen
@@ -289,7 +291,10 @@ export function ContactSection({ isOpen, onClose }: ContactSectionProps) {
           data-lenis-prevent-touch="true"
           onWheel={(e) => e.stopPropagation()}
           onTouchMove={(e) => e.stopPropagation()}
-          className="fixed inset-0 z-[100] w-full h-full min-h-[100dvh] max-h-[100dvh] bg-[#040810] text-[#F8FAFC] flex flex-col overflow-hidden shadow-2xl"
+          className={cn(
+          "fixed inset-0 z-[100] w-full h-full min-h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden shadow-2xl transition-colors duration-300",
+          isLight ? "bg-[#FBF9F6] text-[#0B1325]" : "bg-[#040810] text-[#F8FAFC]"
+        )}
           aria-label="Private Enquiries"
           role="dialog"
           aria-modal="true"
@@ -306,11 +311,17 @@ export function ContactSection({ isOpen, onClose }: ContactSectionProps) {
               className="w-full h-full object-cover object-center"
             />
             {/* Subtle clean overlay without blur or heavy gradients */}
-            <div className="absolute inset-0 bg-black/40 pointer-events-none" />
+            <div className={cn(
+              "absolute inset-0 pointer-events-none transition-colors duration-300",
+              isLight ? "bg-[#FBF9F6]/85 backdrop-blur-[2px]" : "bg-black/40"
+            )} />
           </div>
 
           {/* Sticky Top Navigation Bar with Close Button (Always visible during scrolling) */}
-          <div className="sticky top-0 z-30 w-full bg-[#040810]/80 backdrop-blur-md border-b border-white/10 shrink-0">
+          <div className={cn(
+            "sticky top-0 z-30 w-full backdrop-blur-md border-b shrink-0 transition-colors duration-300",
+            isLight ? "bg-[#FBF9F6]/90 border-[#0B1325]/10" : "bg-[#040810]/80 border-white/10"
+          )}>
             <div className="max-w-7xl mx-auto flex items-center justify-between px-5 sm:px-10 py-3 sm:py-4">
               <div className="flex items-center gap-3">
                 <span className="font-serif text-xs sm:text-sm tracking-[0.25em] text-white uppercase font-light drop-shadow-md">
@@ -324,7 +335,12 @@ export function ContactSection({ isOpen, onClose }: ContactSectionProps) {
               <button
                 type="button"
                 onClick={handleClose}
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full border border-white/20 hover:border-white text-white hover:text-sky-300 bg-black/40 hover:bg-black/70 backdrop-blur-md transition-all text-[10px] sm:text-xs font-mono uppercase tracking-widest cursor-pointer shadow-lg active:scale-95"
+                className={cn(
+                  "inline-flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full border backdrop-blur-md transition-all text-[10px] sm:text-xs font-mono uppercase tracking-widest cursor-pointer active:scale-95",
+                  isLight
+                    ? "border-[#0B1325]/20 hover:border-[#0B1325] text-[#0B1325] bg-white/80 hover:bg-white shadow-sm"
+                    : "border-white/20 hover:border-white text-white hover:text-sky-300 bg-black/40 hover:bg-black/70 shadow-lg"
+                )}
                 aria-label="Close Contact Modal"
               >
                 <span>CLOSE</span>
@@ -372,7 +388,12 @@ export function ContactSection({ isOpen, onClose }: ContactSectionProps) {
 
               {/* Form Container */}
               <div className="max-w-2xl mx-auto">
-                <div className="rounded-2xl border border-white/10 bg-[#070E1C]/85 p-5 sm:p-9 md:p-10 backdrop-blur-xl shadow-[0_25px_60px_rgba(0,0,0,0.6)]">
+                <div className={cn(
+                  "rounded-2xl p-5 sm:p-9 md:p-10 backdrop-blur-xl transition-colors duration-300",
+                  isLight
+                    ? "bg-white/95 border border-[#0B1325]/15 shadow-[0_20px_50px_rgba(11,19,37,0.08)] text-[#0B1325]"
+                    : "border border-white/10 bg-[#070E1C]/85 shadow-[0_25px_60px_rgba(0,0,0,0.6)]"
+                )}>
                   {submitted ? (
                     /* Confirmed Success State */
                     <motion.div
@@ -522,14 +543,20 @@ export function ContactSection({ isOpen, onClose }: ContactSectionProps) {
                             onChange={handlePhoneChange}
                             onPaste={handlePhonePaste}
                             placeholder="Phone number"
-                            className="w-full px-4 py-3 bg-transparent text-white text-sm placeholder:text-[#64748B] focus:outline-none"
+                            className={cn(
+                              "w-full px-4 py-3 bg-transparent text-sm focus:outline-none",
+                              isLight ? "text-[#0B1325] placeholder-[#6B6661]/60" : "text-white placeholder-[#64748B]"
+                            )}
                           />
 
                           {/* Country dropdown */}
                           {isCountryDropdownOpen && (
                             <div
                               ref={countryDropdownRef}
-                              className="absolute left-0 top-full mt-2 w-72 max-h-60 overflow-y-auto rounded-lg bg-[#070E1C] border border-[#3B5373]/60 shadow-2xl z-50 p-2"
+                              className={cn(
+                                "absolute left-0 top-full mt-2 w-72 max-h-60 overflow-y-auto rounded-lg shadow-2xl z-50 p-2 border",
+                                isLight ? "bg-white border-[#0B1325]/15 text-[#0B1325]" : "bg-[#070E1C] border-[#3B5373]/60 text-white"
+                              )}
                             >
                               <div className="relative mb-2">
                                 <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#64748B]" />
@@ -585,7 +612,10 @@ export function ContactSection({ isOpen, onClose }: ContactSectionProps) {
                         </button>
 
                         {isServiceDropdownOpen && (
-                          <div className="absolute left-0 right-0 top-full mt-2 rounded-lg bg-[#070E1C] border border-[#3B5373]/60 shadow-2xl z-50 p-1.5">
+                          <div className={cn(
+                            "absolute left-0 right-0 top-full mt-2 rounded-lg shadow-2xl z-50 p-1.5 border",
+                            isLight ? "bg-white border-[#0B1325]/15 text-[#0B1325]" : "bg-[#070E1C] border-[#3B5373]/60 text-white"
+                          )}>
                             {SERVICE_OPTIONS.map((srv) => (
                               <button
                                 key={srv}
@@ -652,7 +682,12 @@ export function ContactSection({ isOpen, onClose }: ContactSectionProps) {
                       <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-4 rounded-full bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 hover:from-sky-300 hover:to-blue-500 text-[#040810] font-sans font-semibold text-xs tracking-[0.2em] uppercase transition-all duration-300 shadow-[0_4px_25px_rgba(56,189,248,0.25)] hover:shadow-[0_4px_30px_rgba(56,189,248,0.4)] disabled:opacity-50 mt-4 cursor-pointer"
+                        className={cn(
+                          "w-full py-4 rounded-full font-sans font-semibold text-xs tracking-[0.2em] uppercase transition-all duration-300 disabled:opacity-50 mt-4 cursor-pointer",
+                          isLight
+                            ? "bg-white hover:bg-[#FDFCFB] text-[#0B1325] border border-[#0B1325]/25 shadow-md hover:shadow-lg"
+                            : "bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 hover:from-sky-300 hover:to-blue-500 text-[#040810] shadow-[0_4px_25px_rgba(56,189,248,0.25)] hover:shadow-[0_4px_30px_rgba(56,189,248,0.4)]"
+                        )}
                       >
                         {loading ? 'Submitting Enquiry...' : 'Submit Private Enquiry'}
                       </button>

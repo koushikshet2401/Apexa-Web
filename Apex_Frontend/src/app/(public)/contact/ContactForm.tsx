@@ -14,6 +14,9 @@ import {
   formatPhoneNumber,
 } from '@/data/countries'
 import { ApexMonogram } from '@/components/ui/ApexMonogram'
+import { useTheme } from '@/components/providers/ThemeProvider'
+import { themeTokens } from '@/lib/theme'
+import { cn } from '@/lib/utils'
 
 const SERVICE_OPTIONS = [
   'Luxury Villas',
@@ -24,6 +27,7 @@ const SERVICE_OPTIONS = [
 ]
 
 export function ContactForm() {
+  const { isLight } = useTheme()
   const searchParams = useSearchParams()
   const prefillPropertyId = searchParams.get('propertyId') || ''
   const prefillPropertyName = searchParams.get('propertyName') || ''
@@ -163,30 +167,30 @@ export function ContactForm() {
       {/* Header with centered monogram and title */}
       <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-12">
         <div className="flex justify-center mb-4">
-          <div className="p-3 rounded-full border border-sky-400/30 bg-sky-400/[0.06] shadow-[0_0_25px_rgba(56,189,248,0.15)]">
-            <ApexMonogram size={38} strokeWidth={1.2} color="#7DD3FC" />
+          <div className={cn("p-3 rounded-full transition-colors", themeTokens.contact.monogramBadge(isLight))}>
+            <ApexMonogram size={38} strokeWidth={1.2} color={themeTokens.contact.monogramColor(isLight)} />
           </div>
         </div>
 
         <div className="flex items-center justify-center gap-3 mb-3">
-          <span className="w-8 h-px bg-sky-400/60" />
-          <span className="font-mono text-xs tracking-[0.25em] text-[#7DD3FC] uppercase font-medium">
+          <span className={cn("w-8 h-px transition-colors", themeTokens.contact.tagLine(isLight))} />
+          <span className={cn("font-mono text-xs tracking-[0.25em] uppercase font-medium transition-colors", themeTokens.contact.tag(isLight))}>
             Private Enquiries &amp; Advisory
           </span>
-          <span className="w-8 h-px bg-sky-400/60" />
+          <span className={cn("w-8 h-px transition-colors", themeTokens.contact.tagLine(isLight))} />
         </div>
 
-        <h1 className="heading-display text-3xl sm:text-5xl text-white font-light mb-3">
+        <h1 className={cn("heading-display text-3xl sm:text-5xl font-light mb-3 transition-colors", themeTokens.contact.heading(isLight))}>
           Connect With Our Desk
         </h1>
-        <p className="font-sans text-xs sm:text-sm text-[#94A3B8] font-light leading-relaxed">
+        <p className={cn("font-sans text-xs sm:text-sm font-light leading-relaxed transition-colors", themeTokens.contact.subheading(isLight))}>
           Please enter your requirements below. Our advisory office will review your enquiry confidentially and respond with a curated dossier.
         </p>
       </div>
 
       {/* Form Container */}
       <div className="max-w-2xl mx-auto">
-        <div className="rounded-2xl border border-white/10 bg-[#070E1C]/85 p-6 sm:p-10 md:p-12 backdrop-blur-xl shadow-[0_25px_60px_rgba(0,0,0,0.6)]">
+        <div className={cn("rounded-2xl p-6 sm:p-10 md:p-12 backdrop-blur-xl transition-colors duration-300", themeTokens.contact.formCard(isLight))}>
           {submitted ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -194,22 +198,28 @@ export function ContactForm() {
               transition={{ duration: 0.5 }}
               className="py-10 flex flex-col items-center text-center max-w-md mx-auto"
             >
-              <div className="w-16 h-16 rounded-full border border-sky-400 bg-sky-400/10 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(56,189,248,0.25)]">
-                <Check size={28} className="text-[#7DD3FC]" strokeWidth={2} />
+              <div className={cn(
+                "w-16 h-16 rounded-full border flex items-center justify-center mb-6 shadow-md transition-colors",
+                isLight ? "border-[#0B1325]/20 bg-[#0B1325]/5 text-[#0B1325]" : "border-sky-400 bg-sky-400/10 text-[#7DD3FC]"
+              )}>
+                <Check size={28} strokeWidth={2} />
               </div>
 
-              <h2 className="heading-display text-2xl sm:text-3xl text-white mb-3">
+              <h2 className={cn("heading-display text-2xl sm:text-3xl mb-3 transition-colors", themeTokens.contact.heading(isLight))}>
                 Enquiry Received
               </h2>
 
-              <p className="text-[#94A3B8] font-light text-sm sm:text-base mb-6 leading-relaxed">
+              <p className={cn("font-light text-sm sm:text-base mb-6 leading-relaxed transition-colors", themeTokens.contact.subheading(isLight))}>
                 Thank you for registering your interest with Apex Pacific Holdings. Our partners will review your requirements and follow up confidentially.
               </p>
 
               {submissionId && (
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/[0.04] border border-white/10 font-mono text-xs text-white/70 mb-8">
-                  <span className="text-white/40 uppercase">Ref ID:</span>
-                  <span className="text-[#7DD3FC] font-semibold">{submissionId}</span>
+                <div className={cn(
+                  "inline-flex items-center gap-2 px-4 py-2 rounded-lg font-mono text-xs mb-8 transition-colors",
+                  isLight ? "bg-[#0B1325]/5 border border-[#0B1325]/15 text-[#0B1325]" : "bg-white/[0.04] border border-white/10 text-white/70"
+                )}>
+                  <span className={cn("uppercase", isLight ? "text-[#6B6661]" : "text-white/40")}>Ref ID:</span>
+                  <span className={cn("font-semibold", isLight ? "text-[#0B1325]" : "text-[#7DD3FC]")}>{submissionId}</span>
                 </div>
               )}
 
@@ -224,7 +234,10 @@ export function ContactForm() {
                   setConsentGiven(false)
                   setSubmissionId(null)
                 }}
-                className="px-6 py-3 rounded-full border border-sky-400/40 hover:border-sky-300 text-xs font-mono tracking-widest uppercase text-white hover:bg-sky-400/10 transition-colors"
+                className={cn(
+                  "px-6 py-3 rounded-full text-xs font-mono tracking-widest uppercase transition-colors cursor-pointer",
+                  isLight ? "border border-[#0B1325]/25 text-[#0B1325] hover:bg-[#0B1325]/5" : "border border-sky-400/40 hover:border-sky-300 text-white hover:bg-sky-400/10"
+                )}
               >
                 Submit Another Enquiry
               </button>
@@ -249,21 +262,24 @@ export function ContactForm() {
               )}
 
               {prefillPropertyName && (
-                <div className="p-3.5 rounded-xl bg-sky-500/10 border border-sky-400/25 flex items-center justify-between text-xs text-sky-200">
+                <div className={cn(
+                  "p-3.5 rounded-xl flex items-center justify-between text-xs transition-colors",
+                  isLight ? "bg-[#0B1325]/5 border border-[#0B1325]/15 text-[#0B1325]" : "bg-sky-500/10 border border-sky-400/25 text-sky-200"
+                )}>
                   <div className="flex items-center gap-2.5">
-                    <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
+                    <span className={cn("w-2 h-2 rounded-full animate-pulse", isLight ? "bg-[#0B1325]" : "bg-sky-400")} />
                     <span>
-                      Inquiring regarding: <strong className="text-white font-medium">{prefillPropertyName}</strong>
+                      Inquiring regarding: <strong className="font-medium">{prefillPropertyName}</strong>
                     </span>
                   </div>
-                  <span className="font-mono text-[10px] text-sky-300/70 uppercase tracking-wider">Property Inquiry</span>
+                  <span className={cn("font-mono text-[10px] uppercase tracking-wider", isLight ? "text-[#6B6661]" : "text-sky-300/70")}>Property Inquiry</span>
                 </div>
               )}
 
               {/* Full Name */}
               <div>
-                <label htmlFor="fullName" className="block text-xs font-mono tracking-wider uppercase text-[#94A3B8] mb-2">
-                  Full Name <span className="text-sky-400">*</span>
+                <label htmlFor="fullName" className={cn("block text-xs font-mono tracking-wider uppercase mb-2 transition-colors", themeTokens.contact.label(isLight))}>
+                  Full Name <span className={isLight ? "text-[#0B1325]" : "text-sky-400"}>*</span>
                 </label>
                 <input
                   id="fullName"
@@ -275,7 +291,7 @@ export function ContactForm() {
                     if (validationErrors.name) setValidationErrors((prev) => ({ ...prev, name: '' }))
                   }}
                   placeholder="e.g. Lord Alexander Wright"
-                  className="w-full px-4 py-3 bg-white/[0.03] border border-white/10 rounded-lg text-sm text-white placeholder-white/30 focus:outline-none focus:border-sky-400 transition-colors"
+                  className={cn("w-full px-4 py-3 rounded-lg text-sm focus:outline-none transition-colors", themeTokens.contact.input(isLight))}
                 />
                 {validationErrors.name && (
                   <p className="mt-1 text-xs text-red-400">{validationErrors.name}</p>
@@ -284,8 +300,8 @@ export function ContactForm() {
 
               {/* Email Address */}
               <div>
-                <label htmlFor="email" className="block text-xs font-mono tracking-wider uppercase text-[#94A3B8] mb-2">
-                  Confidential Email <span className="text-sky-400">*</span>
+                <label htmlFor="email" className={cn("block text-xs font-mono tracking-wider uppercase mb-2 transition-colors", themeTokens.contact.label(isLight))}>
+                  Confidential Email <span className={isLight ? "text-[#0B1325]" : "text-sky-400"}>*</span>
                 </label>
                 <input
                   id="email"
@@ -297,7 +313,7 @@ export function ContactForm() {
                     if (validationErrors.email) setValidationErrors((prev) => ({ ...prev, email: '' }))
                   }}
                   placeholder="e.g. wright@familyoffice.co.uk"
-                  className="w-full px-4 py-3 bg-white/[0.03] border border-white/10 rounded-lg text-sm text-white placeholder-white/30 focus:outline-none focus:border-sky-400 transition-colors"
+                  className={cn("w-full px-4 py-3 rounded-lg text-sm focus:outline-none transition-colors", themeTokens.contact.input(isLight))}
                 />
                 {validationErrors.email && (
                   <p className="mt-1 text-xs text-red-400">{validationErrors.email}</p>
@@ -306,8 +322,8 @@ export function ContactForm() {
 
               {/* Phone with Country Dropdown */}
               <div>
-                <label htmlFor="phone" className="block text-xs font-mono tracking-wider uppercase text-[#94A3B8] mb-2">
-                  Direct Contact Number <span className="text-sky-400">*</span>
+                <label htmlFor="phone" className={cn("block text-xs font-mono tracking-wider uppercase mb-2 transition-colors", themeTokens.contact.label(isLight))}>
+                  Direct Contact Number <span className={isLight ? "text-[#0B1325]" : "text-sky-400"}>*</span>
                 </label>
                 <div className="flex gap-2 relative">
                   {/* Country Selector Trigger */}
@@ -315,25 +331,25 @@ export function ContactForm() {
                     <button
                       type="button"
                       onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
-                      className="h-full px-3 py-3 bg-white/[0.03] border border-white/10 rounded-lg text-sm text-white flex items-center gap-2 hover:border-white/20 transition-colors min-w-[105px]"
+                      className={cn("h-full px-3 py-3 rounded-lg text-sm flex items-center gap-2 transition-colors min-w-[105px]", themeTokens.contact.input(isLight))}
                     >
                       <span className="text-lg">{selectedCountry.flag}</span>
-                      <span className="font-mono text-xs text-white/80">{selectedCountry.dialCode}</span>
-                      <ChevronDown size={14} className="text-white/40 ml-auto" />
+                      <span className={cn("font-mono text-xs", isLight ? "text-[#0B1325]" : "text-white/80")}>{selectedCountry.dialCode}</span>
+                      <ChevronDown size={14} className={cn("ml-auto", isLight ? "text-[#0B1325]/50" : "text-white/40")} />
                     </button>
 
                     {/* Country Search Dropdown */}
                     {isCountryDropdownOpen && (
-                      <div className="absolute top-full left-0 mt-1 w-72 bg-[#0B1528] border border-white/15 rounded-lg shadow-2xl z-50 overflow-hidden">
-                        <div className="p-2 border-b border-white/10 flex items-center gap-2">
-                          <Search size={14} className="text-white/40" />
+                      <div className={cn("absolute top-full left-0 mt-1 w-72 rounded-lg z-50 overflow-hidden transition-colors", themeTokens.contact.dropdownMenu(isLight))}>
+                        <div className={cn("p-2 border-b flex items-center gap-2 transition-colors", isLight ? "border-[#0B1325]/10" : "border-white/10")}>
+                          <Search size={14} className={isLight ? "text-[#0B1325]/50" : "text-white/40"} />
                           <input
                             ref={countrySearchInputRef}
                             type="text"
                             placeholder="Search country..."
                             value={countrySearch}
                             onChange={(e) => setCountrySearch(e.target.value)}
-                            className="w-full bg-transparent text-xs text-white placeholder-white/40 focus:outline-none"
+                            className={cn("w-full bg-transparent text-xs focus:outline-none", isLight ? "text-[#0B1325] placeholder:text-[#6B6661]/60" : "text-white placeholder-white/40")}
                           />
                         </div>
                         <div className="max-h-56 overflow-y-auto py-1">
@@ -345,13 +361,13 @@ export function ContactForm() {
                                 setSelectedCountry(c)
                                 setIsCountryDropdownOpen(false)
                               }}
-                              className="w-full px-3 py-2 text-left text-xs text-white/80 hover:bg-sky-400/10 hover:text-white flex items-center justify-between transition-colors"
+                              className={cn("w-full px-3 py-2 text-left text-xs flex items-center justify-between transition-colors", themeTokens.contact.dropdownItem(isLight))}
                             >
                               <span className="flex items-center gap-2 truncate">
                                 <span>{c.flag}</span>
                                 <span className="truncate">{c.name}</span>
                               </span>
-                              <span className="font-mono text-[11px] text-white/40 ml-2">{c.dialCode}</span>
+                              <span className={cn("font-mono text-[11px] ml-2", isLight ? "text-[#6B6661]" : "text-white/40")}>{c.dialCode}</span>
                             </button>
                           ))}
                         </div>
@@ -371,7 +387,7 @@ export function ContactForm() {
                       if (validationErrors.phone) setValidationErrors((prev) => ({ ...prev, phone: '' }))
                     }}
                     placeholder={selectedCountry.format}
-                    className="flex-1 px-4 py-3 bg-white/[0.03] border border-white/10 rounded-lg text-sm text-white placeholder-white/30 focus:outline-none focus:border-sky-400 transition-colors font-mono"
+                    className={cn("flex-1 px-4 py-3 rounded-lg text-sm focus:outline-none transition-colors font-mono", themeTokens.contact.input(isLight))}
                   />
                 </div>
                 {validationErrors.phone && (
@@ -381,19 +397,19 @@ export function ContactForm() {
 
               {/* Service of Interest */}
               <div ref={serviceDropdownRef} className="relative">
-                <label className="block text-xs font-mono tracking-wider uppercase text-[#94A3B8] mb-2">
+                <label className={cn("block text-xs font-mono tracking-wider uppercase mb-2 transition-colors", themeTokens.contact.label(isLight))}>
                   Portfolio / Practice of Interest
                 </label>
                 <button
                   type="button"
                   onClick={() => setIsServiceDropdownOpen(!isServiceDropdownOpen)}
-                  className="w-full px-4 py-3 bg-white/[0.03] border border-white/10 rounded-lg text-sm text-white flex items-center justify-between hover:border-white/20 transition-colors text-left"
+                  className={cn("w-full px-4 py-3 rounded-lg text-sm flex items-center justify-between transition-colors text-left", themeTokens.contact.input(isLight))}
                 >
                   <span>{selectedService}</span>
-                  <ChevronDown size={14} className="text-white/40" />
+                  <ChevronDown size={14} className={isLight ? "text-[#0B1325]/50" : "text-white/40"} />
                 </button>
                 {isServiceDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-[#0B1528] border border-white/15 rounded-lg shadow-2xl z-40 py-1 overflow-hidden">
+                  <div className={cn("absolute top-full left-0 right-0 mt-1 rounded-lg z-40 py-1 overflow-hidden transition-colors", themeTokens.contact.dropdownMenu(isLight))}>
                     {SERVICE_OPTIONS.map((svc) => (
                       <button
                         key={svc}
@@ -402,7 +418,7 @@ export function ContactForm() {
                           setSelectedService(svc)
                           setIsServiceDropdownOpen(false)
                         }}
-                        className="w-full px-4 py-2.5 text-left text-xs text-white/80 hover:bg-sky-400/10 hover:text-white transition-colors"
+                        className={cn("w-full px-4 py-2.5 text-left text-xs transition-colors", themeTokens.contact.dropdownItem(isLight))}
                       >
                         {svc}
                       </button>
@@ -413,7 +429,7 @@ export function ContactForm() {
 
               {/* Message */}
               <div>
-                <label htmlFor="message" className="block text-xs font-mono tracking-wider uppercase text-[#94A3B8] mb-2">
+                <label htmlFor="message" className={cn("block text-xs font-mono tracking-wider uppercase mb-2 transition-colors", themeTokens.contact.label(isLight))}>
                   Confidential Brief / Requirements
                 </label>
                 <textarea
@@ -422,7 +438,7 @@ export function ContactForm() {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Outline your acquisition criteria, preferred territories, or architectural requirements..."
-                  className="w-full px-4 py-3 bg-white/[0.03] border border-white/10 rounded-lg text-sm text-white placeholder-white/30 focus:outline-none focus:border-sky-400 transition-colors resize-none"
+                  className={cn("w-full px-4 py-3 rounded-lg text-sm focus:outline-none transition-colors resize-none", themeTokens.contact.input(isLight))}
                 />
               </div>
 
@@ -436,11 +452,11 @@ export function ContactForm() {
                     setConsentGiven(e.target.checked)
                     if (validationErrors.consent) setValidationErrors((prev) => ({ ...prev, consent: '' }))
                   }}
-                  className="mt-1 w-4 h-4 rounded border-white/20 bg-white/5 text-sky-400 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                  className={cn("mt-1 w-4 h-4 rounded cursor-pointer", isLight ? "border-[#0B1325]/30 text-[#0B1325] focus:ring-0" : "border-white/20 bg-white/5 text-sky-400 focus:ring-0")}
                 />
-                <label htmlFor="consent" className="text-xs text-[#94A3B8] leading-relaxed cursor-pointer font-light">
+                <label htmlFor="consent" className={cn("text-xs leading-relaxed cursor-pointer font-light transition-colors", themeTokens.contact.label(isLight))}>
                   I consent to Apex Pacific Holdings contacting me confidentially regarding luxury real estate opportunities. View our{' '}
-                  <Link href="/privacy-policy" className="text-sky-400 hover:underline">
+                  <Link href="/privacy-policy" className={isLight ? "text-[#0B1325] underline font-medium" : "text-sky-400 hover:underline"}>
                     Privacy Policy
                   </Link>
                   .
@@ -455,14 +471,17 @@ export function ContactForm() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-4 rounded-full bg-gradient-to-r from-sky-400 to-sky-500 hover:from-sky-300 hover:to-sky-400 text-[#040810] font-sans font-medium text-xs tracking-[0.2em] uppercase transition-all duration-300 shadow-[0_0_25px_rgba(56,189,248,0.3)] hover:shadow-[0_0_35px_rgba(56,189,248,0.5)] disabled:opacity-50 cursor-pointer"
+                  className={cn(
+                    "w-full py-4 rounded-full font-sans font-medium text-xs tracking-[0.2em] uppercase transition-all duration-300 disabled:opacity-50 cursor-pointer",
+                    themeTokens.contact.submitButton(isLight)
+                  )}
                 >
                   {loading ? 'Submitting Confidential Dossier...' : 'Submit Confidential Enquiry'}
                 </button>
               </div>
 
-              <div className="flex items-center justify-center gap-2 pt-2 text-[#64748B] text-[11px]">
-                <ShieldCheck size={14} className="text-sky-400" />
+              <div className={cn("flex items-center justify-center gap-2 pt-2 text-[11px] transition-colors", themeTokens.contact.label(isLight))}>
+                <ShieldCheck size={14} className={isLight ? "text-emerald-600" : "text-sky-400"} />
                 <span>Strict Non-Disclosure Protocol · Direct Partner Attention</span>
               </div>
             </form>

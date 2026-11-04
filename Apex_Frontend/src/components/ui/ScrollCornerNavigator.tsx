@@ -3,8 +3,10 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowDown, ArrowUp } from 'lucide-react'
+import { useTheme } from '@/components/providers/ThemeProvider'
 
 export function ScrollCornerNavigator() {
+  const { isLight } = useTheme()
   const [isAtTop, setIsAtTop] = useState(true)
   const [scrollProgress, setScrollProgress] = useState(0)
 
@@ -68,7 +70,11 @@ export function ScrollCornerNavigator() {
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.94 }}
         aria-label={isAtTop ? 'Scroll down into launches' : 'Back to homepage top'}
-        className="relative group w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#071426]/85 hover:bg-[#0A1B32] border border-white/20 hover:border-sky-400 text-white hover:text-sky-300 backdrop-blur-xl flex items-center justify-center shadow-[0_8px_30px_rgba(0,0,0,0.65)] hover:shadow-[0_0_25px_rgba(56,189,248,0.35)] transition-colors duration-300 cursor-pointer select-none"
+        className={`relative group w-11 h-11 sm:w-12 sm:h-12 rounded-full backdrop-blur-xl flex items-center justify-center transition-all duration-300 cursor-pointer select-none ${
+          isLight
+            ? 'bg-white/90 hover:bg-[#FDFCFB] border border-[#0B1325]/20 hover:border-[#0B1325] text-[#0B1325] hover:text-[#0B1325] shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:shadow-[0_0_20px_rgba(11,19,37,0.15)]'
+            : 'bg-[#071426]/85 hover:bg-[#0A1B32] border border-white/20 hover:border-sky-400 text-white hover:text-sky-300 shadow-[0_8px_30px_rgba(0,0,0,0.65)] hover:shadow-[0_0_25px_rgba(56,189,248,0.35)]'
+        }`}
       >
         {/* Subtle SVG Scroll Progress Ring */}
         <svg
@@ -81,7 +87,7 @@ export function ScrollCornerNavigator() {
             cy="24"
             r={radius}
             fill="none"
-            stroke="rgba(255, 255, 255, 0.12)"
+            stroke={isLight ? 'rgba(11, 19, 37, 0.12)' : 'rgba(255, 255, 255, 0.12)'}
             strokeWidth="2"
           />
           {/* Active progress fill */}
@@ -90,7 +96,7 @@ export function ScrollCornerNavigator() {
             cy="24"
             r={radius}
             fill="none"
-            stroke="#38BDF8"
+            stroke={isLight ? '#0B1325' : '#38BDF8'}
             strokeWidth="2"
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
@@ -128,7 +134,13 @@ export function ScrollCornerNavigator() {
         </AnimatePresence>
 
         {/* Floating Tooltip Pill on Desktop Hover */}
-        <span className="hidden sm:inline-block absolute right-full mr-3.5 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-md bg-[#071426]/90 border border-white/15 text-[10px] font-mono tracking-widest uppercase text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-lg">
+        <span
+          className={`hidden sm:inline-block absolute right-full mr-3.5 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-md text-[10px] font-mono tracking-widest uppercase whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-lg ${
+            isLight
+              ? 'bg-white/95 border border-[#0B1325]/15 text-[#0B1325]'
+              : 'bg-[#071426]/90 border border-white/15 text-white'
+          }`}
+        >
           {isAtTop ? 'EXPLORE' : 'TOP'}
         </span>
       </motion.button>

@@ -29,6 +29,9 @@ import { Navigation } from '@/components/layout/Navigation'
 import { Footer } from '@/components/layout/Footer'
 import { GatewayFlow } from '@/components/ui/gateway-flow'
 import { CircularTestimonials, Testimonial } from '@/components/ui/circular-testimonials'
+import { useTheme } from '@/components/providers/ThemeProvider'
+import { themeTokens } from '@/lib/theme'
+import { cn } from '@/lib/utils'
 
 interface PropertyDetailData {
   id: string
@@ -62,6 +65,7 @@ export interface CinematicPropertyDetailProps {
 
 export function CinematicPropertyDetail({ property, backHref }: CinematicPropertyDetailProps) {
   const router = useRouter()
+  const { isLight } = useTheme()
   const containerRef = useRef<HTMLDivElement>(null)
   const pinRef = useRef<HTMLDivElement>(null)
   const section1Ref = useRef<HTMLElement>(null)
@@ -262,20 +266,30 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
       })
       tl.to({}, { duration: 0.15 })
 
-      // STAGE 2: Section 3 (Architectural Spaces & Finishes) slides up over Section 2
+      // STAGE 2: Section 3 (Architectural Spaces & Finishes) slides up over Section 2 while Section 2 fades
       tl.to(s3, {
         yPercent: 0,
         duration: 0.8,
         ease: 'power2.out',
-      })
+      }, 'stage2')
+      tl.to(s2, {
+        opacity: 0,
+        duration: 0.4,
+        ease: 'power1.out',
+      }, 'stage2+=0.35')
       tl.to({}, { duration: 0.15 })
 
-      // STAGE 3: Section 4 (Enquiry Form) slides up over Section 3
+      // STAGE 3: Section 4 (Enquiry Form) slides up over Section 3 while Section 3 fades
       tl.to(s4, {
         yPercent: 0,
         duration: 0.8,
         ease: 'power2.out',
-      })
+      }, 'stage3')
+      tl.to(s3, {
+        opacity: 0,
+        duration: 0.4,
+        ease: 'power1.out',
+      }, 'stage3+=0.35')
       tl.to({}, { duration: 0.15 })
 
       ScrollTrigger.refresh()
@@ -337,7 +351,7 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
   const priceDisplay = property.price || 'AED 8.2M'
 
   return (
-    <div className="relative bg-[#040810] text-[#F8FAFC] selection:bg-[#7DD3FC]/20 selection:text-white">
+    <div className={cn("relative selection:bg-[#7DD3FC]/20 selection:text-white transition-colors duration-300", themeTokens.propertyDetail.pageBg(isLight))}>
       {/* Top Fixed Navigation */}
       <Navigation />
 
@@ -353,7 +367,7 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
       <div ref={containerRef} className="relative w-full">
         <div
           ref={pinRef}
-          className="relative w-full h-screen overflow-hidden bg-[#040810]"
+          className={cn("relative w-full h-screen overflow-hidden transition-colors duration-300", isLight ? "bg-[#FBF9F6]" : "bg-[#040810]")}
         >
           {/* =========================================================================
               SECTION 1: FULL-SCREEN PROPERTY VIDEO (PINNED HERO)
@@ -386,7 +400,10 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
                     router.push(targetBackHref)
                   }
                 }}
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/60 hover:bg-black/90 backdrop-blur-md border border-white/20 text-[11px] font-mono uppercase tracking-[0.2em] text-[#7DD3FC] hover:text-white transition-all shadow-lg cursor-pointer group"
+                className={cn(
+                  "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-mono uppercase tracking-[0.2em] transition-all cursor-pointer group",
+                  themeTokens.propertyDetail.backButton(isLight)
+                )}
               >
                 <ArrowLeft size={12} className="group-hover:-translate-x-0.5 transition-transform" />
                 <span>Back to {targetBackLabel}</span>
@@ -414,17 +431,17 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
               transition={{ duration: 0.9, delay: 0.35, ease: 'easeOut' }}
               className="absolute left-4 right-4 sm:left-8 md:left-12 lg:left-16 bottom-14 sm:bottom-16 lg:bottom-20 z-25 max-w-sm sm:max-w-md pointer-events-auto"
             >
-              <div className="rounded-2xl bg-black/65 sm:bg-black/55 backdrop-blur-xl border border-white/20 p-4 sm:p-5 shadow-[0_20px_50px_rgba(0,0,0,0.85)]">
+              <div className={cn("rounded-2xl p-4 sm:p-5 transition-all duration-300", themeTokens.propertyDetail.heroCard(isLight))}>
                 {/* Architectural Style Tag */}
                 <div className="flex items-center gap-2 mb-1.5">
-                  <span className="w-3.5 h-px bg-[#7DD3FC]" />
-                  <span className="font-mono text-[9px] sm:text-[10px] tracking-[0.25em] text-[#7DD3FC] uppercase font-medium">
+                  <span className={cn("w-3.5 h-px transition-colors duration-300", themeTokens.propertyDetail.heroCardTagLine(isLight))} />
+                  <span className={cn("font-mono text-[9px] sm:text-[10px] tracking-[0.25em] uppercase font-medium transition-colors duration-300", themeTokens.propertyDetail.heroCardTag(isLight))}>
                     {property.type || 'ARCHITECTURAL RESIDENCE'} · {property.city || property.cityName || 'DUBAI'}
                   </span>
                 </div>
 
                 {/* Curated Editorial Description */}
-                <p className="font-sans text-xs sm:text-sm text-white/85 font-light leading-relaxed mb-3 line-clamp-2 sm:line-clamp-3">
+                <p className={cn("font-sans text-xs sm:text-sm font-light leading-relaxed mb-3 line-clamp-2 sm:line-clamp-3 transition-colors duration-300", themeTokens.propertyDetail.heroCardDesc(isLight))}>
                   {property.shortDescription || property.tagline || 'Sculptural architectural landmark elevated with private terraces, infinity horizons, and bespoke finishes.'}
                 </p>
 
@@ -446,10 +463,13 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
                         }
                       }
                     }}
-                    className="w-full inline-flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white text-white hover:text-black border border-white/20 hover:border-white font-mono text-[10px] sm:text-[11px] tracking-[0.16em] uppercase transition-all duration-300 shadow-md group cursor-pointer"
+                    className={cn(
+                      "w-full inline-flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl font-mono text-[10px] sm:text-[11px] tracking-[0.16em] uppercase transition-all duration-300 shadow-md group cursor-pointer",
+                      themeTokens.propertyDetail.heroCardButton1(isLight)
+                    )}
                   >
                     <div className="flex items-center gap-2">
-                      <Sparkles size={12} className="text-sky-300 group-hover:text-black transition-colors" />
+                      <Sparkles size={12} className={cn("transition-colors", isLight ? "text-[#0B1325]" : "text-sky-300 group-hover:text-black")} />
                       <span>Architectural Spaces &amp; Finishes</span>
                     </div>
                     <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
@@ -460,10 +480,13 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${property.name} ${property.locationLine || property.cityName || property.city || ''} ${property.country || ''}`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full inline-flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-[#0C1F38]/90 via-[#123157]/90 to-[#0C1F38]/90 hover:from-[#123157] hover:to-[#1E4D82] text-white border border-[#7DD3FC]/40 hover:border-[#7DD3FC] font-mono text-[10px] sm:text-[11px] tracking-[0.16em] uppercase transition-all duration-300 shadow-[0_0_20px_rgba(56,189,248,0.2)] group cursor-pointer"
+                    className={cn(
+                      "w-full inline-flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl font-mono text-[10px] sm:text-[11px] tracking-[0.16em] uppercase transition-all duration-300 shadow-md group cursor-pointer",
+                      themeTokens.propertyDetail.heroCardButton2(isLight)
+                    )}
                   >
                     <div className="flex items-center gap-2">
-                      <MapPin size={12} className="text-[#7DD3FC]" />
+                      <MapPin size={12} className={cn("transition-colors", isLight ? "text-[#0B1325]" : "text-[#7DD3FC]")} />
                       <span>Explore via Map</span>
                     </div>
                     <ArrowUpRight size={13} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
@@ -493,12 +516,16 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
           <section
             ref={section2Ref}
             id="property-details-section"
-            className="absolute inset-0 w-full h-full z-20 overflow-y-auto no-scrollbar bg-[#040810] shadow-[0_-40px_100px_rgba(0,0,0,0.98)] border-t border-white/10 flex flex-col justify-center items-center pt-16 sm:pt-20 pb-[calc(env(safe-area-inset-bottom)+75px)] sm:pb-8 px-4"
+            style={{ backgroundColor: isLight ? '#FBF9F6' : '#040810' }}
+            className={cn(
+              "absolute inset-0 w-full h-full z-20 overflow-y-auto no-scrollbar flex flex-col justify-center items-center pt-16 sm:pt-20 pb-[calc(env(safe-area-inset-bottom)+75px)] sm:pb-8 px-4 transition-colors duration-300",
+              themeTokens.propertyDetail.sectionContainer(isLight)
+            )}
           >
             {/* 21.dev GatewayFlow Background Animation */}
             <div className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden opacity-40">
               <GatewayFlow
-                mode="dark"
+                mode={isLight ? "light" : "dark"}
                 speed={0.85}
                 density={1}
                 size={1}
@@ -508,41 +535,46 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
             </div>
 
             {/* Ambient Radial Gradient Mask for high contrast & elegance */}
-            <div className="absolute inset-0 z-1 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(4,8,16,0.65)_0%,rgba(4,8,16,0.95)_100%)]" />
+            <div className={cn(
+              "absolute inset-0 z-1 pointer-events-none transition-all duration-500",
+              isLight
+                ? "bg-[radial-gradient(ellipse_at_center,rgba(251,249,246,0.65)_0%,rgba(251,249,246,0.95)_100%)]"
+                : "bg-[radial-gradient(ellipse_at_center,rgba(4,8,16,0.65)_0%,rgba(4,8,16,0.95)_100%)]"
+            )} />
 
             {/* Centered Luxury Details Container */}
             <div className="relative z-10 max-w-4xl w-full mx-auto px-4 sm:px-10 py-6 sm:py-12 md:py-16 text-center flex flex-col items-center justify-center">
               {/* Location & Name Header */}
               <div className="flex items-center justify-center gap-3 mb-3 sm:mb-4">
-                <span className="w-6 sm:w-10 h-px bg-[#7DD3FC]/60" />
-                <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.3em] text-[#7DD3FC] font-medium">
+                <span className={cn("w-6 sm:w-10 h-px transition-colors duration-300", themeTokens.propertyDetail.labelLine(isLight))} />
+                <span className={cn("font-mono text-[10px] sm:text-xs uppercase tracking-[0.3em] font-medium transition-colors duration-300", themeTokens.propertyDetail.label(isLight))}>
                   {property.city ? `${property.city}, ` : ''}{property.country || 'UNITED ARAB EMIRATES'} · {property.name}
                 </span>
-                <span className="w-6 sm:w-10 h-px bg-[#7DD3FC]/60" />
+                <span className={cn("w-6 sm:w-10 h-px transition-colors duration-300", themeTokens.propertyDetail.labelLine(isLight))} />
               </div>
 
               {/* Specs line */}
-              <p className="font-mono text-xs sm:text-sm md:text-base text-white/90 font-medium tracking-wider mb-2">
+              <p className={cn("font-mono text-xs sm:text-sm md:text-base font-medium tracking-wider mb-2 transition-colors duration-300", themeTokens.propertyDetail.specs(isLight))}>
                 {specsLine}
               </p>
 
               {/* Price Display */}
-              <h2 className="heading-display text-3xl sm:text-5xl md:text-6xl text-white font-light tracking-tight mb-4 sm:mb-6">
+              <h2 className={cn("heading-display text-3xl sm:text-5xl md:text-6xl font-light tracking-tight mb-4 sm:mb-6 transition-colors duration-300", themeTokens.propertyDetail.price(isLight))}>
                 {priceDisplay}
               </h2>
 
               {/* Description paragraph */}
-              <p className="font-sans text-xs sm:text-sm md:text-base text-[#CBD5E1] font-light leading-relaxed max-w-2xl mx-auto mb-6 sm:mb-8 text-pretty">
+              <p className={cn("font-sans text-xs sm:text-sm md:text-base font-light leading-relaxed max-w-2xl mx-auto mb-6 sm:mb-8 text-pretty transition-colors duration-300", themeTokens.propertyDetail.description(isLight))}>
                 {property.description ||
                   'Seven cantilevered floors with private landscaped sky gardens on every level. With only twenty-four residences, each occupies an entire quadrant with 270-degree horizons over the skyline and water.'}
               </p>
 
               {/* Highlights bullet points */}
-              <div className="w-full max-w-2xl mx-auto pt-4 sm:pt-6 border-t border-white/10">
+              <div className={cn("w-full max-w-2xl mx-auto pt-4 sm:pt-6 border-t transition-colors duration-300", isLight ? "border-[#0B1325]/10" : "border-white/10")}>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4 text-left">
                   {highlights.map((h, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-xs sm:text-[13px] text-[#E2E8F0] font-light leading-snug">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#7DD3FC] mt-1.5 flex-shrink-0 shadow-[0_0_8px_rgba(125,211,252,0.9)]" />
+                    <li key={i} className={cn("flex items-start gap-2.5 text-xs sm:text-[13px] font-light leading-snug transition-colors duration-300", themeTokens.propertyDetail.highlightItem(isLight))}>
+                      <span className={cn("w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 transition-all duration-300", themeTokens.propertyDetail.highlightDot(isLight))} />
                       <span>{h}</span>
                     </li>
                   ))}
@@ -559,20 +591,33 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
           <section
             ref={section3Ref}
             id="property-images-section"
-            className="absolute inset-0 w-full h-full z-30 overflow-hidden bg-[#060D1A] shadow-[0_-35px_80px_rgba(0,0,0,0.95)] border-t border-white/10 flex flex-col justify-center items-center py-6 sm:py-10 px-4 sm:px-8"
+            style={{ backgroundColor: isLight ? '#FBF9F6' : '#060D1A' }}
+            className={cn(
+              "absolute inset-0 w-full h-full z-30 overflow-y-auto sm:overflow-hidden flex flex-col justify-center items-center py-6 sm:py-10 px-4 sm:px-8 transition-colors duration-300",
+              themeTokens.propertyDetail.showcaseContainer(isLight)
+            )}
           >
             {/* Subtle Ambient Background Gradients */}
-            <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-[#040810] to-transparent pointer-events-none" />
+            <div className={cn(
+              "absolute top-0 inset-x-0 h-40 pointer-events-none transition-colors duration-300",
+              isLight ? "bg-gradient-to-b from-[#FBF9F6] to-transparent" : "bg-gradient-to-b from-[#040810] to-transparent"
+            )} />
             <div className="absolute -top-32 right-12 w-96 h-96 bg-sky-500/5 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-32 left-12 w-96 h-96 bg-sky-500/5 rounded-full blur-3xl pointer-events-none" />
 
             <div className="relative z-10 w-full max-w-6xl mx-auto px-2 sm:px-8 flex flex-col items-center">
               {/* Section Header */}
               <div className="text-center mb-4 sm:mb-8">
-                <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.3em] text-[#7DD3FC] block mb-1 sm:mb-1.5">
+                <span className={cn(
+                  "font-mono text-[10px] sm:text-xs uppercase tracking-[0.3em] block mb-1 sm:mb-1.5 transition-colors duration-300",
+                  themeTokens.propertyDetail.label(isLight)
+                )}>
                   Curated Residence Showcase
                 </span>
-                <h3 className="heading-display text-2xl sm:text-4xl text-white font-light tracking-wide">
+                <h3 className={cn(
+                  "heading-display text-2xl sm:text-4xl font-light tracking-wide transition-colors duration-300",
+                  themeTokens.propertyDetail.showcaseTitle(isLight)
+                )}>
                   Architectural Spaces &amp; Finishes
                 </h3>
               </div>
@@ -583,12 +628,13 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
                   testimonials={testimonialsData}
                   autoplay={true}
                   colors={{
-                    name: '#F8FAFC',
-                    designation: '#7DD3FC',
-                    testimony: '#CBD5E1',
-                    arrowBackground: '#040810',
-                    arrowForeground: '#F8FAFC',
-                    arrowHoverBackground: '#38BDF8',
+                    name: isLight ? '#0B1325' : '#F8FAFC',
+                    designation: isLight ? '#6B6661' : '#7DD3FC',
+                    testimony: isLight ? '#6B6661' : '#CBD5E1',
+                    arrowBackground: isLight ? '#FFFFFF' : '#040810',
+                    arrowForeground: isLight ? '#0B1325' : '#F8FAFC',
+                    arrowHoverBackground: isLight ? '#F5F2EC' : '#38BDF8',
+                    arrowBorder: isLight ? 'rgba(11, 19, 37, 0.2)' : 'rgba(255, 255, 255, 0.15)',
                   }}
                   fontSizes={{
                     name: '1.75rem',
@@ -608,28 +654,47 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
           <section
             ref={section4Ref}
             id="property-enquiry-section"
-            className="absolute inset-0 w-full h-full z-40 overflow-y-auto no-scrollbar bg-[#040810] shadow-[0_-45px_100px_rgba(0,0,0,0.98)] border-t border-white/10 flex flex-col justify-center items-center pt-16 sm:pt-20 pb-[calc(env(safe-area-inset-bottom)+85px)] sm:pb-8 px-4 sm:px-6"
+            style={{ backgroundColor: isLight ? '#FBF9F6' : '#040810' }}
+            className={cn(
+              "absolute inset-0 w-full h-full z-40 overflow-y-auto no-scrollbar flex flex-col justify-center items-center pt-16 sm:pt-20 pb-[calc(env(safe-area-inset-bottom)+85px)] sm:pb-8 px-4 sm:px-6 transition-colors duration-300",
+              themeTokens.propertyDetail.sectionContainer(isLight)
+            )}
           >
             {/* Ambient glow */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(56,189,248,0.06)_0%,transparent_70%)] pointer-events-none" />
+            <div className={cn(
+              "absolute inset-0 pointer-events-none transition-opacity duration-300",
+              isLight ? "opacity-0" : "bg-[radial-gradient(circle_at_50%_30%,rgba(56,189,248,0.06)_0%,transparent_70%)] opacity-100"
+            )} />
 
             <div className="relative z-10 max-w-3xl w-full mx-auto">
               {/* Header */}
               <div className="text-center mb-4 sm:mb-6">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/30 text-[#7DD3FC] text-[10px] sm:text-[11px] font-mono tracking-widest uppercase mb-2">
+                <div className={cn(
+                  "inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-mono tracking-widest uppercase mb-2 transition-colors duration-300",
+                  themeTokens.propertyDetail.enquiryBadge(isLight)
+                )}>
                   <Sparkles size={12} />
                   <span>Private Acquisition Desk</span>
                 </div>
-                <h2 className="heading-display text-2xl sm:text-4xl lg:text-5xl text-white font-light tracking-tight mb-1">
+                <h2 className={cn(
+                  "heading-display text-2xl sm:text-4xl lg:text-5xl font-light tracking-tight mb-1 transition-colors duration-300",
+                  themeTokens.propertyDetail.enquiryTitle(isLight)
+                )}>
                   Enquire About This Property
                 </h2>
-                <p className="font-sans text-xs sm:text-sm text-[#94A3B8] font-light max-w-lg mx-auto">
+                <p className={cn(
+                  "font-sans text-xs sm:text-sm font-light max-w-lg mx-auto transition-colors duration-300",
+                  themeTokens.propertyDetail.enquiryDesc(isLight)
+                )}>
                   Direct connection with our senior partners for {property.name}. Receive the comprehensive property dossier and confidential schedule of private viewings.
                 </p>
               </div>
 
               {/* Form Card */}
-              <div className="rounded-2xl border border-white/10 bg-[#070D18]/90 p-4 sm:p-8 backdrop-blur-xl shadow-[0_25px_60px_rgba(0,0,0,0.7)]">
+              <div className={cn(
+                "rounded-2xl p-4 sm:p-8 backdrop-blur-xl transition-all duration-300",
+                themeTokens.propertyDetail.enquiryCard(isLight)
+              )}>
                 {formSubmitted ? (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -639,15 +704,18 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
                     <div className="w-16 h-16 rounded-full border border-sky-400 bg-sky-400/10 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(56,189,248,0.3)]">
                       <Check size={28} className="text-[#7DD3FC]" strokeWidth={2} />
                     </div>
-                    <h3 className="heading-display text-2xl sm:text-3xl text-white mb-2">
+                    <h3 className={cn("heading-display text-2xl sm:text-3xl mb-2 transition-colors", themeTokens.propertyDetail.enquiryTitle(isLight))}>
                       Enquiry Registered Confidentially
                     </h3>
-                    <p className="text-sm text-[#94A3B8] max-w-md mx-auto mb-6 leading-relaxed">
-                      Thank you for registering interest in <strong className="text-white">{property.name}</strong>. Our private advisory desk has been notified and will reach out directly.
+                    <p className={cn("text-sm max-w-md mx-auto mb-6 leading-relaxed transition-colors", themeTokens.propertyDetail.enquiryDesc(isLight))}>
+                      Thank you for registering interest in <strong className={isLight ? "text-[#0B1325]" : "text-white"}>{property.name}</strong>. Our private advisory desk has been notified and will reach out directly.
                     </p>
                     {enquiryRef && (
-                      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/[0.04] border border-white/10 font-mono text-xs text-[#7DD3FC] mb-6">
-                        <span className="text-white/40 uppercase">Ref:</span>
+                      <div className={cn(
+                        "inline-flex items-center gap-2 px-4 py-2 rounded-lg font-mono text-xs mb-6",
+                        isLight ? "bg-black/5 border border-black/10 text-[#0B1325]" : "bg-white/[0.04] border border-white/10 text-[#7DD3FC]"
+                      )}>
+                        <span className="opacity-40 uppercase">Ref:</span>
                         <span className="font-semibold">{enquiryRef}</span>
                       </div>
                     )}
@@ -673,7 +741,7 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
 
                     {/* Row 1: Full Name */}
                     <div>
-                      <label className="block text-[11px] font-mono tracking-wider uppercase text-[#94A3B8] mb-1.5">
+                      <label className={cn("block text-[11px] font-mono tracking-wider uppercase mb-1.5 transition-colors duration-300", themeTokens.propertyDetail.formLabel(isLight))}>
                         Full Name *
                       </label>
                       <input
@@ -682,14 +750,17 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
                         value={formName}
                         onChange={(e) => setFormName(e.target.value)}
                         placeholder="e.g. Lord Alexander Wright"
-                        className="w-full px-3.5 py-2.5 rounded-lg bg-white/[0.03] border border-white/10 text-white text-xs sm:text-sm placeholder:text-white/20 focus:outline-none focus:border-[#7DD3FC] transition-colors"
+                        className={cn(
+                          "w-full px-3.5 py-2.5 rounded-lg text-xs sm:text-sm focus:outline-none transition-colors",
+                          themeTokens.propertyDetail.formInput(isLight)
+                        )}
                       />
                     </div>
 
                     {/* Row 2: Email & Phone */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                       <div>
-                        <label className="block text-[11px] font-mono tracking-wider uppercase text-[#94A3B8] mb-1.5">
+                        <label className={cn("block text-[11px] font-mono tracking-wider uppercase mb-1.5 transition-colors duration-300", themeTokens.propertyDetail.formLabel(isLight))}>
                           Email Address *
                         </label>
                         <input
@@ -698,12 +769,15 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
                           value={formEmail}
                           onChange={(e) => setFormEmail(e.target.value)}
                           placeholder="name@example.com"
-                          className="w-full px-3.5 py-2.5 rounded-lg bg-white/[0.03] border border-white/10 text-white text-xs sm:text-sm placeholder:text-white/20 focus:outline-none focus:border-[#7DD3FC] transition-colors"
+                          className={cn(
+                            "w-full px-3.5 py-2.5 rounded-lg text-xs sm:text-sm focus:outline-none transition-colors",
+                            themeTokens.propertyDetail.formInput(isLight)
+                          )}
                         />
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-mono tracking-wider uppercase text-[#94A3B8] mb-1.5">
+                        <label className={cn("block text-[11px] font-mono tracking-wider uppercase mb-1.5 transition-colors duration-300", themeTokens.propertyDetail.formLabel(isLight))}>
                           Phone (+Country Code) *
                         </label>
                         <input
@@ -712,19 +786,28 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
                           value={formPhone}
                           onChange={(e) => setFormPhone(e.target.value)}
                           placeholder="+971 50 123 4567"
-                          className="w-full px-3.5 py-2.5 rounded-lg bg-white/[0.03] border border-white/10 text-white text-xs sm:text-sm placeholder:text-white/20 focus:outline-none focus:border-[#7DD3FC] transition-colors"
+                          className={cn(
+                            "w-full px-3.5 py-2.5 rounded-lg text-xs sm:text-sm focus:outline-none transition-colors",
+                            themeTokens.propertyDetail.formInput(isLight)
+                          )}
                         />
                       </div>
                     </div>
 
                     {/* Target Residence Context */}
                     <div>
-                      <label className="block text-[11px] font-mono tracking-wider uppercase text-[#94A3B8] mb-1.5">
+                      <label className={cn("block text-[11px] font-mono tracking-wider uppercase mb-1.5 transition-colors duration-300", themeTokens.propertyDetail.formLabel(isLight))}>
                         Target Residence
                       </label>
-                      <div className="px-3.5 py-2.5 rounded-lg bg-sky-500/[0.07] border border-sky-400/20 text-xs sm:text-sm text-white flex items-center justify-between">
+                      <div className={cn(
+                        "px-3.5 py-2.5 rounded-lg text-xs sm:text-sm flex items-center justify-between transition-colors",
+                        themeTokens.propertyDetail.formTargetContext(isLight)
+                      )}>
                         <span className="font-medium truncate">{property.name}</span>
-                        <span className="font-mono text-[10px] text-[#7DD3FC] uppercase ml-2 flex-shrink-0">
+                        <span className={cn(
+                          "font-mono text-[10px] uppercase ml-2 flex-shrink-0 font-medium transition-colors",
+                          isLight ? "text-[#6B6661]" : "text-[#7DD3FC]"
+                        )}>
                           {property.city || 'Dubai'}
                         </span>
                       </div>
@@ -732,14 +815,17 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
 
                     {/* Message */}
                     <div>
-                      <label className="block text-[11px] font-mono tracking-wider uppercase text-[#94A3B8] mb-1.5">
+                      <label className={cn("block text-[11px] font-mono tracking-wider uppercase mb-1.5 transition-colors duration-300", themeTokens.propertyDetail.formLabel(isLight))}>
                         Specific Requirements or Questions
                       </label>
                       <textarea
                         rows={2}
                         value={formMessage}
                         onChange={(e) => setFormMessage(e.target.value)}
-                        className="w-full px-3.5 py-2 sm:py-2.5 rounded-lg bg-white/[0.03] border border-white/10 text-white text-xs sm:text-sm placeholder:text-white/20 focus:outline-none focus:border-[#7DD3FC] transition-colors resize-none"
+                        className={cn(
+                          "w-full px-3.5 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm focus:outline-none transition-colors resize-none",
+                          themeTokens.propertyDetail.formInput(isLight)
+                        )}
                       />
                     </div>
 
@@ -750,9 +836,12 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
                         id="property-enquiry-consent"
                         checked={formConsent}
                         onChange={(e) => setFormConsent(e.target.checked)}
-                        className="w-4 h-4 rounded border-white/20 bg-white/5 text-[#7DD3FC] focus:ring-0 cursor-pointer"
+                        className={cn(
+                          "w-4 h-4 rounded cursor-pointer",
+                          isLight ? "border-[#0B1325]/30 text-[#0B1325] focus:ring-0" : "border-white/20 bg-white/5 text-[#7DD3FC] focus:ring-0"
+                        )}
                       />
-                      <label htmlFor="property-enquiry-consent" className="text-[11px] text-[#94A3B8] cursor-pointer">
+                      <label htmlFor="property-enquiry-consent" className={cn("text-[11px] cursor-pointer transition-colors duration-300", themeTokens.propertyDetail.formLabel(isLight))}>
                         I authorize Apex Pacific Holdings to contact me regarding this residence in accordance with privacy policies.
                       </label>
                     </div>
@@ -761,7 +850,10 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
                     <button
                       type="submit"
                       disabled={formLoading}
-                      className="w-full py-3 sm:py-3.5 rounded-full bg-white text-[#040810] hover:bg-[#7DD3FC] font-mono text-xs uppercase tracking-widest font-semibold transition-all duration-300 shadow-[0_4px_25px_rgba(255,255,255,0.2)] disabled:opacity-50 cursor-pointer"
+                      className={cn(
+                        "w-full py-3 sm:py-3.5 rounded-full font-mono text-xs uppercase tracking-widest font-semibold transition-all duration-300 disabled:opacity-50 cursor-pointer",
+                        themeTokens.propertyDetail.formButton(isLight)
+                      )}
                     >
                       {formLoading ? 'Submitting Confidential Inquiry...' : 'Register Confidential Interest'}
                     </button>
@@ -776,7 +868,7 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
       {/* =========================================================================
           FOOTER (Follows the 4 stacked pinned sections)
       ========================================================================= */}
-      <div className="relative z-20 bg-[#040810] border-t border-white/10">
+      <div className={cn("relative z-20 border-t transition-colors duration-300", isLight ? "bg-[#FBF9F6] border-[#0B1325]/10" : "bg-[#040810] border-white/10")}>
         <Footer />
       </div>
 
@@ -788,7 +880,10 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
               initial={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: 'easeOut' }}
-              className="fixed inset-0 z-[9999] bg-[#040810] flex flex-col items-center justify-center pointer-events-auto select-none"
+              className={cn(
+                "fixed inset-0 z-[9999] flex flex-col items-center justify-center pointer-events-auto select-none transition-colors",
+                isLight ? "bg-[#FBF9F6]" : "bg-[#040810]"
+              )}
             >
               <OrbitalLoader
                 size="md"

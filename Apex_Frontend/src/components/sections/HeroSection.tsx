@@ -5,6 +5,8 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useReducedMotion } from 'framer-motion'
 import { Play, Pause, Search } from 'lucide-react'
+import { useTheme } from '@/components/providers/ThemeProvider'
+import { cn } from '@/lib/utils'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
@@ -17,6 +19,7 @@ export function HeroSection() {
   const heroContentRef = useRef<HTMLDivElement>(null)
 
   const router = useRouter()
+  const { isLight } = useTheme()
   const [isPlaying, setIsPlaying] = useState(true)
   const [showControls, setShowControls] = useState(false)
   const [videoLoaded, setVideoLoaded] = useState(false)
@@ -259,23 +262,44 @@ export function HeroSection() {
         <div className="absolute bottom-16 sm:bottom-12 md:bottom-14 lg:bottom-16 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] sm:w-[calc(100%-4rem)] max-w-xl z-30 pointer-events-auto pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)]">
           <form
             onSubmit={handleSearchSubmit}
-            className="relative flex items-center justify-between rounded-lg border border-white/20 bg-black/60 backdrop-blur-xl px-4 py-3 sm:py-3.5 shadow-2xl transition-all duration-300 hover:border-sky-400/50 focus-within:border-sky-400 focus-within:ring-1 focus-within:ring-sky-400/50"
+            className={cn(
+              "relative flex items-center justify-between rounded-xl border backdrop-blur-xl px-4 py-3 sm:py-3.5 transition-all duration-300",
+              isLight
+                ? "border-[#0B1325]/20 hover:border-[#0B1325]/50 bg-white/85 hover:bg-white/95 shadow-[0_8px_30px_rgba(0,0,0,0.12)] text-[#0B1325]"
+                : "border-white/20 hover:border-sky-400/50 bg-black/60 shadow-2xl focus-within:border-sky-400 text-white"
+            )}
           >
             <div className="flex items-center gap-3 flex-1 min-w-0 pr-3">
-              <Search size={18} className="text-[#94A3B8] flex-shrink-0" />
+              <Search
+                size={18}
+                className={cn(
+                  "flex-shrink-0 transition-colors",
+                  isLight ? "text-[#0B1325]" : "text-[#94A3B8]"
+                )}
+              />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Find your home"
-                className="w-full bg-transparent text-xs sm:text-sm text-white placeholder-[#94A3B8] font-light focus:outline-none tracking-wide"
+                className={cn(
+                  "w-full bg-transparent text-xs sm:text-sm font-light focus:outline-none tracking-wide transition-colors",
+                  isLight
+                    ? "text-[#0B1325] placeholder-[#6B6661] font-medium"
+                    : "text-white placeholder-[#94A3B8]"
+                )}
               />
             </div>
             <button
               type="submit"
-              className="font-mono text-xs tracking-[0.2em] uppercase text-white hover:text-sky-300 font-medium px-2 py-1 transition-colors flex-shrink-0 cursor-pointer"
+              className={cn(
+                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all font-mono text-[10px] sm:text-xs tracking-[0.2em] uppercase font-medium flex-shrink-0 cursor-pointer",
+                isLight
+                  ? "bg-white text-[#0B1325] border-[#0B1325]/20 hover:border-[#0B1325]/50 hover:bg-[#F5F2EC] shadow-sm"
+                  : "bg-white/10 hover:bg-sky-400/20 text-white hover:text-sky-200 border-white/20"
+              )}
             >
-              SEARCH
+              <span>SEARCH</span>
             </button>
           </form>
         </div>

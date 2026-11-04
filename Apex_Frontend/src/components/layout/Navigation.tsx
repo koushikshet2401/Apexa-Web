@@ -17,6 +17,7 @@ import {
   ArrowRight,
 } from 'lucide-react'
 import CinematicThemeSwitcher from '@/components/ui/cinematic-theme-switcher'
+import { useTheme } from '@/components/providers/ThemeProvider'
 
 // Primary links matching luxury editorial layout
 const primaryNavLinks = [
@@ -29,12 +30,15 @@ const primaryNavLinks = [
 export function Navigation({ hasHero }: { hasHero?: boolean }) {
   const pathname = usePathname()
   const router = useRouter()
+  const { theme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [showBottomNav, setShowBottomNav] = useState(false)
   const [activeBottomNav, setActiveBottomNav] = useState('home')
   const closeRef = useRef<HTMLButtonElement>(null)
+
+  const isLight = mounted && (theme === 'light' || resolvedTheme === 'light')
 
   useEffect(() => {
     setMounted(true)
@@ -254,11 +258,13 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
         transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
         className="fixed top-0 left-0 right-0 z-40"
         style={{
-          background: scrolled
-            ? 'rgba(4, 8, 16, 0.92)'
-            : 'linear-gradient(to bottom, rgba(4,8,16,0.80) 0%, transparent 100%)',
+          background: isLight
+            ? (scrolled ? 'rgba(251, 249, 246, 0.94)' : 'linear-gradient(to bottom, rgba(251,249,246,0.92) 0%, transparent 100%)')
+            : (scrolled ? 'rgba(4, 8, 16, 0.92)' : 'linear-gradient(to bottom, rgba(4,8,16,0.80) 0%, transparent 100%)'),
           backdropFilter: scrolled ? 'blur(16px) saturate(180%)' : 'none',
-          borderBottom: scrolled ? '1px solid rgba(203,213,225,0.10)' : 'none',
+          borderBottom: scrolled
+            ? (isLight ? '1px solid rgba(11, 19, 37, 0.08)' : '1px solid rgba(203,213,225,0.10)')
+            : 'none',
           transition: 'background 0.4s ease, backdrop-filter 0.4s ease, border-color 0.4s ease',
         }}
       >
@@ -274,14 +280,24 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
               onClick={() => setMenuOpen(true)}
               aria-label="Open navigation menu"
               aria-expanded={menuOpen}
-              className="group flex items-center gap-3 py-2 px-1 text-white hover:text-sky-300 transition-colors focus:outline-none cursor-pointer"
+              className={`group flex items-center gap-3 py-2 px-1 transition-colors focus:outline-none cursor-pointer ${
+                isLight ? 'text-[#0B1325] hover:text-[#1D263B]' : 'text-white hover:text-sky-300'
+              }`}
             >
               <div className="flex flex-col gap-1.5 items-start">
-                <span className="block w-6 h-[1.5px] bg-[#F8FAFC] group-hover:bg-sky-300 transition-all group-hover:w-7" />
-                <span className="block w-4 h-[1.5px] bg-[#F8FAFC] group-hover:bg-sky-300 transition-all group-hover:w-7" />
-                <span className="block w-5 h-[1.5px] bg-[#F8FAFC] group-hover:bg-sky-300 transition-all group-hover:w-7" />
+                <span className={`block w-6 h-[1.5px] transition-all group-hover:w-7 ${
+                  isLight ? 'bg-[#0B1325] group-hover:bg-[#1D263B]' : 'bg-[#F8FAFC] group-hover:bg-sky-300'
+                }`} />
+                <span className={`block w-4 h-[1.5px] transition-all group-hover:w-7 ${
+                  isLight ? 'bg-[#0B1325] group-hover:bg-[#1D263B]' : 'bg-[#F8FAFC] group-hover:bg-sky-300'
+                }`} />
+                <span className={`block w-5 h-[1.5px] transition-all group-hover:w-7 ${
+                  isLight ? 'bg-[#0B1325] group-hover:bg-[#1D263B]' : 'bg-[#F8FAFC] group-hover:bg-sky-300'
+                }`} />
               </div>
-              <span className="hidden sm:inline-block font-mono text-[10px] tracking-[0.22em] uppercase text-[#CBD5E1]">
+              <span className={`hidden sm:inline-block font-mono text-[10px] tracking-[0.22em] uppercase ${
+                isLight ? 'text-[#6B6661]' : 'text-[#CBD5E1]'
+              }`}>
                 MENU
               </span>
             </button>
@@ -295,7 +311,9 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
             className="text-center transition-opacity hover:opacity-90 flex items-center"
           >
             <span
-              className="block font-serif font-light text-white tracking-[0.30em] uppercase select-none"
+              className={`block font-serif font-light tracking-[0.30em] uppercase select-none ${
+                isLight ? 'text-[#0B1325]' : 'text-white'
+              }`}
               style={{ fontSize: 'clamp(0.75rem, 1.4vw, 0.95rem)' }}
             >
               APEX PACIFIC HOLDINGS
@@ -308,7 +326,11 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
               href="/#contact"
               onClick={(e) => scrollToSection(e, 'contact')}
               id="nav-contact-cta"
-              className="hidden sm:inline-flex items-center gap-2 px-5 py-2 rounded-full border border-sky-400/30 hover:border-sky-400 text-white hover:text-sky-200 text-[11px] font-mono tracking-[0.18em] uppercase bg-sky-400/[0.06] hover:bg-sky-400/15 transition-all duration-300"
+              className={`hidden sm:inline-flex items-center gap-2 px-5 py-2 rounded-full text-[11px] font-mono tracking-[0.18em] uppercase transition-all duration-300 ${
+                isLight
+                  ? 'border border-[#0B1325]/15 bg-white text-[#0B1325] hover:border-[#0B1325]/40 hover:bg-[#F5F2EC] shadow-sm'
+                  : 'border border-sky-400/30 hover:border-sky-400 text-white hover:text-sky-200 bg-sky-400/[0.06] hover:bg-sky-400/15'
+              }`}
             >
               <span>ENQUIRE</span>
             </Link>
@@ -321,11 +343,18 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
       {/* Hidden strictly on Hero, slides up gracefully once entered into New Launches */}
       <nav
         aria-label="Mobile Bottom Navigation"
-        className={`md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#040810]/95 backdrop-blur-xl border-t border-white/10 px-2 py-2 transition-all duration-500 ease-out ${showBottomNav
-          ? 'translate-y-0 opacity-100 pointer-events-auto'
-          : 'translate-y-full opacity-0 pointer-events-none'
-          }`}
-        style={{ boxShadow: '0 -10px 30px rgba(0,0,0,0.7)' }}
+        className={`md:hidden fixed bottom-0 left-0 right-0 z-40 backdrop-blur-xl px-2 py-2 transition-all duration-500 ease-out ${
+          isLight
+            ? 'bg-[#FBF9F6]/95 border-t border-[#0B1325]/10 text-[#0B1325]'
+            : 'bg-[#040810]/95 border-t border-white/10 text-white'
+        } ${
+          showBottomNav
+            ? 'translate-y-0 opacity-100 pointer-events-auto'
+            : 'translate-y-full opacity-0 pointer-events-none'
+        }`}
+        style={{
+          boxShadow: isLight ? '0 -10px 30px rgba(0,0,0,0.06)' : '0 -10px 30px rgba(0,0,0,0.7)',
+        }}
       >
         <div className="grid grid-cols-5 items-center">
           {/* 1. HOME */}
@@ -335,8 +364,11 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
               setActiveBottomNav('home')
               navigateToSection(e, 'home')
             }}
-            className={`flex flex-col items-center justify-center py-1 transition-colors cursor-pointer ${activeBottomNav === 'home' ? 'text-sky-400 font-medium' : 'text-[#94A3B8] hover:text-white'
-              }`}
+            className={`flex flex-col items-center justify-center py-1 transition-colors cursor-pointer ${
+              activeBottomNav === 'home'
+                ? (isLight ? 'text-[#0B1325] font-semibold' : 'text-sky-400 font-medium')
+                : (isLight ? 'text-[#6B6661] hover:text-[#0B1325]' : 'text-[#94A3B8] hover:text-white')
+            }`}
           >
             <Home size={18} strokeWidth={activeBottomNav === 'home' ? 2 : 1.5} />
             <span className="text-[9px] font-mono tracking-wider uppercase mt-1">HOME</span>
@@ -349,8 +381,11 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
               setActiveBottomNav('launches')
               navigateToSection(e, 'launches')
             }}
-            className={`flex flex-col items-center justify-center py-1 transition-colors cursor-pointer ${activeBottomNav === 'launches' ? 'text-sky-400 font-medium' : 'text-[#94A3B8] hover:text-white'
-              }`}
+            className={`flex flex-col items-center justify-center py-1 transition-colors cursor-pointer ${
+              activeBottomNav === 'launches'
+                ? (isLight ? 'text-[#0B1325] font-semibold' : 'text-sky-400 font-medium')
+                : (isLight ? 'text-[#6B6661] hover:text-[#0B1325]' : 'text-[#94A3B8] hover:text-white')
+            }`}
           >
             <Sparkles size={18} strokeWidth={activeBottomNav === 'launches' ? 2 : 1.5} />
             <span className="text-[9px] font-mono tracking-wider uppercase mt-1">LAUNCHES</span>
@@ -363,8 +398,11 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
               setActiveBottomNav('residences')
               navigateToSection(e, 'collection')
             }}
-            className={`flex flex-col items-center justify-center py-1 transition-colors cursor-pointer ${activeBottomNav === 'residences' ? 'text-sky-400 font-medium' : 'text-[#94A3B8] hover:text-white'
-              }`}
+            className={`flex flex-col items-center justify-center py-1 transition-colors cursor-pointer ${
+              activeBottomNav === 'residences'
+                ? (isLight ? 'text-[#0B1325] font-semibold' : 'text-sky-400 font-medium')
+                : (isLight ? 'text-[#6B6661] hover:text-[#0B1325]' : 'text-[#94A3B8] hover:text-white')
+            }`}
           >
             <Building2 size={18} strokeWidth={activeBottomNav === 'residences' ? 2 : 1.5} />
             <span className="text-[9px] font-mono tracking-wider uppercase mt-1">RESIDENCES</span>
@@ -377,8 +415,11 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
               setActiveBottomNav('enquiry')
               navigateToSection(e, 'contact')
             }}
-            className={`flex flex-col items-center justify-center py-1 transition-colors cursor-pointer ${activeBottomNav === 'enquiry' ? 'text-sky-400 font-medium' : 'text-[#94A3B8] hover:text-white'
-              }`}
+            className={`flex flex-col items-center justify-center py-1 transition-colors cursor-pointer ${
+              activeBottomNav === 'enquiry'
+                ? (isLight ? 'text-[#0B1325] font-semibold' : 'text-sky-400 font-medium')
+                : (isLight ? 'text-[#6B6661] hover:text-[#0B1325]' : 'text-[#94A3B8] hover:text-white')
+            }`}
           >
             <MessageSquare size={18} strokeWidth={activeBottomNav === 'enquiry' ? 2 : 1.5} />
             <span className="text-[9px] font-mono tracking-wider uppercase mt-1">ENQUIRE</span>
@@ -389,7 +430,9 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-label="Open full-screen menu"
-            className="flex flex-col items-center justify-center py-1 text-[#94A3B8] hover:text-white transition-colors focus:outline-none cursor-pointer"
+            className={`flex flex-col items-center justify-center py-1 transition-colors focus:outline-none cursor-pointer ${
+              isLight ? 'text-[#6B6661] hover:text-[#0B1325]' : 'text-[#94A3B8] hover:text-white'
+            }`}
           >
             <Grid2X2 size={18} strokeWidth={1.5} />
             <span className="text-[9px] font-mono tracking-wider uppercase mt-1">MORE</span>
@@ -404,32 +447,52 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
           aria-modal="true"
           aria-label="Navigation Menu"
           data-lenis-prevent
-          className="fixed inset-0 z-[200] bg-[#040810] text-[#F8FAFC] flex flex-col overflow-y-auto overscroll-contain animate-in fade-in duration-150"
+          className={`fixed inset-0 z-[200] flex flex-col overflow-y-auto overscroll-contain animate-in fade-in duration-150 transition-colors ${
+            isLight
+              ? 'bg-[#FBF9F6] text-[#0B1325]'
+              : 'bg-[#040810] text-[#F8FAFC]'
+          }`}
           style={{
             WebkitOverflowScrolling: 'touch',
             touchAction: 'pan-y',
           }}
         >
           {/* Top Bar */}
-          <div className="flex items-center justify-between px-6 sm:px-12 py-6 border-b border-white/10 shrink-0">
-            <span className="font-serif font-light text-white tracking-[0.28em] text-sm uppercase">
+          <div className={`flex items-center justify-between px-6 sm:px-12 py-6 border-b shrink-0 transition-colors ${
+            isLight ? 'border-[#0B1325]/10' : 'border-white/10'
+          }`}>
+            <span className={`font-serif font-light tracking-[0.28em] text-sm uppercase ${
+              isLight ? 'text-[#0B1325]' : 'text-white'
+            }`}>
               APEX PACIFIC HOLDINGS
             </span>
 
-            <button
-              ref={closeRef}
-              onClick={closeMenu}
-              aria-label="Close navigation menu"
-              className="w-10 h-10 rounded-full border border-white/20 hover:border-white flex items-center justify-center text-white transition-colors cursor-pointer"
-            >
-              <X size={18} />
-            </button>
+            <div className="flex items-center gap-3">
+              <CinematicThemeSwitcher />
+              <button
+                ref={closeRef}
+                onClick={closeMenu}
+                aria-label="Close navigation menu"
+                className={`w-10 h-10 rounded-full border flex items-center justify-center transition-colors cursor-pointer ${
+                  isLight
+                    ? 'border-[#0B1325]/20 hover:border-[#0B1325] text-[#0B1325] hover:bg-[#0B1325]/5'
+                    : 'border-white/20 hover:border-white text-white hover:bg-white/5'
+                }`}
+              >
+                <X size={18} />
+              </button>
+            </div>
           </div>
 
           {/* Menu Body */}
           <div className="flex-1 max-w-5xl w-full mx-auto px-6 sm:px-12 py-8 sm:py-10 flex flex-col justify-between">
             {/* Primary Nav List (Home, New Launches, Residences, About Apex) */}
-            <nav aria-label="Main Navigation Menu" className="divide-y divide-white/[0.08] mb-10">
+            <nav
+              aria-label="Main Navigation Menu"
+              className={`divide-y mb-10 transition-colors ${
+                isLight ? 'divide-[#0B1325]/[0.08]' : 'divide-white/[0.08]'
+              }`}
+            >
               {primaryNavLinks.map((item) => (
                 <Link
                   key={item.label}
@@ -441,40 +504,64 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
                       closeMenu()
                     }
                   }}
-                  className="group flex items-center justify-between py-4 sm:py-5 text-white hover:text-sky-300 transition-colors cursor-pointer"
+                  className={`group flex items-center justify-between py-4 sm:py-5 transition-colors cursor-pointer ${
+                    isLight
+                      ? 'text-[#0B1325] hover:text-[#1D263B]'
+                      : 'text-white hover:text-sky-300'
+                  }`}
                 >
                   <span className="font-serif text-2xl sm:text-4xl font-light tracking-tight">
                     {item.label}
                   </span>
                   <ChevronRight
                     size={20}
-                    className="text-[#64748B] group-hover:text-sky-300 group-hover:translate-x-1.5 transition-all"
+                    className={`transition-all group-hover:translate-x-1.5 ${
+                      isLight
+                        ? 'text-[#6B6661] group-hover:text-[#0B1325]'
+                        : 'text-[#64748B] group-hover:text-sky-300'
+                    }`}
                   />
                 </Link>
               ))}
             </nav>
 
             {/* 3 Secondary Columns: EXPLORE, ABOUT, CONNECT */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 py-8 border-t border-white/10">
+            <div className={`grid grid-cols-1 sm:grid-cols-3 gap-8 py-8 border-t transition-colors ${
+              isLight ? 'border-[#0B1325]/10' : 'border-white/10'
+            }`}>
               {/* EXPLORE */}
               <div className="flex flex-col gap-3">
-                <span className="font-mono text-[11px] tracking-[0.25em] text-[#64748B] uppercase font-semibold">
+                <span className={`font-mono text-[11px] tracking-[0.25em] uppercase font-semibold ${
+                  isLight ? 'text-[#6B6661]' : 'text-[#64748B]'
+                }`}>
                   EXPLORE
                 </span>
-                <div className="flex flex-col gap-2 text-xs sm:text-sm text-[#CBD5E1] font-light">
-                  <Link href="/#launches" onClick={(e) => navigateToSection(e, 'launches')} className="hover:text-sky-300 transition-colors cursor-pointer">
+                <div className={`flex flex-col gap-2 text-xs sm:text-sm font-light ${
+                  isLight ? 'text-[#1D263B]' : 'text-[#CBD5E1]'
+                }`}>
+                  <Link href="/#launches" onClick={(e) => navigateToSection(e, 'launches')} className={`transition-colors cursor-pointer ${
+                    isLight ? 'hover:text-[#0B1325]' : 'hover:text-sky-300'
+                  }`}>
                     New launches
                   </Link>
-                  <Link href="/#collection" onClick={(e) => navigateToSection(e, 'collection')} className="hover:text-sky-300 transition-colors cursor-pointer">
+                  <Link href="/#collection" onClick={(e) => navigateToSection(e, 'collection')} className={`transition-colors cursor-pointer ${
+                    isLight ? 'hover:text-[#0B1325]' : 'hover:text-sky-300'
+                  }`}>
                     Residences
                   </Link>
-                  <Link href="/services/luxury-villas" onClick={closeMenu} className="hover:text-sky-300 transition-colors cursor-pointer">
+                  <Link href="/services/luxury-villas" onClick={closeMenu} className={`transition-colors cursor-pointer ${
+                    isLight ? 'hover:text-[#0B1325]' : 'hover:text-sky-300'
+                  }`}>
                     Luxury Villas
                   </Link>
-                  <Link href="/services/sky-residences" onClick={closeMenu} className="hover:text-sky-300 transition-colors cursor-pointer">
+                  <Link href="/services/sky-residences" onClick={closeMenu} className={`transition-colors cursor-pointer ${
+                    isLight ? 'hover:text-[#0B1325]' : 'hover:text-sky-300'
+                  }`}>
                     Sky Residences
                   </Link>
-                  <Link href="/services/commercial-properties" onClick={closeMenu} className="hover:text-sky-300 transition-colors cursor-pointer">
+                  <Link href="/services/commercial-properties" onClick={closeMenu} className={`transition-colors cursor-pointer ${
+                    isLight ? 'hover:text-[#0B1325]' : 'hover:text-sky-300'
+                  }`}>
                     Commercial Properties
                   </Link>
                 </div>
@@ -482,23 +569,37 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
 
               {/* ABOUT */}
               <div className="flex flex-col gap-3">
-                <span className="font-mono text-[11px] tracking-[0.25em] text-[#64748B] uppercase font-semibold">
+                <span className={`font-mono text-[11px] tracking-[0.25em] uppercase font-semibold ${
+                  isLight ? 'text-[#6B6661]' : 'text-[#64748B]'
+                }`}>
                   ABOUT
                 </span>
-                <div className="flex flex-col gap-2 text-xs sm:text-sm text-[#CBD5E1] font-light">
-                  <Link href="/#about" onClick={(e) => navigateToSection(e, 'about')} className="hover:text-sky-300 transition-colors cursor-pointer">
+                <div className={`flex flex-col gap-2 text-xs sm:text-sm font-light ${
+                  isLight ? 'text-[#1D263B]' : 'text-[#CBD5E1]'
+                }`}>
+                  <Link href="/#about" onClick={(e) => navigateToSection(e, 'about')} className={`transition-colors cursor-pointer ${
+                    isLight ? 'hover:text-[#0B1325]' : 'hover:text-sky-300'
+                  }`}>
                     Who we are
                   </Link>
-                  <Link href="/#about" onClick={(e) => navigateToSection(e, 'about')} className="hover:text-sky-300 transition-colors cursor-pointer">
+                  <Link href="/#about" onClick={(e) => navigateToSection(e, 'about')} className={`transition-colors cursor-pointer ${
+                    isLight ? 'hover:text-[#0B1325]' : 'hover:text-sky-300'
+                  }`}>
                     Heritage &amp; Craft
                   </Link>
-                  <Link href="/#portfolio" onClick={(e) => navigateToSection(e, 'portfolio')} className="hover:text-sky-300 transition-colors cursor-pointer">
+                  <Link href="/#portfolio" onClick={(e) => navigateToSection(e, 'portfolio')} className={`transition-colors cursor-pointer ${
+                    isLight ? 'hover:text-[#0B1325]' : 'hover:text-sky-300'
+                  }`}>
                     Disciplined Practice
                   </Link>
-                  <Link href="/#collection" onClick={(e) => navigateToSection(e, 'collection')} className="hover:text-sky-300 transition-colors cursor-pointer">
+                  <Link href="/#collection" onClick={(e) => navigateToSection(e, 'collection')} className={`transition-colors cursor-pointer ${
+                    isLight ? 'hover:text-[#0B1325]' : 'hover:text-sky-300'
+                  }`}>
                     Global Footprint
                   </Link>
-                  <button type="button" onClick={(e) => openContactModal(e)} className="text-left hover:text-sky-300 transition-colors cursor-pointer">
+                  <button type="button" onClick={(e) => openContactModal(e)} className={`text-left transition-colors cursor-pointer ${
+                    isLight ? 'hover:text-[#0B1325]' : 'hover:text-sky-300'
+                  }`}>
                     Confidential Advisory
                   </button>
                 </div>
@@ -506,23 +607,37 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
 
               {/* CONNECT */}
               <div className="flex flex-col gap-3">
-                <span className="font-mono text-[11px] tracking-[0.25em] text-[#64748B] uppercase font-semibold">
+                <span className={`font-mono text-[11px] tracking-[0.25em] uppercase font-semibold ${
+                  isLight ? 'text-[#6B6661]' : 'text-[#64748B]'
+                }`}>
                   CONNECT
                 </span>
-                <div className="flex flex-col gap-2 text-xs sm:text-sm text-[#CBD5E1] font-light">
-                  <button type="button" onClick={(e) => openContactModal(e)} className="text-left hover:text-sky-300 transition-colors cursor-pointer">
+                <div className={`flex flex-col gap-2 text-xs sm:text-sm font-light ${
+                  isLight ? 'text-[#1D263B]' : 'text-[#CBD5E1]'
+                }`}>
+                  <button type="button" onClick={(e) => openContactModal(e)} className={`text-left transition-colors cursor-pointer ${
+                    isLight ? 'hover:text-[#0B1325]' : 'hover:text-sky-300'
+                  }`}>
                     Get in touch
                   </button>
-                  <a href="https://wa.me/" target="_blank" rel="noopener noreferrer" onClick={closeMenu} className="hover:text-sky-300 transition-colors cursor-pointer">
+                  <a href="https://wa.me/" target="_blank" rel="noopener noreferrer" onClick={closeMenu} className={`transition-colors cursor-pointer ${
+                    isLight ? 'hover:text-[#0B1325]' : 'hover:text-sky-300'
+                  }`}>
                     WhatsApp Advisory
                   </a>
-                  <button type="button" onClick={(e) => openContactModal(e)} className="text-left hover:text-sky-300 transition-colors cursor-pointer">
+                  <button type="button" onClick={(e) => openContactModal(e)} className={`text-left transition-colors cursor-pointer ${
+                    isLight ? 'hover:text-[#0B1325]' : 'hover:text-sky-300'
+                  }`}>
                     Client Advisory
                   </button>
-                  <button type="button" onClick={(e) => openContactModal(e)} className="text-left hover:text-sky-300 transition-colors cursor-pointer">
+                  <button type="button" onClick={(e) => openContactModal(e)} className={`text-left transition-colors cursor-pointer ${
+                    isLight ? 'hover:text-[#0B1325]' : 'hover:text-sky-300'
+                  }`}>
                     Concierge Support
                   </button>
-                  <button type="button" onClick={(e) => openContactModal(e)} className="text-left hover:text-sky-300 transition-colors cursor-pointer">
+                  <button type="button" onClick={(e) => openContactModal(e)} className={`text-left transition-colors cursor-pointer ${
+                    isLight ? 'hover:text-[#0B1325]' : 'hover:text-sky-300'
+                  }`}>
                     Contact Us
                   </button>
                 </div>
@@ -530,21 +645,38 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
             </div>
 
             {/* Bottom Box: EXPLORE ALL OF APEX PACIFIC HOLDINGS */}
-            <div className="pt-6 border-t border-white/10">
+            <div className={`pt-6 border-t transition-colors ${
+              isLight ? 'border-[#0B1325]/10' : 'border-white/10'
+            }`}>
               <Link
                 href="/#collection"
                 onClick={(e) => navigateToSection(e, 'collection')}
-                className="w-full flex items-center justify-between p-4 sm:p-5 rounded-lg border border-sky-400/30 hover:border-sky-400 bg-sky-400/[0.04] hover:bg-sky-400/10 transition-colors group cursor-pointer"
+                className={`w-full flex items-center justify-between p-4 sm:p-5 rounded-lg transition-all group cursor-pointer ${
+                  isLight
+                    ? 'border border-[#0B1325]/15 bg-white text-[#0B1325] hover:border-[#0B1325]/40 hover:bg-[#FDFCFB] shadow-sm'
+                    : 'border border-sky-400/30 hover:border-sky-400 bg-sky-400/[0.04] hover:bg-sky-400/10 text-white'
+                }`}
               >
-                <span className="font-mono text-xs sm:text-sm tracking-[0.2em] uppercase text-white group-hover:text-sky-200">
+                <span className={`font-mono text-xs sm:text-sm tracking-[0.2em] uppercase ${
+                  isLight ? 'text-[#0B1325]' : 'text-white group-hover:text-sky-200'
+                }`}>
                   EXPLORE ALL OF APEX PACIFIC HOLDINGS
                 </span>
-                <ArrowRight size={16} className="text-sky-400 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight
+                  size={16}
+                  className={`transition-transform group-hover:translate-x-1 ${
+                    isLight ? 'text-[#0B1325]' : 'text-sky-400'
+                  }`}
+                />
               </Link>
             </div>
 
             {/* Sub-footer details */}
-            <div className="mt-6 pt-4 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-mono tracking-widest uppercase text-[#64748B]">
+            <div className={`mt-6 pt-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-mono tracking-widest uppercase transition-colors ${
+              isLight
+                ? 'border-[#0B1325]/10 text-[#6B6661]'
+                : 'border-white/[0.06] text-[#64748B]'
+            }`}>
               <span>UAE · THAILAND · MALAYSIA · AUSTRALIA · GEORGIA</span>
               <span>CONFIDENTIAL ADVISORY</span>
             </div>

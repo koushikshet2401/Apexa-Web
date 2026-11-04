@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
   transpilePackages: ['gsap'],
   allowedDevOrigins: ['localhost:3000', '*.trycloudflare.com'],
   images: {
+    formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: '*.cloudflare.com' },

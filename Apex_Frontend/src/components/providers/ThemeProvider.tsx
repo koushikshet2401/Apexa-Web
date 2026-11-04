@@ -21,12 +21,25 @@ export function ThemeProvider({
 
 export function useTheme() {
   const { theme, setTheme, resolvedTheme, systemTheme } = useNextTheme()
-  const toggleTheme = () => setTheme(theme === 'dark' || resolvedTheme === 'dark' ? 'light' : 'dark')
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const currentTheme = (theme ?? resolvedTheme ?? 'dark') as 'light' | 'dark'
+  const isLight = mounted && (currentTheme === 'light' || resolvedTheme === 'light')
+  const isDark = !isLight
+  const toggleTheme = () => setTheme(isLight ? 'dark' : 'light')
+
   return {
-    theme: (theme ?? 'dark') as 'light' | 'dark',
+    theme: currentTheme,
     toggleTheme,
     setTheme: (t: 'light' | 'dark') => setTheme(t),
     resolvedTheme,
     systemTheme,
+    isLight,
+    isDark,
+    mounted,
   }
 }

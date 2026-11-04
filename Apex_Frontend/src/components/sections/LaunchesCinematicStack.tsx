@@ -27,6 +27,8 @@ import { PropertySearchDrawer } from '@/components/search/PropertySearchDrawer'
 import { OrbitalLoader } from '@/components/ui/orbital-loader'
 import { ThreeDPhotoCarousel, CarouselCardItem } from '@/components/ui/3d-carousel'
 import { cn } from '@/lib/utils'
+import { useTheme } from '@/components/providers/ThemeProvider'
+import { themeTokens } from '@/lib/theme'
 
 export interface VideoLaunch {
   id: string
@@ -213,6 +215,7 @@ export function LaunchesCinematicStack({
   const PERSPECTIVE_GALLERY_PROPERTIES =
     spaceProperties && spaceProperties.length > 0 ? spaceProperties : DEFAULT_SPACE_PROPERTIES
   const router = useRouter()
+  const { isLight } = useTheme()
   const containerRef = useRef<HTMLDivElement>(null)
   const pinRef = useRef<HTMLDivElement>(null)
 
@@ -1045,11 +1048,14 @@ export function LaunchesCinematicStack({
   const activeColItem: CollectionCountry = COLLECTION_COUNTRIES[activeColIndex] || COLLECTION_COUNTRIES[0]
 
   return (
-    <section ref={containerRef} id="home" className="relative w-full bg-[#040810]">
+    <section ref={containerRef} id="home" className={cn("relative w-full transition-colors duration-300", isLight ? "bg-[#FBF9F6]" : "bg-[#040810]")}>
       {/* Pinned 100vh Viewport Stage */}
       <div
         ref={pinRef}
-        className="relative w-full h-screen h-[100dvh] overflow-hidden bg-[#040810] flex items-center justify-center select-none"
+        className={cn(
+          "relative w-full h-screen h-[100dvh] overflow-hidden flex items-center justify-center select-none transition-colors duration-300",
+          isLight ? "bg-[#FBF9F6]" : "bg-[#040810]"
+        )}
       >
         {/* ══════════════════════════════════════════════════════════════════
             LAYER 0: PINNED HOMEPAGE HERO VIDEO (Stays fixed behind overlay)
@@ -1129,7 +1135,10 @@ export function LaunchesCinematicStack({
                 }}
                 aria-label={isPlaying ? 'Pause video' : 'Play video'}
                 className={cn(
-                  "pointer-events-auto w-14 h-14 sm:w-16 sm:h-16 rounded-full border border-white/30 hover:border-white bg-black/45 hover:bg-black/70 text-white hover:text-sky-300 flex items-center justify-center backdrop-blur-md transition-all duration-300 shadow-[0_8px_32px_rgba(0,0,0,0.6)] hover:scale-105 active:scale-95 cursor-pointer",
+                  "pointer-events-auto w-14 h-14 sm:w-16 sm:h-16 rounded-full border flex items-center justify-center backdrop-blur-md transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer",
+                  isLight
+                    ? "border-[#0B1325]/20 hover:border-[#0B1325] bg-white/80 hover:bg-white text-[#0B1325] shadow-[0_8px_32px_rgba(0,0,0,0.12)]"
+                    : "border-white/30 hover:border-white bg-black/45 hover:bg-black/70 text-white hover:text-sky-300 shadow-[0_8px_32px_rgba(0,0,0,0.6)]",
                   isPlaying ? "opacity-0 hover:opacity-100 focus:opacity-100" : "opacity-100 scale-100"
                 )}
               >
@@ -1153,16 +1162,35 @@ export function LaunchesCinematicStack({
                     setIsSearchOpen(true)
                   }
                 }}
-                className="relative flex items-center justify-between rounded-xl border border-white/35 hover:border-white/60 bg-black/60 hover:bg-black/75 backdrop-blur-xl px-4 py-3 sm:py-3.5 shadow-[0_8px_30px_rgba(0,0,0,0.7)] transition-all duration-300 cursor-pointer group select-none"
+                className={cn(
+                  "relative flex items-center justify-between rounded-xl border backdrop-blur-xl px-4 py-3 sm:py-3.5 transition-all duration-300 cursor-pointer group select-none",
+                  isLight
+                    ? "border-[#0B1325]/20 hover:border-[#0B1325]/50 bg-white/85 hover:bg-white/95 shadow-[0_8px_30px_rgba(0,0,0,0.12)] text-[#0B1325]"
+                    : "border-white/35 hover:border-white/60 bg-black/60 hover:bg-black/75 shadow-[0_8px_30px_rgba(0,0,0,0.7)] text-white"
+                )}
                 aria-label="Open property search panel"
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0 pr-3">
-                  <Search size={18} className="text-white/85 group-hover:text-sky-300 transition-colors flex-shrink-0" />
-                  <span className="text-xs sm:text-sm text-white/90 font-light tracking-wide truncate">
+                  <Search
+                    size={18}
+                    className={cn(
+                      "transition-colors flex-shrink-0",
+                      isLight ? "text-[#0B1325]" : "text-white/85 group-hover:text-sky-300"
+                    )}
+                  />
+                  <span className={cn(
+                    "text-xs sm:text-sm font-light tracking-wide truncate",
+                    isLight ? "text-[#0B1325] font-medium" : "text-white/90"
+                  )}>
                     Find your home
                   </span>
                 </div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 group-hover:bg-sky-400/20 text-white group-hover:text-sky-200 border border-white/20 group-hover:border-sky-400/40 transition-all font-mono text-[10px] sm:text-xs tracking-[0.2em] uppercase font-medium flex-shrink-0">
+                <div className={cn(
+                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all font-mono text-[10px] sm:text-xs tracking-[0.2em] uppercase font-medium flex-shrink-0",
+                  isLight
+                    ? "bg-white text-[#0B1325] border-[#0B1325]/20 hover:border-[#0B1325]/50 hover:bg-[#F5F2EC] shadow-sm"
+                    : "bg-white/10 group-hover:bg-sky-400/20 text-white group-hover:text-sky-200 border-white/20 group-hover:border-sky-400/40"
+                )}>
                   <span>SEARCH</span>
                 </div>
               </div>
@@ -1236,45 +1264,67 @@ export function LaunchesCinematicStack({
           ref={layer1Ref}
           data-section="launches"
           style={{ zIndex: 20 }}
-          className="absolute inset-0 w-full h-full flex flex-col items-center justify-center text-center px-6 sm:px-12 z-20 will-change-[transform,filter] bg-[#040810] shadow-[0_-25px_60px_rgba(0,0,0,0.95)]"
+          className={cn(
+            "absolute inset-0 w-full h-full flex flex-col items-center justify-center text-center px-6 sm:px-12 z-20 will-change-[transform,filter] transition-colors duration-300",
+            isLight
+              ? "bg-[#FBF9F6] shadow-[0_-25px_60px_rgba(0,0,0,0.06)]"
+              : "bg-[#040810] shadow-[0_-25px_60px_rgba(0,0,0,0.95)]"
+          )}
         >
           {/* Ambient Lighting */}
           <div
             className="absolute inset-0 pointer-events-none opacity-25"
             style={{
-              background: 'radial-gradient(ellipse at 50% 50%, rgba(56, 189, 248, 0.22) 0%, transparent 68%)',
+              background: isLight
+                ? 'radial-gradient(ellipse at 50% 50%, rgba(11, 19, 37, 0.04) 0%, transparent 68%)'
+                : 'radial-gradient(ellipse at 50% 50%, rgba(56, 189, 248, 0.22) 0%, transparent 68%)',
             }}
           />
 
           <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
             {/* Eyebrow */}
             <div className="flex items-center justify-center gap-3 mb-6 sm:mb-8">
-              <span className="w-8 h-px bg-sky-400/60" />
-              <span className="font-mono text-xs sm:text-sm tracking-[0.32em] uppercase text-[#7DD3FC] font-medium">
+              <span className={cn("w-8 h-px transition-colors", isLight ? "bg-[#0B1325]/30" : "bg-sky-400/60")} />
+              <span className={cn(
+                "font-mono text-xs sm:text-sm tracking-[0.32em] uppercase font-medium transition-colors",
+                isLight ? "text-[#6B6661]" : "text-[#7DD3FC]"
+              )}>
                 NEW LAUNCHES
               </span>
-              <span className="w-8 h-px bg-sky-400/60" />
+              <span className={cn("w-8 h-px transition-colors", isLight ? "bg-[#0B1325]/30" : "bg-sky-400/60")} />
             </div>
 
             {/* Headline */}
             <h2
-              className="heading-display font-light text-white tracking-tight leading-[1.08] mb-5 sm:mb-8 text-balance"
+              className={cn(
+                "heading-display font-light tracking-tight leading-[1.08] mb-5 sm:mb-8 text-balance transition-colors",
+                isLight ? "text-[#0B1325]" : "text-white"
+              )}
               style={{ fontSize: 'clamp(2.3rem, 5.8vw, 4.8rem)' }}
             >
               {homepageContent?.unveilHeading || (
-                <>Unveil the Latest in <span className="text-sky-200">Exceptional Living</span></>
+                <>Unveil the Latest in <span className={isLight ? "text-[#1D263B] font-normal" : "text-sky-200"}>Exceptional Living</span></>
               )}
             </h2>
 
             {/* Subtext */}
-            <p className="font-sans text-xs sm:text-base md:text-lg text-[#94A3B8] font-light max-w-2xl mx-auto leading-relaxed text-pretty mb-10 sm:mb-14">
+            <p className={cn(
+              "font-sans text-xs sm:text-base md:text-lg font-light max-w-2xl mx-auto leading-relaxed text-pretty mb-10 sm:mb-14 transition-colors",
+              isLight ? "text-[#6B6661]" : "text-[#94A3B8]"
+            )}>
               {homepageContent?.unveilSubtext || "Discover exceptional properties across our international portfolio, each selected for its location, design and long-term potential."}
             </p>
 
             {/* Scroll Indicator */}
-            <div className="flex flex-col items-center justify-center gap-2.5 text-[10px] font-mono tracking-[0.25em] text-[#64748B] uppercase">
+            <div className={cn(
+              "flex flex-col items-center justify-center gap-2.5 text-[10px] font-mono tracking-[0.25em] uppercase transition-colors",
+              isLight ? "text-[#6B6661]" : "text-[#64748B]"
+            )}>
               <span>SCROLL TO EXPLORE</span>
-              <div className="w-px h-8 sm:h-12 bg-gradient-to-b from-sky-400 to-transparent animate-pulse" />
+              <div className={cn(
+                "w-px h-8 sm:h-12 animate-pulse transition-colors",
+                isLight ? "bg-gradient-to-b from-[#0B1325]/40 to-transparent" : "bg-gradient-to-b from-sky-400 to-transparent"
+              )} />
             </div>
           </div>
         </div>
@@ -1306,19 +1356,38 @@ export function LaunchesCinematicStack({
               opacity: 1,
             }}
           />
-          {/* Subtle bottom-only gradient: Top & middle stay 100% crisp, bright and clear */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#040810]/90 via-black/20 to-transparent pointer-events-none" />
+          {/* Subtle bottom-only gradient */}
+          <div className={cn(
+            "absolute inset-0 pointer-events-none transition-colors duration-300",
+            isLight
+              ? "bg-gradient-to-t from-[#FBF9F6]/80 via-transparent to-transparent"
+              : "bg-gradient-to-t from-[#040810]/90 via-black/20 to-transparent"
+          )} />
 
           {/* Overlay Content with safe pb for mobile nav */}
           <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-10 md:p-14 lg:p-16 pb-20 sm:pb-12 md:pb-16 z-20 pointer-events-none">
-            <div className="max-w-xl pointer-events-auto bg-black/50 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none p-4 sm:p-0 rounded-2xl sm:rounded-none border border-white/15 sm:border-none shadow-[0_8px_30px_rgba(0,0,0,0.8)] sm:shadow-none">
-              <span className="inline-block text-[10px] sm:text-xs font-mono tracking-[0.25em] uppercase text-[#7DD3FC] mb-0.5 sm:mb-1">
+            <div className={cn(
+              "max-w-xl pointer-events-auto backdrop-blur-md p-5 sm:p-6 rounded-2xl border transition-all duration-300",
+              isLight
+                ? "bg-white/75 border-[#0B1325]/15 shadow-xl text-[#0B1325]"
+                : "bg-black/50 border-white/15 shadow-[0_8px_30px_rgba(0,0,0,0.8)] text-white"
+            )}>
+              <span className={cn(
+                "inline-block text-[10px] sm:text-xs font-mono tracking-[0.25em] uppercase mb-0.5 sm:mb-1 transition-colors",
+                isLight ? "text-[#6B6661] font-semibold" : "text-[#7DD3FC]"
+              )}>
                 {LAUNCHES[0].tag}
               </span>
-              <h2 className="font-display text-xl sm:text-4xl md:text-5xl lg:text-6xl text-white font-light tracking-tight mb-0.5 sm:mb-1">
+              <h2 className={cn(
+                "font-display text-xl sm:text-4xl md:text-5xl lg:text-6xl font-light tracking-tight mb-0.5 sm:mb-1 transition-colors",
+                isLight ? "text-[#0B1325]" : "text-white"
+              )}>
                 {LAUNCHES[0].title}
               </h2>
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase text-[#94A3B8] mb-0.5 sm:mb-2">
+              <div className={cn(
+                "flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase mb-0.5 sm:mb-2 transition-colors",
+                isLight ? "text-[#6B6661]" : "text-[#94A3B8]"
+              )}>
                 <span>{LAUNCHES[0].location}</span>
                 <span>·</span>
                 <span>{LAUNCHES[0].type}</span>
@@ -1326,10 +1395,16 @@ export function LaunchesCinematicStack({
                 <span>{LAUNCHES[0].beds}</span>
               </div>
               <div className="flex items-baseline gap-2 mb-2.5 sm:mb-4">
-                <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-[#94A3B8]">
+                <span className={cn(
+                  "text-[9px] sm:text-[10px] uppercase tracking-[0.2em] transition-colors",
+                  isLight ? "text-[#6B6661]" : "text-[#94A3B8]"
+                )}>
                   From
                 </span>
-                <span className="font-display text-base sm:text-2xl md:text-3xl text-white tracking-wide">
+                <span className={cn(
+                  "font-display text-base sm:text-2xl md:text-3xl tracking-wide transition-colors",
+                  isLight ? "text-[#0B1325] font-normal" : "text-white"
+                )}>
                   {LAUNCHES[0].price}
                 </span>
               </div>
@@ -1337,7 +1412,12 @@ export function LaunchesCinematicStack({
                 type="button"
                 onClick={(e) => handleExploreLaunch(e, `${LAUNCHES[0].href}?from=launches`)}
                 disabled={navigatingHref?.startsWith(LAUNCHES[0].href)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full bg-white text-black hover:bg-sky-200 border border-white text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_4px_25px_rgba(0,0,0,0.9)] cursor-pointer disabled:opacity-90"
+                className={cn(
+                  "inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 cursor-pointer disabled:opacity-90",
+                  isLight
+                    ? "bg-white text-[#0B1325] border border-[#0B1325]/20 hover:border-[#0B1325]/50 hover:bg-[#FDFCFB] shadow-md"
+                    : "bg-white text-black hover:bg-sky-200 border border-white shadow-[0_4px_25px_rgba(0,0,0,0.9)]"
+                )}
               >
                 {navigatingHref?.startsWith(LAUNCHES[0].href) ? (
                   <>
@@ -1382,19 +1462,38 @@ export function LaunchesCinematicStack({
               opacity: 1,
             }}
           />
-          {/* Subtle bottom-only gradient: Top & middle stay 100% crisp, bright and clear */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#040810]/90 via-black/20 to-transparent pointer-events-none" />
+          {/* Subtle bottom-only gradient */}
+          <div className={cn(
+            "absolute inset-0 pointer-events-none transition-colors duration-300",
+            isLight
+              ? "bg-gradient-to-t from-[#FBF9F6]/80 via-transparent to-transparent"
+              : "bg-gradient-to-t from-[#040810]/90 via-black/20 to-transparent"
+          )} />
 
           {/* Overlay Content with safe pb for mobile nav */}
           <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-10 md:p-14 lg:p-16 pb-20 sm:pb-12 md:pb-16 z-20 pointer-events-none">
-            <div className="max-w-xl pointer-events-auto bg-black/50 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none p-4 sm:p-0 rounded-2xl sm:rounded-none border border-white/15 sm:border-none shadow-[0_8px_30px_rgba(0,0,0,0.8)] sm:shadow-none">
-              <span className="inline-block text-[10px] sm:text-xs font-mono tracking-[0.25em] uppercase text-[#7DD3FC] mb-0.5 sm:mb-1">
+            <div className={cn(
+              "max-w-xl pointer-events-auto backdrop-blur-md p-5 sm:p-6 rounded-2xl border transition-all duration-300",
+              isLight
+                ? "bg-white/75 border-[#0B1325]/15 shadow-xl text-[#0B1325]"
+                : "bg-black/50 border-white/15 shadow-[0_8px_30px_rgba(0,0,0,0.8)] text-white"
+            )}>
+              <span className={cn(
+                "inline-block text-[10px] sm:text-xs font-mono tracking-[0.25em] uppercase mb-0.5 sm:mb-1 transition-colors",
+                isLight ? "text-[#6B6661] font-semibold" : "text-[#7DD3FC]"
+              )}>
                 {LAUNCHES[1].tag}
               </span>
-              <h2 className="font-display text-xl sm:text-4xl md:text-5xl lg:text-6xl text-white font-light tracking-tight mb-0.5 sm:mb-1">
+              <h2 className={cn(
+                "font-display text-xl sm:text-4xl md:text-5xl lg:text-6xl font-light tracking-tight mb-0.5 sm:mb-1 transition-colors",
+                isLight ? "text-[#0B1325]" : "text-white"
+              )}>
                 {LAUNCHES[1].title}
               </h2>
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase text-[#94A3B8] mb-0.5 sm:mb-2">
+              <div className={cn(
+                "flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase mb-0.5 sm:mb-2 transition-colors",
+                isLight ? "text-[#6B6661]" : "text-[#94A3B8]"
+              )}>
                 <span>{LAUNCHES[1].location}</span>
                 <span>·</span>
                 <span>{LAUNCHES[1].type}</span>
@@ -1402,10 +1501,16 @@ export function LaunchesCinematicStack({
                 <span>{LAUNCHES[1].beds}</span>
               </div>
               <div className="flex items-baseline gap-2 mb-2.5 sm:mb-4">
-                <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-[#94A3B8]">
+                <span className={cn(
+                  "text-[9px] sm:text-[10px] uppercase tracking-[0.2em] transition-colors",
+                  isLight ? "text-[#6B6661]" : "text-[#94A3B8]"
+                )}>
                   From
                 </span>
-                <span className="font-display text-base sm:text-2xl md:text-3xl text-white tracking-wide">
+                <span className={cn(
+                  "font-display text-base sm:text-2xl md:text-3xl tracking-wide transition-colors",
+                  isLight ? "text-[#0B1325] font-normal" : "text-white"
+                )}>
                   {LAUNCHES[1].price}
                 </span>
               </div>
@@ -1413,7 +1518,12 @@ export function LaunchesCinematicStack({
                 type="button"
                 onClick={(e) => handleExploreLaunch(e, `${LAUNCHES[1].href}?from=launches`)}
                 disabled={navigatingHref?.startsWith(LAUNCHES[1].href)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full bg-white text-black hover:bg-sky-200 border border-white text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_4px_25px_rgba(0,0,0,0.9)] cursor-pointer disabled:opacity-90"
+                className={cn(
+                  "inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 cursor-pointer disabled:opacity-90",
+                  isLight
+                    ? "bg-white text-[#0B1325] border border-[#0B1325]/20 hover:border-[#0B1325]/50 hover:bg-[#FDFCFB] shadow-md"
+                    : "bg-white text-black hover:bg-sky-200 border border-white shadow-[0_4px_25px_rgba(0,0,0,0.9)]"
+                )}
               >
                 {navigatingHref?.startsWith(LAUNCHES[1].href) ? (
                   <>
@@ -1458,19 +1568,38 @@ export function LaunchesCinematicStack({
               opacity: 1,
             }}
           />
-          {/* Subtle bottom-only gradient: Top & middle stay 100% crisp, bright and clear */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#040810]/90 via-black/20 to-transparent pointer-events-none" />
+          {/* Subtle bottom-only gradient */}
+          <div className={cn(
+            "absolute inset-0 pointer-events-none transition-colors duration-300",
+            isLight
+              ? "bg-gradient-to-t from-[#FBF9F6]/80 via-transparent to-transparent"
+              : "bg-gradient-to-t from-[#040810]/90 via-black/20 to-transparent"
+          )} />
 
           {/* Overlay Content with safe pb for mobile nav */}
           <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-10 md:p-14 lg:p-16 pb-20 sm:pb-12 md:pb-16 z-20 pointer-events-none">
-            <div className="max-w-xl pointer-events-auto bg-black/50 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none p-4 sm:p-0 rounded-2xl sm:rounded-none border border-white/15 sm:border-none shadow-[0_8px_30px_rgba(0,0,0,0.8)] sm:shadow-none">
-              <span className="inline-block text-[10px] sm:text-xs font-mono tracking-[0.25em] uppercase text-[#7DD3FC] mb-0.5 sm:mb-1">
+            <div className={cn(
+              "max-w-xl pointer-events-auto backdrop-blur-md p-5 sm:p-6 rounded-2xl border transition-all duration-300",
+              isLight
+                ? "bg-white/75 border-[#0B1325]/15 shadow-xl text-[#0B1325]"
+                : "bg-black/50 border-white/15 shadow-[0_8px_30px_rgba(0,0,0,0.8)] text-white"
+            )}>
+              <span className={cn(
+                "inline-block text-[10px] sm:text-xs font-mono tracking-[0.25em] uppercase mb-0.5 sm:mb-1 transition-colors",
+                isLight ? "text-[#6B6661] font-semibold" : "text-[#7DD3FC]"
+              )}>
                 {LAUNCHES[2].tag}
               </span>
-              <h2 className="font-display text-xl sm:text-4xl md:text-5xl lg:text-6xl text-white font-light tracking-tight mb-0.5 sm:mb-1">
+              <h2 className={cn(
+                "font-display text-xl sm:text-4xl md:text-5xl lg:text-6xl font-light tracking-tight mb-0.5 sm:mb-1 transition-colors",
+                isLight ? "text-[#0B1325]" : "text-white"
+              )}>
                 {LAUNCHES[2].title}
               </h2>
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase text-[#94A3B8] mb-0.5 sm:mb-2">
+              <div className={cn(
+                "flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase mb-0.5 sm:mb-2 transition-colors",
+                isLight ? "text-[#6B6661]" : "text-[#94A3B8]"
+              )}>
                 <span>{LAUNCHES[2].location}</span>
                 <span>·</span>
                 <span>{LAUNCHES[2].type}</span>
@@ -1478,10 +1607,16 @@ export function LaunchesCinematicStack({
                 <span>{LAUNCHES[2].beds}</span>
               </div>
               <div className="flex items-baseline gap-2 mb-2.5 sm:mb-4">
-                <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-[#94A3B8]">
+                <span className={cn(
+                  "text-[9px] sm:text-[10px] uppercase tracking-[0.2em] transition-colors",
+                  isLight ? "text-[#6B6661]" : "text-[#94A3B8]"
+                )}>
                   From
                 </span>
-                <span className="font-display text-base sm:text-2xl md:text-3xl text-white tracking-wide">
+                <span className={cn(
+                  "font-display text-base sm:text-2xl md:text-3xl tracking-wide transition-colors",
+                  isLight ? "text-[#0B1325] font-normal" : "text-white"
+                )}>
                   {LAUNCHES[2].price}
                 </span>
               </div>
@@ -1489,7 +1624,12 @@ export function LaunchesCinematicStack({
                 type="button"
                 onClick={(e) => handleExploreLaunch(e, `${LAUNCHES[2].href}?from=launches`)}
                 disabled={navigatingHref?.startsWith(LAUNCHES[2].href)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full bg-white text-black hover:bg-sky-200 border border-white text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_4px_25px_rgba(0,0,0,0.9)] cursor-pointer disabled:opacity-90"
+                className={cn(
+                  "inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 cursor-pointer disabled:opacity-90",
+                  isLight
+                    ? "bg-white text-[#0B1325] border border-[#0B1325]/20 hover:border-[#0B1325]/50 hover:bg-[#FDFCFB] shadow-md"
+                    : "bg-white text-black hover:bg-sky-200 border border-white shadow-[0_4px_25px_rgba(0,0,0,0.9)]"
+                )}
               >
                 {navigatingHref?.startsWith(LAUNCHES[2].href) ? (
                   <>
@@ -1515,42 +1655,48 @@ export function LaunchesCinematicStack({
           ref={layer5Ref}
           data-section="collection"
           style={{ zIndex: 60 }}
-          className="absolute inset-0 w-full h-[100dvh] max-h-[100dvh] will-change-[transform,filter] z-[60] bg-[#040810] flex flex-col justify-between pt-[calc(env(safe-area-inset-top)+84px)] sm:pt-24 md:pt-28 px-4 sm:px-8 md:px-12 pb-[calc(env(safe-area-inset-bottom)+76px)] sm:pb-8 border-t border-white/10 shadow-[0_-30px_70px_rgba(0,0,0,0.98)] overflow-hidden"
+          className={cn(
+            "absolute inset-0 w-full h-[100dvh] max-h-[100dvh] will-change-[transform,filter] z-[60] flex flex-col justify-between pt-[calc(env(safe-area-inset-top)+84px)] sm:pt-24 md:pt-28 px-4 sm:px-8 md:px-12 pb-[calc(env(safe-area-inset-bottom)+76px)] sm:pb-8 border-t overflow-hidden transition-colors duration-300",
+            themeTokens.collection.container(isLight)
+          )}
         >
           {/* 1. Header & Controls: Eyebrow, Title, Description, Search Bar & Country Filters */}
           <div className="w-full max-w-7xl mx-auto flex flex-col gap-2 sm:gap-3 shrink-0">
             {/* Eyebrow */}
             <div className="flex items-center gap-2">
-              <span className="w-5 h-px bg-sky-400" />
-              <span className="font-mono text-[9px] sm:text-[11px] tracking-[0.24em] uppercase text-[#7DD3FC] font-medium">
+              <span className={cn("w-5 h-px transition-colors duration-300", themeTokens.collection.eyebrowLine(isLight))} />
+              <span className={cn("font-mono text-[9px] sm:text-[11px] tracking-[0.24em] uppercase font-medium transition-colors duration-300", themeTokens.collection.eyebrow(isLight))}>
                 SIGNATURE RESIDENCES
               </span>
             </div>
 
             {/* Title & Description Row */}
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-1 sm:gap-6">
-              <h2 className="font-serif text-2xl sm:text-4xl md:text-5xl text-white font-light tracking-tight leading-none">
-                The <span className="text-sky-200">collection</span>
+              <h2 className={cn("font-serif text-2xl sm:text-4xl md:text-5xl font-light tracking-tight leading-none transition-colors duration-300", themeTokens.collection.title(isLight))}>
+                The <span className={themeTokens.collection.titleAccent(isLight)}>collection</span>
               </h2>
-              <p className="font-sans text-[11px] sm:text-xs md:text-sm text-[#94A3B8] max-w-md font-light leading-relaxed text-left sm:text-right line-clamp-1 sm:line-clamp-none">
+              <p className={cn("font-sans text-[11px] sm:text-xs md:text-sm max-w-md font-light leading-relaxed text-left sm:text-right line-clamp-1 sm:line-clamp-none transition-colors duration-300", themeTokens.collection.description(isLight))}>
                 Five addresses, each designed around its site. Drag, swipe or click to explore the portfolio.
               </p>
             </div>
 
             {/* Search Input & Country Filter Chips Row */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-1.5 border-t border-white/[0.08]">
+            <div className={cn("flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-1.5 border-t transition-colors duration-300", isLight ? "border-[#0B1325]/10" : "border-white/[0.08]")}>
               {/* Search bar */}
               <div className="relative w-full sm:w-64 md:w-72">
                 <Search
                   size={13}
-                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sky-400/80 pointer-events-none"
+                  className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors duration-300", themeTokens.collection.searchIcon(isLight))}
                 />
                 <input
                   type="text"
                   value={colSearchQuery}
                   onChange={(e) => handleColSearchChange(e.target.value)}
                   placeholder="Search country or residence..."
-                  className="w-full bg-white/[0.04] text-white placeholder-[#64748B] text-[11px] sm:text-xs pl-9 pr-7 py-1.5 sm:py-2 rounded-full border border-white/15 focus:border-sky-400 focus:outline-none transition-all font-sans"
+                  className={cn(
+                    "w-full text-[11px] sm:text-xs pl-9 pr-7 py-1.5 sm:py-2 rounded-full border transition-all font-sans focus:outline-none",
+                    themeTokens.collection.searchInput(isLight)
+                  )}
                 />
                 {colSearchQuery && (
                   <button
@@ -1558,7 +1704,10 @@ export function LaunchesCinematicStack({
                       setColSearchQuery('')
                       setSelectedCountry('All')
                     }}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-white"
+                    className={cn(
+                      "absolute right-2.5 top-1/2 -translate-y-1/2 transition-colors",
+                      isLight ? "text-[#6B6661] hover:text-[#0B1325]" : "text-[#94A3B8] hover:text-white"
+                    )}
                   >
                     <X size={12} />
                   </button>
@@ -1575,9 +1724,7 @@ export function LaunchesCinematicStack({
                       onClick={() => handleSelectCountry(chip.value)}
                       className={cn(
                         'px-2 py-0.5 sm:px-2.5 sm:py-1 text-[8.5px] sm:text-[10px] font-mono uppercase tracking-[0.12em] rounded-full transition-all duration-200 border cursor-pointer shrink-0',
-                        isSelected
-                          ? 'bg-sky-400 text-[#040810] font-semibold border-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.4)]'
-                          : 'bg-white/[0.04] text-[#CBD5E1] border-white/10 hover:border-white/30 hover:text-white'
+                        themeTokens.collection.filterChip(isLight, isSelected)
                       )}
                     >
                       {chip.label}
@@ -1650,9 +1797,7 @@ export function LaunchesCinematicStack({
                     }}
                     className={cn(
                       'absolute w-[260px] h-[180px] md:w-[500px] md:h-[330px] rounded-2xl overflow-hidden shadow-2xl transition-shadow cursor-pointer will-change-transform group',
-                      isActive
-                        ? 'border border-sky-400/60 shadow-[0_20px_50px_rgba(0,0,0,0.95)]'
-                        : 'border border-white/10 hover:opacity-70'
+                      themeTokens.collection.carouselCard(isLight, isActive)
                     )}
                   >
                     {/* Exact Country Image with Cover Fit & No Stretching */}
@@ -1676,7 +1821,10 @@ export function LaunchesCinematicStack({
                           type="button"
                           onClick={(e) => handleExploreCountry(e, item.href)}
                           disabled={navigatingHref === item.href}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 hover:bg-sky-400 hover:text-[#040810] text-white border border-white/30 text-[10px] sm:text-xs font-mono uppercase tracking-[0.16em] backdrop-blur-md shadow-lg transition-all duration-300 shrink-0 cursor-pointer disabled:opacity-80"
+                          className={cn(
+                            "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-mono uppercase tracking-[0.16em] transition-all duration-300 shrink-0 cursor-pointer disabled:opacity-80",
+                            themeTokens.collection.cardExploreButton(isLight)
+                          )}
                         >
                           {navigatingHref === item.href ? (
                             <>
@@ -1703,13 +1851,22 @@ export function LaunchesCinematicStack({
             <div className="flex items-end justify-between gap-4">
               {/* Left: Active Country Details & Specs */}
               <div className="flex flex-col min-w-0 pr-2">
-                <span className="font-mono text-[9px] sm:text-[10px] text-[#7DD3FC] tracking-[0.2em] uppercase">
+                <span className={cn(
+                  "font-mono text-[9px] sm:text-[10px] tracking-[0.2em] uppercase font-medium transition-colors duration-300",
+                  themeTokens.collection.bottomLabel(isLight)
+                )}>
                   DESTINATION · {activeColItem.countryKey}
                 </span>
-                <h3 className="font-serif text-xl sm:text-2xl md:text-3xl text-white font-light tracking-wide truncate mt-0.5">
+                <h3 className={cn(
+                  "font-serif text-xl sm:text-2xl md:text-3xl font-light tracking-wide truncate mt-0.5 transition-colors duration-300",
+                  themeTokens.collection.bottomTitle(isLight)
+                )}>
                   {activeColItem.title}
                 </h3>
-                <p className="font-mono text-[9px] sm:text-[11px] text-sky-200/80 tracking-[0.18em] uppercase mt-0.5 truncate">
+                <p className={cn(
+                  "font-mono text-[9px] sm:text-[11px] tracking-[0.18em] uppercase mt-0.5 truncate transition-colors duration-300",
+                  themeTokens.collection.bottomSpecs(isLight)
+                )}>
                   {activeColItem.specs}
                 </p>
               </div>
@@ -1719,7 +1876,10 @@ export function LaunchesCinematicStack({
                 type="button"
                 onClick={(e) => handleExploreCountry(e, activeColItem.href)}
                 disabled={navigatingHref === activeColItem.href}
-                className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-sky-500/20 hover:bg-sky-400 text-sky-200 hover:text-[#040810] border border-sky-400/50 text-[10px] sm:text-xs font-mono uppercase tracking-[0.18em] font-medium transition-all duration-300 shrink-0 shadow-lg cursor-pointer disabled:opacity-80"
+                className={cn(
+                  "inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-[10px] sm:text-xs font-mono uppercase tracking-[0.18em] font-medium transition-all duration-300 shrink-0 cursor-pointer disabled:opacity-80",
+                  themeTokens.collection.bottomExploreButton(isLight)
+                )}
               >
                 {navigatingHref === activeColItem.href ? (
                   <>
@@ -1736,7 +1896,7 @@ export function LaunchesCinematicStack({
             </div>
 
             {/* Reference Bottom Horizontal Divider Rule */}
-            <div className="w-full h-px bg-white/10 mt-2 sm:mt-3" />
+            <div className={cn("w-full h-px mt-2 sm:mt-3 transition-colors duration-300", themeTokens.collection.divider(isLight))} />
           </div>
         </div>
 
@@ -1747,43 +1907,49 @@ export function LaunchesCinematicStack({
         <div
           ref={layer6Ref}
           style={{ zIndex: 70 }}
-          className="absolute inset-0 w-full h-[100dvh] max-h-[100dvh] will-change-[transform,filter] z-[70] bg-[#040810] flex flex-col items-center justify-center text-center px-6 sm:px-12 shadow-[0_-30px_70px_rgba(0,0,0,0.98)] border-t border-white/10 overflow-hidden"
+          className={cn(
+            "absolute inset-0 w-full h-[100dvh] max-h-[100dvh] will-change-[transform,filter] z-[70] flex flex-col items-center justify-center text-center px-6 sm:px-12 border-t overflow-hidden transition-colors duration-300",
+            themeTokens.oneTeam.container(isLight)
+          )}
         >
           {/* Subtle Ambient Radial Glow */}
           <div
-            className="absolute inset-0 pointer-events-none opacity-25"
+            className="absolute inset-0 pointer-events-none transition-opacity duration-500"
             style={{
-              background: 'radial-gradient(ellipse at 50% 50%, rgba(56, 189, 248, 0.22) 0%, transparent 68%)',
+              background: isLight
+                ? 'radial-gradient(ellipse at 50% 50%, rgba(11, 19, 37, 0.04) 0%, transparent 68%)'
+                : 'radial-gradient(ellipse at 50% 50%, rgba(56, 189, 248, 0.22) 0%, transparent 68%)',
+              opacity: isLight ? 1 : 0.25,
             }}
           />
 
           <div className="relative z-10 max-w-3xl mx-auto flex flex-col items-center">
             {/* Eyebrow */}
             <div className="flex items-center justify-center gap-3 mb-4 sm:mb-6">
-              <span className="w-8 h-px bg-sky-400/60" />
-              <span className="font-mono text-xs sm:text-sm tracking-[0.32em] uppercase text-[#7DD3FC] font-medium">
+              <span className={cn("w-8 h-px transition-colors duration-300", themeTokens.oneTeam.eyebrowLine(isLight))} />
+              <span className={cn("font-mono text-xs sm:text-sm tracking-[0.32em] uppercase font-medium transition-colors duration-300", themeTokens.oneTeam.eyebrow(isLight))}>
                 WHAT WE DO
               </span>
-              <span className="w-8 h-px bg-sky-400/60" />
+              <span className={cn("w-8 h-px transition-colors duration-300", themeTokens.oneTeam.eyebrowLine(isLight))} />
             </div>
 
             {/* Main Title */}
             <h2
-              className="heading-display font-light text-white tracking-tight leading-[1.08] mb-5 sm:mb-7 text-balance"
+              className={cn("heading-display font-light tracking-tight leading-[1.08] mb-5 sm:mb-7 text-balance transition-colors duration-300", themeTokens.oneTeam.title(isLight))}
               style={{ fontSize: 'clamp(2.4rem, 6vw, 4.8rem)' }}
             >
-              One team, <span className="text-sky-200">end to end</span>
+              One team, <span className={themeTokens.oneTeam.titleAccent(isLight)}>end to end</span>
             </h2>
 
             {/* Description */}
-            <p className="font-sans text-xs sm:text-base md:text-lg text-[#94A3B8] font-light max-w-xl mx-auto leading-relaxed text-pretty">
+            <p className={cn("font-sans text-xs sm:text-base md:text-lg font-light max-w-xl mx-auto leading-relaxed text-pretty transition-colors duration-300", themeTokens.oneTeam.description(isLight))}>
               Development, design and advice from a single studio, so nothing is lost between the drawing board and the front door.
             </p>
 
             {/* Subtle Scroll Cue */}
-            <div className="flex flex-col items-center justify-center gap-2 mt-8 sm:mt-12 text-[10px] font-mono tracking-[0.25em] text-[#64748B] uppercase">
+            <div className={cn("flex flex-col items-center justify-center gap-2 mt-8 sm:mt-12 text-[10px] font-mono tracking-[0.25em] uppercase transition-colors duration-300", themeTokens.oneTeam.scrollCue(isLight))}>
               <span>SCROLL TO EXPLORE</span>
-              <div className="w-px h-6 sm:h-8 bg-gradient-to-b from-sky-400 to-transparent animate-pulse" />
+              <div className={cn("w-px h-6 sm:h-8 animate-pulse transition-all duration-300", themeTokens.oneTeam.scrollLine(isLight))} />
             </div>
           </div>
         </div>
@@ -1796,7 +1962,10 @@ export function LaunchesCinematicStack({
           ref={layer7Ref}
           data-section="services"
           style={{ zIndex: 80 }}
-          className="absolute inset-0 w-full h-[100dvh] max-h-[100dvh] will-change-[transform,filter] z-[80] bg-[#040810] flex flex-col justify-center items-center px-3 sm:px-6 md:px-8 lg:px-12 pb-[calc(env(safe-area-inset-bottom)+70px)] sm:pb-8 pt-4 sm:pt-6 overflow-hidden shadow-[0_-30px_70px_rgba(0,0,0,0.98)] border-t border-white/10"
+          className={cn(
+            "absolute inset-0 w-full h-[100dvh] max-h-[100dvh] will-change-[transform,filter] z-[80] flex flex-col justify-center items-center px-3 sm:px-6 md:px-8 lg:px-12 pb-[calc(env(safe-area-inset-bottom)+70px)] sm:pb-8 pt-4 sm:pt-6 overflow-hidden border-t transition-colors duration-300",
+            themeTokens.oneTeam.container(isLight)
+          )}
         >
           {/* 5-Panel Content Grid: Enlarged sizing taking generous viewport space */}
           <div className="w-full max-w-6xl mx-auto flex-1 flex flex-col justify-center my-auto gap-2.5 sm:gap-3.5 md:gap-4 overflow-hidden">
@@ -1819,7 +1988,7 @@ export function LaunchesCinematicStack({
                   "relative h-28 sm:h-36 md:h-44 lg:h-52 rounded-xl sm:rounded-2xl overflow-hidden border transition-all duration-300 group shadow-xl cursor-pointer select-none",
                   navigatingHref === '/services/luxury-villas'
                     ? "border-sky-400 ring-2 ring-sky-400/50 shadow-[0_0_30px_rgba(56,189,248,0.4)]"
-                    : "border-white/10 hover:border-sky-400/50"
+                    : themeTokens.oneTeam.cardBorder(isLight)
                 )}
               >
                 <Image
@@ -1847,7 +2016,10 @@ export function LaunchesCinematicStack({
                         <span>Loading...</span>
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full bg-black/60 group-hover:bg-white text-white/80 group-hover:text-black border border-white/20 group-hover:border-white font-mono text-[8px] sm:text-[9px] uppercase tracking-wider transition-all duration-300">
+                      <span className={cn(
+                        "inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full font-mono text-[8px] sm:text-[9px] uppercase tracking-wider transition-all duration-300",
+                        themeTokens.oneTeam.exploreButton(isLight)
+                      )}>
                         <span className="hidden sm:inline">Explore</span>
                         <ArrowUpRight size={11} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                       </span>
@@ -1870,7 +2042,7 @@ export function LaunchesCinematicStack({
                   "relative h-28 sm:h-36 md:h-44 lg:h-52 rounded-xl sm:rounded-2xl overflow-hidden border transition-all duration-300 group shadow-xl cursor-pointer select-none",
                   navigatingHref === '/services/commercial-properties'
                     ? "border-sky-400 ring-2 ring-sky-400/50 shadow-[0_0_30px_rgba(56,189,248,0.4)]"
-                    : "border-white/10 hover:border-sky-400/50"
+                    : themeTokens.oneTeam.cardBorder(isLight)
                 )}
               >
                 <Image
@@ -1898,7 +2070,10 @@ export function LaunchesCinematicStack({
                         <span>Loading...</span>
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full bg-black/60 group-hover:bg-white text-white/80 group-hover:text-black border border-white/20 group-hover:border-white font-mono text-[8px] sm:text-[9px] uppercase tracking-wider transition-all duration-300">
+                      <span className={cn(
+                        "inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full font-mono text-[8px] sm:text-[9px] uppercase tracking-wider transition-all duration-300",
+                        themeTokens.oneTeam.exploreButton(isLight)
+                      )}>
                         <span className="hidden sm:inline">Explore</span>
                         <ArrowUpRight size={11} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                       </span>
@@ -1911,7 +2086,10 @@ export function LaunchesCinematicStack({
             {/* ─── ROW 2: CENTRAL PINNED VIDEO (Rises from bottom first) ─── */}
             <div
               ref={oneTeamVideoWrapRef}
-              className="relative w-full h-44 sm:h-64 md:h-76 lg:h-88 rounded-xl sm:rounded-2xl overflow-hidden border border-white/15 bg-black shadow-2xl will-change-transform pointer-events-none select-none"
+              className={cn(
+                "relative w-full h-44 sm:h-64 md:h-76 lg:h-88 rounded-xl sm:rounded-2xl overflow-hidden bg-black will-change-transform pointer-events-none select-none transition-all duration-300",
+                themeTokens.oneTeam.videoContainer(isLight)
+              )}
             >
               <video
                 ref={oneTeamVideoRef}
@@ -1961,7 +2139,7 @@ export function LaunchesCinematicStack({
                   "relative h-28 sm:h-36 md:h-44 lg:h-52 rounded-xl sm:rounded-2xl overflow-hidden border transition-all duration-300 group shadow-xl cursor-pointer select-none",
                   navigatingHref === '/services/sky-residences'
                     ? "border-sky-400 ring-2 ring-sky-400/50 shadow-[0_0_30px_rgba(56,189,248,0.4)]"
-                    : "border-white/10 hover:border-sky-400/50"
+                    : themeTokens.oneTeam.cardBorder(isLight)
                 )}
               >
                 <Image
@@ -1989,7 +2167,10 @@ export function LaunchesCinematicStack({
                         <span>Loading...</span>
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full bg-black/60 group-hover:bg-white text-white/80 group-hover:text-black border border-white/20 group-hover:border-white font-mono text-[8px] sm:text-[9px] uppercase tracking-wider transition-all duration-300">
+                      <span className={cn(
+                        "inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full font-mono text-[8px] sm:text-[9px] uppercase tracking-wider transition-all duration-300",
+                        themeTokens.oneTeam.exploreButton(isLight)
+                      )}>
                         <span className="hidden sm:inline">Explore</span>
                         <ArrowUpRight size={11} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                       </span>
@@ -2012,7 +2193,7 @@ export function LaunchesCinematicStack({
                   "relative h-28 sm:h-36 md:h-44 lg:h-52 rounded-xl sm:rounded-2xl overflow-hidden border transition-all duration-300 group shadow-xl cursor-pointer select-none",
                   navigatingHref === '/services/waterfront-residences'
                     ? "border-sky-400 ring-2 ring-sky-400/50 shadow-[0_0_30px_rgba(56,189,248,0.4)]"
-                    : "border-white/10 hover:border-sky-400/50"
+                    : themeTokens.oneTeam.cardBorder(isLight)
                 )}
               >
                 <Image
@@ -2040,7 +2221,10 @@ export function LaunchesCinematicStack({
                         <span>Loading...</span>
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full bg-black/60 group-hover:bg-white text-white/80 group-hover:text-black border border-white/20 group-hover:border-white font-mono text-[8px] sm:text-[9px] uppercase tracking-wider transition-all duration-300">
+                      <span className={cn(
+                        "inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full font-mono text-[8px] sm:text-[9px] uppercase tracking-wider transition-all duration-300",
+                        themeTokens.oneTeam.exploreButton(isLight)
+                      )}>
                         <span className="hidden sm:inline">Explore</span>
                         <ArrowUpRight size={11} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                       </span>
@@ -2059,21 +2243,29 @@ export function LaunchesCinematicStack({
         <div
           ref={layer8Ref}
           style={{ zIndex: 90 }}
-          className="absolute inset-0 w-full h-[100dvh] max-h-[100dvh] will-change-[transform,filter] z-[90] bg-[#040810] flex flex-col justify-between px-4 sm:px-8 lg:px-12 pt-16 sm:pt-20 pb-[calc(env(safe-area-inset-bottom)+75px)] sm:pb-8 shadow-[0_-30px_70px_rgba(0,0,0,0.98)] border-t border-white/10 overflow-hidden select-none"
+          className={cn(
+            "absolute inset-0 w-full h-[100dvh] max-h-[100dvh] will-change-[transform,filter] z-[90] flex flex-col justify-between px-4 sm:px-8 lg:px-12 pt-16 sm:pt-20 pb-[calc(env(safe-area-inset-bottom)+75px)] sm:pb-8 border-t overflow-hidden select-none transition-colors duration-300",
+            themeTokens.spacesInTheRound.container(isLight)
+          )}
         >
           {/* Subtle Ambient Radial Lighting */}
           <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] sm:w-[1000px] h-[500px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-sky-400/10 via-[#0B1528]/40 to-transparent blur-3xl pointer-events-none"
+            className={cn(
+              "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] sm:w-[1000px] h-[500px] blur-3xl pointer-events-none transition-all duration-500",
+              isLight
+                ? "bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#0B1325]/5 via-transparent to-transparent"
+                : "bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-sky-400/10 via-[#0B1528]/40 to-transparent"
+            )}
           />
 
           {/* 1. Top Header: Exact Match to Reference Screenshot 4 */}
           <div className="w-full max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-3 sm:gap-4 shrink-0 pointer-events-auto">
             <div>
-              <h2 className="heading-display font-light text-white text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight leading-none">
-                Spaces <span className="text-sky-200">in the round</span>
+              <h2 className={cn("heading-display font-light text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight leading-none transition-colors duration-300", themeTokens.spacesInTheRound.title(isLight))}>
+                Spaces <span className={themeTokens.spacesInTheRound.titleAccent(isLight)}>in the round</span>
               </h2>
             </div>
-            <p className="max-w-md font-sans text-xs sm:text-sm text-[#94A3B8] font-light leading-relaxed">
+            <p className={cn("max-w-md font-sans text-xs sm:text-sm font-light leading-relaxed transition-colors duration-300", themeTokens.spacesInTheRound.description(isLight))}>
               Exteriors and interiors from across the portfolio. Drag the ring to turn it.
             </p>
           </div>
@@ -2086,9 +2278,13 @@ export function LaunchesCinematicStack({
               enableLightbox={false}
               autoRotateSpeed={10}
               heightClassName="h-[320px] sm:h-[460px]"
+              isLight={isLight}
               renderItem={(item) => (
                 <div
-                  className="relative w-full h-[220px] sm:h-[390px] rounded-2xl overflow-hidden border border-white/20 hover:border-sky-400/60 transition-all duration-300 group shadow-[0_20px_50px_rgba(0,0,0,0.9)] bg-[#070E1C]"
+                  className={cn(
+                    "relative w-full h-[220px] sm:h-[390px] rounded-2xl overflow-hidden transition-all duration-300 group",
+                    themeTokens.spacesInTheRound.cardBorder(isLight)
+                  )}
                   style={{
                     backfaceVisibility: 'hidden',
                     WebkitBackfaceVisibility: 'hidden',
@@ -2107,7 +2303,10 @@ export function LaunchesCinematicStack({
                         {item.title}
                       </span>
                       {item.subtitle && (
-                        <span className="font-mono text-[7px] sm:text-[9px] uppercase tracking-wider text-[#7DD3FC]/80 truncate">
+                        <span className={cn(
+                          "font-mono text-[7px] sm:text-[9px] uppercase tracking-wider truncate",
+                          isLight ? "text-neutral-300" : "text-[#7DD3FC]/80"
+                        )}>
                           {item.subtitle}
                         </span>
                       )}
@@ -2124,10 +2323,10 @@ export function LaunchesCinematicStack({
                       }}
                       disabled={roundVisitingHref === item.href}
                       className={cn(
-                        "pointer-events-auto inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full font-mono text-[7px] sm:text-[10px] uppercase tracking-[0.12em] sm:tracking-[0.18em] transition-all duration-300 shadow-md backdrop-blur-md cursor-pointer shrink-0",
+                        "pointer-events-auto inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full font-mono text-[7px] sm:text-[10px] uppercase tracking-[0.12em] sm:tracking-[0.18em] transition-all duration-300 cursor-pointer shrink-0",
                         roundVisitingHref === item.href
                           ? "bg-sky-400 text-black border-sky-400 font-semibold shadow-[0_0_15px_rgba(56,189,248,0.5)] cursor-wait"
-                          : "bg-black/70 hover:bg-white text-white hover:text-black border border-white/25 hover:border-white group/btn"
+                          : themeTokens.spacesInTheRound.visitButton(isLight)
                       )}
                       aria-label={`Visit ${item.title}`}
                     >
@@ -2159,7 +2358,10 @@ export function LaunchesCinematicStack({
           ref={layer9Ref}
           data-section="speak-with-us"
           style={{ zIndex: 100 }}
-          className="absolute inset-0 w-full h-[100dvh] max-h-[100dvh] will-change-[transform,filter] z-[100] bg-[#040810] flex flex-col items-center justify-center text-center px-6 sm:px-12 pb-[calc(env(safe-area-inset-bottom)+70px)] sm:pb-0 shadow-[0_-30px_70px_rgba(0,0,0,0.98)] border-t border-white/10 overflow-hidden select-none pointer-events-auto"
+          className={cn(
+            "absolute inset-0 w-full h-[100dvh] max-h-[100dvh] will-change-[transform,filter] z-[100] flex flex-col items-center justify-center text-center px-6 sm:px-12 pb-[calc(env(safe-area-inset-bottom)+70px)] sm:pb-0 border-t overflow-hidden select-none pointer-events-auto transition-colors duration-300",
+            themeTokens.privateAdvisory.container(isLight)
+          )}
           aria-label="Private Advisory"
         >
           {/* Background Video: public/videos/gemini_generated_video_0e105bc8.mp4 */}
@@ -2189,30 +2391,33 @@ export function LaunchesCinematicStack({
               <source src={homepageContent?.advisoryVideoUrl || "/videos/gemini_generated_video_0e105bc8.mp4"} type="video/mp4" />
             </video>
             {/* Subtle, crystal-clear dark overlay at ~12% opacity (preserving natural brightness and clarity) */}
-            <div className="absolute inset-0 bg-black/12 pointer-events-none" />
+            <div className={cn(
+              "absolute inset-0 pointer-events-none transition-colors duration-500",
+              themeTokens.privateAdvisory.videoOverlay(isLight)
+            )} />
           </div>
 
           {/* Content Container: Centered Vertically & Horizontally */}
           <div className="relative z-10 max-w-4xl mx-auto px-6 sm:px-12 text-center flex flex-col items-center">
             {/* Eyebrow */}
             <div className="flex items-center justify-center gap-3 mb-4 sm:mb-6">
-              <span className="w-8 h-px bg-sky-400/80 drop-shadow-sm" />
-              <span className="font-mono text-xs sm:text-sm tracking-[0.32em] uppercase text-[#7DD3FC] font-medium drop-shadow-[0_1px_6px_rgba(0,0,0,0.85)]">
+              <span className={cn("w-8 h-px transition-colors duration-300", themeTokens.privateAdvisory.eyebrowLine(isLight))} />
+              <span className={cn("font-mono text-xs sm:text-sm tracking-[0.32em] uppercase font-medium transition-colors duration-300", themeTokens.privateAdvisory.eyebrow(isLight))}>
                 PRIVATE ADVISORY
               </span>
-              <span className="w-8 h-px bg-sky-400/80 drop-shadow-sm" />
+              <span className={cn("w-8 h-px transition-colors duration-300", themeTokens.privateAdvisory.eyebrowLine(isLight))} />
             </div>
 
             {/* Main Title */}
             <h2
-              className="heading-display font-light text-white tracking-tight leading-[1.08] mb-4 sm:mb-6 text-balance drop-shadow-[0_2px_12px_rgba(0,0,0,0.85)]"
+              className={cn("heading-display font-light tracking-tight leading-[1.08] mb-4 sm:mb-6 text-balance transition-colors duration-300", themeTokens.privateAdvisory.title(isLight))}
               style={{ fontSize: 'clamp(2.3rem, 5.2vw, 4.4rem)' }}
             >
-              Begin your <span className="text-sky-200">conversation</span>
+              Begin your <span className={themeTokens.privateAdvisory.titleAccent(isLight)}>conversation</span>
             </h2>
 
             {/* Description */}
-            <p className="font-sans text-xs sm:text-base md:text-lg text-[#E2E8F0] font-light max-w-xl mx-auto leading-relaxed text-pretty mb-8 sm:mb-10 drop-shadow-[0_1px_8px_rgba(0,0,0,0.85)]">
+            <p className={cn("font-sans text-xs sm:text-base md:text-lg font-light max-w-xl mx-auto leading-relaxed text-pretty mb-8 sm:mb-10 transition-colors duration-300", themeTokens.privateAdvisory.description(isLight))}>
               Our senior partners advise private clients and family offices on prime residential acquisitions across the Gulf, Southeast Asia, and Australasia.
             </p>
 
@@ -2224,13 +2429,16 @@ export function LaunchesCinematicStack({
                   window.dispatchEvent(new CustomEvent('open-contact'))
                 }
               }}
-              className="inline-flex items-center gap-3 px-8 py-4 sm:px-10 sm:py-4.5 rounded-full bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 hover:from-sky-300 hover:to-blue-500 text-[#040810] font-sans font-semibold text-xs sm:text-sm tracking-[0.2em] uppercase transition-all duration-300 shadow-[0_4px_30px_rgba(56,189,248,0.3)] hover:shadow-[0_4px_40px_rgba(56,189,248,0.5)] active:scale-98 cursor-pointer"
+              className={cn(
+                "inline-flex items-center gap-3 px-8 py-4 sm:px-10 sm:py-4.5 rounded-full font-sans font-semibold text-xs sm:text-sm tracking-[0.2em] uppercase transition-all duration-300 active:scale-98 cursor-pointer",
+                themeTokens.privateAdvisory.button(isLight)
+              )}
             >
               <span>SPEAK WITH US</span>
               <ArrowUpRight size={16} />
             </button>
 
-            <span className="font-mono text-[10px] tracking-[0.22em] text-[#CBD5E1] uppercase mt-4 drop-shadow-[0_1px_6px_rgba(0,0,0,0.85)]">
+            <span className={cn("font-mono text-[10px] tracking-[0.22em] uppercase mt-4 transition-colors duration-300", themeTokens.privateAdvisory.confidentialText(isLight))}>
               CONFIDENTIAL · INVITATION ONLY
             </span>
           </div>
@@ -2251,7 +2459,10 @@ export function LaunchesCinematicStack({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.45, ease: 'easeOut' }}
-            className="fixed inset-0 z-[9999] bg-[#040810] flex flex-col items-center justify-center pointer-events-auto select-none"
+            className={cn(
+              "fixed inset-0 z-[9999] flex flex-col items-center justify-center pointer-events-auto select-none transition-colors",
+              isLight ? "bg-[#FBF9F6]" : "bg-[#040810]"
+            )}
           >
             <OrbitalLoader
               size="md"

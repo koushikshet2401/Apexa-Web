@@ -22,6 +22,7 @@ export interface Colors {
   arrowBackground?: string;
   arrowForeground?: string;
   arrowHoverBackground?: string;
+  arrowBorder?: string;
 }
 export interface FontSizes {
   name?: string;
@@ -59,6 +60,7 @@ export const CircularTestimonials = ({
   const colorArrowBg = colors.arrowBackground ?? "#070E1C";
   const colorArrowFg = colors.arrowForeground ?? "#F8FAFC";
   const colorArrowHoverBg = colors.arrowHoverBackground ?? "#38BDF8";
+  const colorArrowBorder = colors.arrowBorder ?? "rgba(255, 255, 255, 0.15)";
   const fontSizeName = fontSizes.name ?? "2rem";
   const fontSizeDesignation = fontSizes.designation ?? "0.85rem";
   const fontSizeQuote = fontSizes.quote ?? "1rem";
@@ -243,10 +245,14 @@ export const CircularTestimonials = ({
                 e.stopPropagation();
                 handlePrev();
               }}
-              className="w-10 h-10 rounded-full bg-black/75 hover:bg-black border border-white/30 text-white flex items-center justify-center pointer-events-auto backdrop-blur-md active:scale-95 shadow-[0_4px_20px_rgba(0,0,0,0.8)] cursor-pointer"
+              style={{
+                backgroundColor: colorArrowBg,
+                borderColor: colorArrowBorder,
+              }}
+              className="w-10 h-10 rounded-full border flex items-center justify-center pointer-events-auto backdrop-blur-md active:scale-95 shadow-md cursor-pointer transition-colors"
               aria-label="Previous space image"
             >
-              <FaArrowLeft size={13} color="#F8FAFC" />
+              <FaArrowLeft size={13} color={colorArrowFg} />
             </button>
             <button
               type="button"
@@ -255,10 +261,14 @@ export const CircularTestimonials = ({
                 e.stopPropagation();
                 handleNext();
               }}
-              className="w-10 h-10 rounded-full bg-black/75 hover:bg-black border border-white/30 text-white flex items-center justify-center pointer-events-auto backdrop-blur-md active:scale-95 shadow-[0_4px_20px_rgba(0,0,0,0.8)] cursor-pointer"
+              style={{
+                backgroundColor: colorArrowBg,
+                borderColor: colorArrowBorder,
+              }}
+              className="w-10 h-10 rounded-full border flex items-center justify-center pointer-events-auto backdrop-blur-md active:scale-95 shadow-md cursor-pointer transition-colors"
               aria-label="Next space image"
             >
-              <FaArrowRight size={13} color="#F8FAFC" />
+              <FaArrowRight size={13} color={colorArrowFg} />
             </button>
           </div>
         </div>
@@ -321,10 +331,11 @@ export const CircularTestimonials = ({
           <div className="flex items-center gap-3.5 pt-4 sm:pt-6">
             <button
               type="button"
-              className="w-11 h-11 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 border border-white/15 hover:border-sky-400 hover:scale-105"
+              className="w-11 h-11 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 border hover:scale-105 shadow-sm"
               onClick={handlePrev}
               style={{
                 backgroundColor: hoverPrev ? colorArrowHoverBg : colorArrowBg,
+                borderColor: colorArrowBorder,
               }}
               onMouseEnter={() => setHoverPrev(true)}
               onMouseLeave={() => setHoverPrev(false)}
@@ -334,10 +345,11 @@ export const CircularTestimonials = ({
             </button>
             <button
               type="button"
-              className="w-11 h-11 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 border border-white/15 hover:border-sky-400 hover:scale-105"
+              className="w-11 h-11 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 border hover:scale-105 shadow-sm"
               onClick={handleNext}
               style={{
                 backgroundColor: hoverNext ? colorArrowHoverBg : colorArrowBg,
+                borderColor: colorArrowBorder,
               }}
               onMouseEnter={() => setHoverNext(true)}
               onMouseLeave={() => setHoverNext(false)}

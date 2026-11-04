@@ -7,7 +7,7 @@ import { db } from '@/lib/db'
 import { ServiceDetailClient } from '@/components/pages/ServiceDetailClient'
 import { ScrollingProjectItem } from '@/components/ui/images-scrolling-animation'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 export async function generateStaticParams() {
   try {
@@ -21,6 +21,7 @@ export async function generateStaticParams() {
   } catch {}
   return SERVICES.map((service) => ({ slug: service.slug }))
 }
+
 
 export async function generateMetadata({
   params,

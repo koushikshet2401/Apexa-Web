@@ -92,7 +92,9 @@ model Property {
   enquiries        Enquiry[]
 
   @@index([isPublished, isFeaturedLaunch, launchOrder])
+  @@index([isPublished, isFeaturedLaunch, launchOrder, launchDate, createdAt])
   @@index([isPublished, countryId])
+  @@index([countryId, isPublished, createdAt])
   @@index([isPublished, isSpaceInRound, spaceOrder])
   @@index([countryId])
   @@index([createdAt])
@@ -116,6 +118,7 @@ model PropertyService {
   service    ServiceCategory @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
   @@id([propertyId, serviceId])
+  @@index([serviceId])
 }
 
 model HomepageContent {

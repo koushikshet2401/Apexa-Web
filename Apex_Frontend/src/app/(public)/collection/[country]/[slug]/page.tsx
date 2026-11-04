@@ -5,7 +5,7 @@ import { db } from '@/lib/db'
 import { SLUG_ALIASES, getPropertyBySlug } from '@/data/properties'
 import { DESTINATIONS } from '@/data/destinations'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 export async function generateStaticParams() {
   try {
@@ -28,6 +28,7 @@ export async function generateStaticParams() {
     ]
   }
 }
+
 
 export async function generateMetadata({
   params,

@@ -11,6 +11,7 @@ export async function LaunchesCinematicStackServer() {
   let dbCountries: any[] = []
   let dbSpaceProps: any[] = []
   let dbHomepageContent: any = null
+  const startTime = performance.now()
 
   try {
     const results = await Promise.all([
@@ -60,14 +61,17 @@ export async function LaunchesCinematicStackServer() {
       db.homepageContent.findFirst(),
     ])
 
+    const elapsed = Math.round(performance.now() - startTime)
+    console.log(`[Database Timing] Homepage data fetched in ${elapsed}ms (Launches: ${results[0]?.length || 0}, Countries: ${results[1]?.length || 0}, Spaces: ${results[2]?.length || 0})`)
     dbLaunches = results[0]
     dbCountries = results[1]
     dbSpaceProps = results[2]
     dbHomepageContent = results[3]
   } catch (error) {
     // Database connection offline or credentials not set; seamlessly fall back to static data
+    const elapsed = Math.round(performance.now() - startTime)
     console.warn(
-      '[LaunchesCinematicStackServer] Database query failed, falling back to static data:',
+      `[Database Timing] Homepage DB query failed after ${elapsed}ms, falling back to static data:`,
       error instanceof Error ? error.message : error
     )
   }

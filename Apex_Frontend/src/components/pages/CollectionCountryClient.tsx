@@ -23,6 +23,9 @@ import {
 } from 'lucide-react'
 import { Navigation } from '@/components/layout/Navigation'
 import { Footer } from '@/components/layout/Footer'
+import { useTheme } from '@/components/providers/ThemeProvider'
+import { themeTokens } from '@/lib/theme'
+import { cn } from '@/lib/utils'
 import {
   Dialog,
   DialogTrigger,
@@ -71,6 +74,7 @@ interface CollectionCountryClientProps {
 }
 
 export function CollectionCountryClient({ country, projects }: CollectionCountryClientProps) {
+  const { isLight } = useTheme()
   const containerRef = useRef<HTMLDivElement>(null)
   const pinRef = useRef<HTMLDivElement>(null)
   const section1Ref = useRef<HTMLElement>(null)
@@ -105,18 +109,18 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
 
   // Mark collection page ready when both GSAP is initialized and hero video/fallback has loaded
   useEffect(() => {
-    if (isGsapReady && videoLoaded) {
-      console.log('[Apex Lifecycle] Collection page ready (GSAP + Hero Video). Dismissing loader.')
+    if (isGsapReady) {
+      console.log('[Apex Lifecycle] Collection page ready (GSAP ready). Dismissing loader.')
       setIsPageReady(true)
     }
-  }, [isGsapReady, videoLoaded])
+  }, [isGsapReady])
 
-  // Safety fallback timer ensuring loading overlay dismisses cleanly after at most 1800ms
+  // Safety fallback timer ensuring loading overlay dismisses cleanly after at most 250ms
   useEffect(() => {
     const timer = setTimeout(() => {
       console.log('[Apex Lifecycle] Collection safety fallback triggered, dismissing loader.')
       setIsPageReady(true)
-    }, 1800)
+    }, 250)
     return () => clearTimeout(timer)
   }, [])
 
@@ -197,12 +201,17 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
       // STAGE 2: Crisp hold so video is appreciated full-screen
       tl.to({}, { duration: 0.35 })
 
-      // STAGE 3: Section 2 (Signature Projects Stage) slides up smoothly over Section 1
+      // STAGE 3: Section 2 (Signature Projects Stage) slides up smoothly over Section 1 while Section 1 fades
       tl.to(s2, {
         yPercent: 0,
         duration: 1.1,
         ease: 'power2.inOut',
-      })
+      }, 'stage3')
+      tl.to(s1, {
+        opacity: 0,
+        duration: 0.5,
+        ease: 'power1.out',
+      }, 'stage3+=0.5')
 
       // STAGE 4: Hold first property card in view
       tl.to({}, { duration: 0.4 })
@@ -245,12 +254,17 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
         }
       }
 
-      // STAGE 6: Section 3 (Register Interest Inquiry Form) slides up over Section 2
+      // STAGE 6: Section 3 (Register Interest Inquiry Form) slides up over Section 2 while Section 2 fades
       tl.to(s3, {
         yPercent: 0,
         duration: 1.1,
         ease: 'power2.inOut',
-      })
+      }, 'stage6')
+      tl.to(s2, {
+        opacity: 0,
+        duration: 0.5,
+        ease: 'power1.out',
+      }, 'stage6+=0.5')
 
       // STAGE 7: Brief hold on inquiry form before page unpins to footer
       tl.to({}, { duration: 0.3 })
@@ -301,7 +315,7 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
   }
 
   return (
-    <div className="relative bg-[#040810] text-[#F8FAFC] selection:bg-[#7DD3FC]/20 selection:text-white">
+    <div className={cn("relative selection:bg-[#7DD3FC]/20 selection:text-white transition-colors duration-300", themeTokens.collectionCountry.pageBg(isLight))}>
       {/* Top Fixed Navigation */}
       <Navigation />
 
@@ -317,10 +331,12 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
       <div ref={containerRef} className="relative w-full">
         <div
           ref={pinRef}
-          className="relative w-full h-screen overflow-hidden bg-[#040810]"
+          className={cn("relative w-full h-screen overflow-hidden transition-colors duration-300", isLight ? "bg-[#FBF9F6]" : "bg-[#040810]")}
         >
           {/* Subtle ambient deep glow */}
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-[#38BDF8]/10 blur-[150px] pointer-events-none z-0" />
+          {!isLight && (
+            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-[#38BDF8]/10 blur-[150px] pointer-events-none z-0" />
+          )}
 
           {/* =========================================================================
               SECTION 1: COUNTRY HERO (EDITORIAL + EXPANDING VIDEO)
@@ -328,7 +344,11 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
           <section
             ref={section1Ref}
             id="country-hero-section"
-            className="absolute inset-0 w-full h-full z-10 overflow-hidden bg-[#040810] flex flex-col justify-between pt-24 sm:pt-28 pb-[calc(env(safe-area-inset-bottom,0px)+74px)] sm:pb-6 px-4 sm:px-8 lg:px-16"
+            style={{ backgroundColor: isLight ? '#FBF9F6' : '#040810' }}
+            className={cn(
+              "absolute inset-0 w-full h-full z-10 overflow-hidden flex flex-col justify-between pt-24 sm:pt-28 pb-[calc(env(safe-area-inset-bottom,0px)+74px)] sm:pb-6 px-4 sm:px-8 lg:px-16 transition-colors duration-300",
+              isLight ? "bg-[#FBF9F6]" : "bg-[#040810]"
+            )}
           >
             <div className="relative max-w-[1440px] w-full mx-auto h-full flex flex-col justify-between">
               {/* Top Editorial Header — ~25-30% of screen */}
@@ -337,7 +357,10 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
                 <div className="mb-2 sm:mb-2.5">
                   <Link
                     href="/#collection"
-                    className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/70 hover:bg-black/90 backdrop-blur-md border border-white/15 text-[11px] font-mono uppercase tracking-[0.2em] text-[#7DD3FC] hover:text-white transition-all shadow-md cursor-pointer"
+                    className={cn(
+                      "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-mono uppercase tracking-[0.2em] transition-all shadow-md cursor-pointer",
+                      themeTokens.collectionCountry.backButton(isLight)
+                    )}
                   >
                     <ArrowLeft size={12} />
                     <span>Back to Collection</span>
@@ -349,26 +372,26 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
                   <div>
                     {country.region && (
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="w-5 h-px bg-[#7DD3FC]" />
-                        <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.28em] text-[#7DD3FC]">
+                        <span className={cn("w-5 h-px transition-colors duration-300", themeTokens.collectionCountry.tagLine(isLight))} />
+                        <span className={cn("font-mono text-[10px] sm:text-xs uppercase tracking-[0.28em] transition-colors duration-300", themeTokens.collectionCountry.tag(isLight))}>
                           {country.region}
                         </span>
                       </div>
                     )}
 
-                    <h1 className="heading-display font-light text-2xl sm:text-4xl lg:text-5xl text-white tracking-tight leading-none mb-1">
+                    <h1 className={cn("heading-display font-light text-2xl sm:text-4xl lg:text-5xl tracking-tight leading-none mb-1 transition-colors duration-300", themeTokens.collectionCountry.heading(isLight))}>
                       {country.displayName || country.name}
                     </h1>
 
                     {country.cities && (
-                      <p className="font-mono text-[9px] sm:text-[11px] uppercase tracking-[0.22em] text-white/50">
+                      <p className={cn("font-mono text-[9px] sm:text-[11px] uppercase tracking-[0.22em] transition-colors duration-300", themeTokens.collectionCountry.subheading(isLight))}>
                         {country.cities}
                       </p>
                     )}
                   </div>
 
                   {country.description && (
-                    <p className="font-sans text-xs sm:text-sm lg:text-base text-white/80 font-light leading-relaxed max-w-xl md:text-right mt-1 md:mt-1.5">
+                    <p className={cn("font-sans text-xs sm:text-sm lg:text-base font-light leading-relaxed max-w-xl md:text-right mt-1 md:mt-1.5 transition-colors duration-300", themeTokens.collectionCountry.description(isLight))}>
                       {country.description}
                     </p>
                   )}
@@ -379,7 +402,10 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
               <div className="flex-1 min-h-0 w-full flex flex-col justify-center pb-2 sm:pb-3 items-center">
                 <div
                   ref={videoWrapperRef}
-                  className="relative w-full h-[52vh] sm:h-[62vh] lg:h-[65vh] max-h-[68vh] rounded-2xl sm:rounded-3xl overflow-hidden border border-white/20 shadow-[0_20px_60px_rgba(0,0,0,0.9)] bg-black will-change-transform"
+                  className={cn(
+                    "relative w-full h-[52vh] sm:h-[62vh] lg:h-[65vh] max-h-[68vh] rounded-2xl sm:rounded-3xl overflow-hidden will-change-transform transition-all duration-300",
+                    themeTokens.collectionCountry.videoFrame(isLight)
+                  )}
                 >
                   <video
                     ref={videoRef}
@@ -422,25 +448,29 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
           <section
             ref={section2Ref}
             id="signature-projects"
-            className="absolute inset-0 w-full h-full z-20 bg-[#040810] shadow-[0_-40px_100px_rgba(0,0,0,0.98)] border-t border-white/10 flex flex-col justify-between pt-16 sm:pt-20 pb-16 sm:pb-8 px-3 sm:px-8 lg:px-12 overflow-hidden"
+            style={{ backgroundColor: isLight ? '#FBF9F6' : '#040810' }}
+            className={cn(
+              "absolute inset-0 w-full h-full z-20 flex flex-col justify-between pt-16 sm:pt-20 pb-16 sm:pb-8 px-3 sm:px-8 lg:px-12 overflow-hidden transition-colors duration-300",
+              themeTokens.collectionCountry.sectionContainer(isLight)
+            )}
           >
             <div className="max-w-[1440px] mx-auto w-full h-full flex flex-col justify-between">
               {/* Section Header */}
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-1 pb-2 sm:pb-3 border-b border-white/10 shrink-0">
+              <div className={cn("flex flex-col sm:flex-row sm:items-end justify-between gap-1 pb-2 sm:pb-3 border-b shrink-0 transition-colors duration-300", isLight ? "border-[#0B1325]/10" : "border-white/10")}>
                 <div>
                   <div className="flex items-center gap-2 mb-0.5">
-                    <span className="w-5 h-px bg-[#7DD3FC]" />
-                    <span className="font-mono text-[9px] sm:text-xs uppercase tracking-[0.25em] text-[#7DD3FC]">
+                    <span className={cn("w-5 h-px transition-colors duration-300", themeTokens.collectionCountry.tagLine(isLight))} />
+                    <span className={cn("font-mono text-[9px] sm:text-xs uppercase tracking-[0.25em] transition-colors duration-300", themeTokens.collectionCountry.tag(isLight))}>
                       PORTFOLIO · CURATED RESIDENCES
                     </span>
                   </div>
-                  <h2 className="heading-display font-light text-lg sm:text-2xl lg:text-3xl text-white tracking-tight">
+                  <h2 className={cn("heading-display font-light text-lg sm:text-2xl lg:text-3xl tracking-tight transition-colors duration-300", themeTokens.collectionCountry.heading(isLight))}>
                     Signature Projects in {country.displayName || country.name}
                   </h2>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-[9px] sm:text-[11px] tracking-[0.2em] text-[#7DD3FC] uppercase">
+                  <span className={cn("font-mono text-[9px] sm:text-[11px] tracking-[0.2em] uppercase transition-colors duration-300", themeTokens.collectionCountry.tag(isLight))}>
                     {projects.length} {projects.length === 1 ? 'RESIDENCE' : 'RESIDENCES'} RECORDED
                   </span>
                 </div>
@@ -450,14 +480,20 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
                   THE CENTRAL CARD STAGE (FRAMED UNDER ONE DIV)
                   Occupies viewport space cleanly with rounded border & deep shadow
               ===================================================================== */}
-              <div className="relative flex-1 min-h-0 w-full max-w-5xl mx-auto my-2 sm:my-3 rounded-2xl sm:rounded-3xl border border-white/15 bg-[#070E1C] shadow-[0_25px_80px_rgba(0,0,0,0.95)] overflow-hidden">
+              <div className={cn(
+                "relative flex-1 min-h-0 w-full max-w-5xl mx-auto my-2 sm:my-3 rounded-2xl sm:rounded-3xl overflow-hidden transition-colors duration-300",
+                themeTokens.collectionCountry.cardStageFrame(isLight)
+              )}>
                 {projects.map((project, idx) => (
                   <div
                     key={project.id}
                     ref={(el) => {
                       cardRefs.current[idx] = el
                     }}
-                    className="absolute inset-0 w-full h-full flex flex-col md:flex-row bg-[#070E1C] overflow-hidden will-change-transform"
+                    className={cn(
+                    "absolute inset-0 w-full h-full flex flex-col md:flex-row overflow-hidden will-change-transform transition-colors duration-300",
+                    themeTokens.collectionCountry.cardItem(isLight)
+                  )}
                   >
                     {/* Visual Half (Desktop: Left 54%, Mobile: Top 48%) */}
                     <div className="relative w-full md:w-[54%] h-[48%] md:h-full overflow-hidden bg-black shrink-0">
@@ -466,20 +502,34 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
                         alt={project.title}
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#070E1C] via-transparent to-black/30 opacity-90 pointer-events-none" />
+                      <div className={cn(
+                        "absolute inset-0 opacity-90 pointer-events-none transition-colors duration-300",
+                        isLight
+                          ? "bg-gradient-to-t md:bg-gradient-to-r from-white via-transparent to-black/30"
+                          : "bg-gradient-to-t md:bg-gradient-to-r from-[#070E1C] via-transparent to-black/30"
+                      )} />
 
                       {/* Top Badges */}
                       <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-10 flex items-center gap-2">
-                        <span className="px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/20 font-mono text-[8px] sm:text-[9px] uppercase tracking-[0.2em] text-[#7DD3FC]">
+                        <span className={cn(
+                          "px-2.5 py-1 rounded-full font-mono text-[8px] sm:text-[9px] uppercase tracking-[0.2em] transition-colors",
+                          themeTokens.collectionCountry.cardBadge(isLight)
+                        )}>
                           {project.type}
                         </span>
-                        <span className="px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/20 font-mono text-[8px] sm:text-[9px] uppercase tracking-[0.2em] text-white/80">
+                        <span className={cn(
+                          "px-2.5 py-1 rounded-full font-mono text-[8px] sm:text-[9px] uppercase tracking-[0.2em] transition-colors",
+                          themeTokens.collectionCountry.cardBadgeSecondary(isLight)
+                        )}>
                           {project.city}
                         </span>
                       </div>
 
                       {/* Watermark Index */}
-                      <div className="absolute bottom-2 left-3 sm:bottom-4 sm:left-4 z-10 font-mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-white/50">
+                      <div className={cn(
+                        "absolute bottom-2 left-3 sm:bottom-4 sm:left-4 z-10 font-mono text-[10px] sm:text-xs tracking-[0.3em] uppercase transition-colors",
+                        isLight ? "text-[#0B1325]/50" : "text-white/50"
+                      )}>
                         0{idx + 1} / 0{projects.length}
                       </div>
                     </div>
@@ -489,30 +539,30 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
                       <div>
                         {/* Property Tag & Price */}
                         <div className="flex items-center justify-between mb-1 sm:mb-2">
-                          <span className="font-mono text-[8px] sm:text-[10px] uppercase tracking-[0.25em] text-[#7DD3FC]">
+                          <span className={cn("font-mono text-[8px] sm:text-[10px] uppercase tracking-[0.25em] transition-colors", themeTokens.collectionCountry.tag(isLight))}>
                             RESIDENCE · 0{idx + 1} OF 0{projects.length}
                           </span>
                           {project.price && (
-                            <span className="font-mono text-xs sm:text-base text-[#7DD3FC] font-semibold drop-shadow">
+                            <span className={cn("font-mono text-xs sm:text-base font-semibold drop-shadow transition-colors", themeTokens.collectionCountry.cardPrice(isLight))}>
                               {project.price}
                             </span>
                           )}
                         </div>
 
                         {/* Title */}
-                        <h3 className="heading-display font-light text-xl sm:text-3xl md:text-4xl text-white tracking-tight mb-1 sm:mb-2 leading-tight">
+                        <h3 className={cn("heading-display font-light text-xl sm:text-3xl md:text-4xl tracking-tight mb-1 sm:mb-2 leading-tight transition-colors", themeTokens.collectionCountry.heading(isLight))}>
                           {project.title}
                         </h3>
 
                         {/* Specifications Line */}
-                        <div className="flex flex-wrap items-center gap-2 font-mono text-[9px] sm:text-xs text-white/70 mb-2 sm:mb-3 pb-2 sm:pb-3 border-b border-white/10">
+                        <div className={cn("flex flex-wrap items-center gap-2 font-mono text-[9px] sm:text-xs mb-2 sm:mb-3 pb-2 sm:pb-3 border-b transition-colors", themeTokens.collectionCountry.cardSpecs(isLight))}>
                           {project.beds && <span>{project.beds}</span>}
                           {project.baths && <span>· {project.baths} Baths</span>}
                           {project.area && <span>· {project.area}</span>}
                         </div>
 
                         {/* Description */}
-                        <p className="font-sans text-xs sm:text-sm text-white/80 font-light leading-relaxed mb-3 line-clamp-3 md:line-clamp-4">
+                        <p className={cn("font-sans text-xs sm:text-sm font-light leading-relaxed mb-3 line-clamp-3 md:line-clamp-4 transition-colors", themeTokens.collectionCountry.cardDesc(isLight))}>
                           {project.description ||
                             project.shortDescription ||
                             'An extraordinary private architectural sanctuary curated by Apex Pacific Holdings.'}
@@ -524,9 +574,9 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
                             {project.highlights.slice(0, 3).map((h, hIdx) => (
                               <span
                                 key={hIdx}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-[10px] text-white/85 font-light"
+                                className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-light transition-colors", themeTokens.collectionCountry.cardHighlightTag(isLight))}
                               >
-                                <Check size={11} className="text-[#7DD3FC] shrink-0" />
+                                <Check size={11} className={cn("shrink-0 transition-colors", themeTokens.collectionCountry.cardHighlightIcon(isLight))} />
                                 <span>{h}</span>
                               </span>
                             ))}
@@ -535,11 +585,14 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
                       </div>
 
                       {/* Actions: Direct Link + Linear Dialog Modal */}
-                      <div className="pt-2 sm:pt-3 border-t border-white/10 flex items-center gap-2 sm:gap-3 shrink-0">
+                      <div className={cn("pt-2 sm:pt-3 border-t flex items-center gap-2 sm:gap-3 shrink-0 transition-colors", isLight ? "border-[#0B1325]/10" : "border-white/10")}>
                         {/* Primary Explore Button */}
                         <Link
                           href={`/collection/${country.slug}/${project.slug}?from=collection`}
-                          className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-[#0C1F38] via-[#123157] to-[#0C1F38] hover:from-[#123157] hover:to-[#1E4D82] border border-[#7DD3FC]/40 hover:border-[#7DD3FC] text-white font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] transition-all shadow-[0_0_20px_rgba(56,189,248,0.2)] group cursor-pointer"
+                          className={cn(
+                            "flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 rounded-xl font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] transition-all group cursor-pointer",
+                            themeTokens.collectionCountry.exploreButton(isLight)
+                          )}
                         >
                           <span>Explore Residence</span>
                           <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
@@ -549,7 +602,10 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
                         <Dialog>
                           <DialogTrigger
                             style={{ borderRadius: '12px' }}
-                            className="p-2.5 sm:py-3 sm:px-4 rounded-xl bg-white/5 hover:bg-[#7DD3FC]/20 border border-white/15 hover:border-[#7DD3FC] text-white hover:text-[#7DD3FC] transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
+                            className={cn(
+                              "p-2.5 sm:py-3 sm:px-4 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shrink-0",
+                              themeTokens.collectionCountry.detailsButton(isLight)
+                            )}
                             aria-label={`View dossier for ${project.title}`}
                           >
                             <Plus size={15} />
@@ -560,9 +616,15 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
                           <DialogContainer className="p-3 sm:p-6 lg:p-8 pb-16 sm:pb-8 flex items-center justify-center">
                             <DialogContent
                               style={{ borderRadius: '24px' }}
-                              className="relative flex h-auto max-h-[86vh] sm:max-h-[88vh] mx-auto flex-col overflow-hidden sm:overflow-y-auto border border-white/20 bg-[#070E1C] text-white shadow-[0_25px_80px_rgba(0,0,0,0.95)] w-full max-w-2xl"
+                              className={cn(
+                                "relative flex h-auto max-h-[86vh] sm:max-h-[88vh] mx-auto flex-col overflow-hidden sm:overflow-y-auto w-full max-w-2xl transition-colors duration-300",
+                                themeTokens.collectionCountry.dialogContent(isLight)
+                              )}
                             >
-                              <DialogClose className="text-white bg-black/70 hover:bg-black p-2 sm:p-2.5 rounded-full border border-white/20 transition-colors shadow-lg z-30" />
+                              <DialogClose className={cn(
+                                "p-2 sm:p-2.5 rounded-full transition-colors shadow-lg z-30",
+                                themeTokens.collectionCountry.dialogClose(isLight)
+                              )} />
 
                               {/* Modal Hero Image */}
                               <div className="relative w-full aspect-[16/9] max-h-[24vh] sm:max-h-[36vh] overflow-hidden bg-black shrink-0">
@@ -571,25 +633,28 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
                                   alt={project.title}
                                   className="h-full w-full object-cover"
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-[#070E1C] via-transparent to-black/30 pointer-events-none" />
+                                <div className={cn(
+                                  "absolute inset-0 pointer-events-none transition-colors",
+                                  isLight ? "bg-gradient-to-t from-white via-transparent to-black/30" : "bg-gradient-to-t from-[#070E1C] via-transparent to-black/30"
+                                )} />
                               </div>
 
                               {/* Modal Content Body */}
                               <div className="p-4 sm:p-7 md:p-8 flex-1 flex flex-col justify-between">
                                 <div>
-                                  <span className="font-mono text-[9px] sm:text-xs uppercase tracking-[0.25em] text-[#7DD3FC] block mb-1">
+                                  <span className={cn("font-mono text-[9px] sm:text-xs uppercase tracking-[0.25em] block mb-1 transition-colors", themeTokens.collectionCountry.tag(isLight))}>
                                     {project.type} · {project.city}
                                   </span>
 
-                                  <DialogTitle className="heading-display font-light text-xl sm:text-4xl text-white tracking-tight mb-1 sm:mb-2">
+                                  <DialogTitle className={cn("heading-display font-light text-xl sm:text-4xl tracking-tight mb-1 sm:mb-2 transition-colors", themeTokens.collectionCountry.heading(isLight))}>
                                     {project.title}
                                   </DialogTitle>
 
-                                  <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] sm:text-xs text-white/70 mb-2 sm:mb-4 pb-2 sm:pb-3 border-b border-white/10">
+                                  <div className={cn("flex flex-wrap items-center gap-2 font-mono text-[10px] sm:text-xs mb-2 sm:mb-4 pb-2 sm:pb-3 border-b transition-colors", themeTokens.collectionCountry.cardSpecs(isLight))}>
                                     {project.beds && <span>{project.beds}</span>}
                                     {project.baths && <span>· {project.baths} Baths</span>}
                                     {project.area && <span>· {project.area}</span>}
-                                    {project.price && <span className="text-[#7DD3FC]">· {project.price}</span>}
+                                    {project.price && <span className={cn(isLight ? "text-[#0B1325] font-semibold" : "text-[#7DD3FC]")}>· {project.price}</span>}
                                   </div>
 
                                   <DialogDescription
@@ -624,10 +689,13 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
                                   </DialogDescription>
                                 </div>
 
-                                <div className="pt-2 sm:pt-3 mt-2 sm:mt-3 border-t border-white/10 shrink-0">
+                                <div className={cn("pt-2 sm:pt-3 mt-2 sm:mt-3 border-t shrink-0 transition-colors", isLight ? "border-[#0B1325]/10" : "border-white/10")}>
                                   <Link
                                     href={`/collection/${country.slug}/${project.slug}?from=collection`}
-                                    className="w-full inline-flex items-center justify-center gap-2.5 px-5 py-3 sm:py-3.5 rounded-xl bg-gradient-to-r from-[#0C1F38] via-[#123157] to-[#0C1F38] hover:from-[#123157] hover:to-[#1E4D82] border border-[#7DD3FC]/40 hover:border-[#7DD3FC] text-white font-mono text-xs uppercase tracking-[0.25em] transition-all duration-300 shadow-[0_0_25px_rgba(56,189,248,0.2)] group cursor-pointer"
+                                    className={cn(
+                                      "w-full inline-flex items-center justify-center gap-2.5 px-5 py-3 sm:py-3.5 rounded-xl font-mono text-xs uppercase tracking-[0.25em] transition-all duration-300 group cursor-pointer",
+                                      themeTokens.collectionCountry.exploreButton(isLight)
+                                    )}
                                   >
                                     <span>Explore Residence</span>
                                     <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
@@ -644,7 +712,7 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
               </div>
 
               {/* Bottom Stage Progress Sub-label */}
-              <div className="flex items-center justify-between px-2 pt-1 font-mono text-[9px] text-white/40 shrink-0">
+              <div className={cn("flex items-center justify-between px-2 pt-1 font-mono text-[9px] shrink-0 transition-colors", isLight ? "text-[#6B6661]" : "text-white/40")}>
                 <span>Scroll vertically to slide through residences</span>
                 <span>{projects.length} curated properties</span>
               </div>
@@ -657,18 +725,28 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
           <section
             ref={section3Ref}
             id="country-inquiry"
-            className="absolute inset-0 w-full h-full z-30 bg-[#040810] shadow-[0_-45px_100px_rgba(0,0,0,0.98)] border-t border-white/15 flex flex-col justify-center items-center py-12 sm:py-16 px-4 sm:px-8 overflow-y-auto"
+            style={{ backgroundColor: isLight ? '#FBF9F6' : '#040810' }}
+            className={cn(
+              "absolute inset-0 w-full h-full z-30 flex flex-col justify-center items-center py-12 sm:py-16 px-4 sm:px-8 overflow-y-auto transition-colors duration-300",
+              themeTokens.collectionCountry.sectionContainer(isLight)
+            )}
           >
-            <div className="max-w-2xl mx-auto bg-[#070E1C] border border-white/15 rounded-2xl sm:rounded-3xl p-6 sm:p-10 shadow-[0_25px_80px_rgba(0,0,0,0.9)]">
+            <div className={cn(
+              "max-w-2xl mx-auto rounded-2xl sm:rounded-3xl p-6 sm:p-10 transition-colors duration-300",
+              themeTokens.collectionCountry.inquiryCard(isLight)
+            )}>
               <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#38BDF8]/10 border border-[#38BDF8]/20 text-[#7DD3FC] font-mono text-[10px] uppercase tracking-[0.25em] mb-3">
+                <div className={cn(
+                  "inline-flex items-center gap-2 px-3 py-1 rounded-full font-mono text-[10px] uppercase tracking-[0.25em] mb-3 transition-colors",
+                  themeTokens.collectionCountry.inquiryBadge(isLight)
+                )}>
                   <Sparkles size={12} />
                   <span>CONFIDENTIAL ADVISORY</span>
                 </div>
-                <h2 className="heading-display font-light text-2xl sm:text-4xl text-white tracking-tight mb-2">
+                <h2 className={cn("heading-display font-light text-2xl sm:text-4xl tracking-tight mb-2 transition-colors", themeTokens.collectionCountry.heading(isLight))}>
                   Register Interest in {country.displayName || country.name}
                 </h2>
-                <p className="font-sans text-xs sm:text-sm text-white/70 font-light max-w-lg mx-auto leading-relaxed">
+                <p className={cn("font-sans text-xs sm:text-sm font-light max-w-lg mx-auto leading-relaxed transition-colors", themeTokens.collectionCountry.subheading(isLight))}>
                   Request a private portfolio dossier, floorplans, and confidential acquisition consultation with our international advisory partners.
                 </p>
               </div>
@@ -700,18 +778,18 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
 
                   {/* Full Name */}
                   <div>
-                    <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-white/60 mb-1.5">
+                    <label className={cn("block text-[10px] font-mono uppercase tracking-[0.2em] mb-1.5 transition-colors", themeTokens.collectionCountry.inquiryLabel(isLight))}>
                       Full Name *
                     </label>
                     <div className="relative">
-                      <User size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
+                      <User size={14} className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors", themeTokens.collectionCountry.inquiryIcon(isLight))} />
                       <input
                         type="text"
                         required
                         value={formName}
                         onChange={(e) => setFormName(e.target.value)}
                         placeholder="e.g. Lord Alexander Wright"
-                        className="w-full bg-[#040810] border border-white/15 focus:border-[#7DD3FC] rounded-xl pl-10 pr-4 py-3 text-xs sm:text-sm text-white placeholder-white/30 focus:outline-none transition-colors"
+                        className={cn("w-full rounded-xl pl-10 pr-4 py-3 text-xs sm:text-sm focus:outline-none transition-colors", themeTokens.collectionCountry.inquiryInput(isLight))}
                       />
                     </div>
                   </div>
@@ -719,35 +797,35 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
                   {/* Email & Phone */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-white/60 mb-1.5">
+                      <label className={cn("block text-[10px] font-mono uppercase tracking-[0.2em] mb-1.5 transition-colors", themeTokens.collectionCountry.inquiryLabel(isLight))}>
                         Email Address *
                       </label>
                       <div className="relative">
-                        <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
+                        <Mail size={14} className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors", themeTokens.collectionCountry.inquiryIcon(isLight))} />
                         <input
                           type="email"
                           required
                           value={formEmail}
                           onChange={(e) => setFormEmail(e.target.value)}
                           placeholder="name@example.com"
-                          className="w-full bg-[#040810] border border-white/15 focus:border-[#7DD3FC] rounded-xl pl-10 pr-4 py-3 text-xs sm:text-sm text-white placeholder-white/30 focus:outline-none transition-colors"
+                          className={cn("w-full rounded-xl pl-10 pr-4 py-3 text-xs sm:text-sm focus:outline-none transition-colors", themeTokens.collectionCountry.inquiryInput(isLight))}
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-white/60 mb-1.5">
+                      <label className={cn("block text-[10px] font-mono uppercase tracking-[0.2em] mb-1.5 transition-colors", themeTokens.collectionCountry.inquiryLabel(isLight))}>
                         Phone (+Country Code) *
                       </label>
                       <div className="relative">
-                        <Phone size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
+                        <Phone size={14} className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors", themeTokens.collectionCountry.inquiryIcon(isLight))} />
                         <input
                           type="tel"
                           required
                           value={formPhone}
                           onChange={(e) => setFormPhone(e.target.value)}
                           placeholder="+971 50 123 4567"
-                          className="w-full bg-[#040810] border border-white/15 focus:border-[#7DD3FC] rounded-xl pl-10 pr-4 py-3 text-xs sm:text-sm text-white placeholder-white/30 focus:outline-none transition-colors"
+                          className={cn("w-full rounded-xl pl-10 pr-4 py-3 text-xs sm:text-sm focus:outline-none transition-colors", themeTokens.collectionCountry.inquiryInput(isLight))}
                         />
                       </div>
                     </div>
@@ -755,14 +833,14 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
 
                   {/* Message */}
                   <div>
-                    <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-white/60 mb-1.5">
+                    <label className={cn("block text-[10px] font-mono uppercase tracking-[0.2em] mb-1.5 transition-colors", themeTokens.collectionCountry.inquiryLabel(isLight))}>
                       Residence / Portfolio Requirement
                     </label>
                     <textarea
                       rows={3}
                       value={formMessage}
                       onChange={(e) => setFormMessage(e.target.value)}
-                      className="w-full bg-[#040810] border border-white/15 focus:border-[#7DD3FC] rounded-xl p-3 text-xs sm:text-sm text-white placeholder-white/30 focus:outline-none transition-colors resize-none"
+                      className={cn("w-full rounded-xl p-3 text-xs sm:text-sm focus:outline-none transition-colors resize-none", themeTokens.collectionCountry.inquiryInput(isLight))}
                     />
                   </div>
 
@@ -770,14 +848,17 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
                   <button
                     type="submit"
                     disabled={formSubmitting}
-                    className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gradient-to-r from-[#0C1F38] via-[#123157] to-[#0C1F38] hover:from-[#123157] hover:to-[#1E4D82] border border-[#7DD3FC]/40 hover:border-[#7DD3FC] text-white font-mono text-xs uppercase tracking-[0.25em] transition-all duration-300 shadow-[0_0_30px_rgba(56,189,248,0.25)] cursor-pointer disabled:opacity-50"
+                    className={cn(
+                      "w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-mono text-xs uppercase tracking-[0.25em] transition-all duration-300 cursor-pointer disabled:opacity-50",
+                      themeTokens.collectionCountry.inquiryButton(isLight)
+                    )}
                   >
                     <span>{formSubmitting ? 'Registering Interest...' : 'Request Confidential Dossier'}</span>
                     <ArrowRight size={14} />
                   </button>
 
-                  <div className="flex items-center justify-center gap-2 pt-2 text-[10px] font-mono text-white/40">
-                    <ShieldCheck size={12} className="text-emerald-400" />
+                  <div className={cn("flex items-center justify-center gap-2 pt-2 text-[10px] font-mono transition-colors", isLight ? "text-[#6B6661]" : "text-white/40")}>
+                    <ShieldCheck size={12} className={isLight ? "text-emerald-600" : "text-emerald-400"} />
                     <span>Strict Non-Disclosure Protocol · Direct Developer Representation</span>
                   </div>
                 </form>
@@ -790,7 +871,7 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
       {/* =========================================================================
           SECTION 4: FOOTER (SOLID OPAQUE Z-40 BACKGROUND)
       ========================================================================= */}
-      <div className="relative z-40 w-full bg-[#040810] border-t border-white/10">
+      <div className={cn("relative z-40 w-full transition-colors duration-300", themeTokens.collectionCountry.footerSection(isLight))}>
         <Footer />
       </div>
 
@@ -802,7 +883,10 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.45, ease: 'easeOut' }}
-            className="fixed inset-0 z-[9999] bg-[#040810] flex flex-col items-center justify-center pointer-events-auto select-none"
+            className={cn(
+              "fixed inset-0 z-[9999] flex flex-col items-center justify-center pointer-events-auto select-none transition-colors",
+              isLight ? "bg-[#FBF9F6]" : "bg-[#040810]"
+            )}
           >
             <OrbitalLoader
               size="md"

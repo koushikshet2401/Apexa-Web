@@ -5,7 +5,7 @@ import { DESTINATIONS } from '@/data/destinations'
 import { PROPERTIES_DATA } from '@/data/properties'
 import { CollectionCountryClient, CountryData, CountryProjectData } from '@/components/pages/CollectionCountryClient'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 export async function generateStaticParams() {
   try {
@@ -26,6 +26,7 @@ export async function generateStaticParams() {
     ]
   }
 }
+
 
 export async function generateMetadata({
   params,

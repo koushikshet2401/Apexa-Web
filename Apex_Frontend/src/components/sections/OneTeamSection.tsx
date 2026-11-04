@@ -8,6 +8,7 @@ import { ArrowUpRight } from 'lucide-react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { OrbitalLoader } from '@/components/ui/orbital-loader'
+import { useTheme } from '@/components/providers/ThemeProvider'
 import { cn } from '@/lib/utils'
 
 interface MediaTile {
@@ -57,6 +58,7 @@ export function OneTeamSection() {
   const [videoLoaded, setVideoLoaded] = useState(false)
   const [navigatingHref, setNavigatingHref] = useState<string | null>(null)
   const [navigatingMessage, setNavigatingMessage] = useState<string | null>(null)
+  const { isLight } = useTheme()
 
   useEffect(() => {
     return () => {
@@ -527,10 +529,14 @@ export function OneTeamSection() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="fixed inset-0 z-[150] bg-[#040810]/80 backdrop-blur-md flex flex-col items-center justify-center pointer-events-auto select-none"
+            className={cn(
+              "fixed inset-0 z-[150] backdrop-blur-md flex flex-col items-center justify-center pointer-events-auto select-none transition-colors",
+              isLight ? "bg-[#FBF9F6]/95" : "bg-[#040810]/80"
+            )}
           >
             <OrbitalLoader
               size="md"
+              isLight={isLight}
               message={navigatingMessage || "Opening Architectural Advisory..."}
               messagePlacement="bottom"
             />

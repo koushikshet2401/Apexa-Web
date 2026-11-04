@@ -10,6 +10,9 @@ import {
   useTransform,
 } from "framer-motion"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { useTheme } from "@/components/providers/ThemeProvider"
+import { themeTokens } from "@/lib/theme"
 
 export const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect
@@ -309,6 +312,7 @@ export interface ThreeDPhotoCarouselProps {
   showControls?: boolean
   className?: string
   heightClassName?: string
+  isLight?: boolean
 }
 
 function ThreeDPhotoCarousel({
@@ -320,7 +324,10 @@ function ThreeDPhotoCarousel({
   showControls = false,
   className,
   heightClassName = "h-[420px] sm:h-[480px]",
+  isLight: isLightProp,
 }: ThreeDPhotoCarouselProps = {}) {
+  const themeContext = useTheme()
+  const activeIsLight = isLightProp !== undefined ? isLightProp : (themeContext?.isLight ?? false)
   const [activeImg, setActiveImg] = useState<string | null>(null)
   const [isCarouselActive, setIsCarouselActive] = useState(true)
   const controls = useAnimation()
@@ -411,12 +418,18 @@ function ThreeDPhotoCarousel({
             type="button"
             onClick={handlePrev}
             aria-label="Rotate Previous"
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-white/20 bg-black/50 hover:bg-white/10 hover:border-sky-400 text-white/80 hover:text-white flex items-center justify-center backdrop-blur-md transition-all cursor-pointer shadow-lg active:scale-95"
+            className={cn(
+              "w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center backdrop-blur-md transition-all cursor-pointer active:scale-95",
+              themeTokens.spacesInTheRound.navButton(activeIsLight)
+            )}
           >
             <ChevronLeft size={16} />
           </button>
 
-          <span className="font-mono text-[10px] sm:text-xs tracking-[0.28em] text-[#94A3B8] uppercase select-none">
+          <span className={cn(
+            "font-mono text-[10px] sm:text-xs tracking-[0.28em] uppercase select-none transition-colors duration-300",
+            themeTokens.spacesInTheRound.dragLabel(activeIsLight)
+          )}>
             ← DRAG TO ROTATE →
           </span>
 
@@ -424,7 +437,10 @@ function ThreeDPhotoCarousel({
             type="button"
             onClick={handleNext}
             aria-label="Rotate Next"
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-white/20 bg-black/50 hover:bg-white/10 hover:border-sky-400 text-white/80 hover:text-white flex items-center justify-center backdrop-blur-md transition-all cursor-pointer shadow-lg active:scale-95"
+            className={cn(
+              "w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center backdrop-blur-md transition-all cursor-pointer active:scale-95",
+              themeTokens.spacesInTheRound.navButton(activeIsLight)
+            )}
           >
             <ChevronRight size={16} />
           </button>
