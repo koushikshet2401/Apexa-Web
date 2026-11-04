@@ -174,8 +174,8 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
       // Calculate responsive scroll travel:
       // ~420px per card swipe on mobile, ~550px on desktop for 1 natural swipe per transition
       const totalCards = Math.max(1, projects.length)
-      const perCardTravel = isMob ? 420 : 550
-      const totalScrollTravel = 900 + totalCards * perCardTravel
+      const perCardTravel = isMob ? 550 : 650
+      const totalScrollTravel = (isMob ? 1000 : 1200) + totalCards * perCardTravel
 
       const tl = gsap.timeline({
         scrollTrigger: {
@@ -184,7 +184,7 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
           end: `+=${totalScrollTravel}`,
           pin: pinEl,
           pinSpacing: true,
-          scrub: isMob ? 0.6 : 0.8,
+          scrub: isMob ? 0.75 : 0.85,
           anticipatePin: 1,
           invalidateOnRefresh: true,
         },

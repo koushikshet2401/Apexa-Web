@@ -672,10 +672,10 @@ export function LaunchesCinematicStack({
         scrollTrigger: {
           trigger: container,
           start: 'top top',
-          end: isMob ? '+=1800vh' : '+=2400vh',
+          end: isMob ? '+=2000vh' : '+=2400vh',
           pin: pinEl,
           pinSpacing: true,
-          scrub: isMob ? 0.3 : 0.5,
+          scrub: isMob ? 0.8 : 0.9,
           anticipatePin: 1,
           invalidateOnRefresh: true,
           onUpdate: (self) => {
@@ -946,7 +946,7 @@ export function LaunchesCinematicStack({
 
       const computeTargetY = (targetProgress: number): number => {
         const isMob = window.innerWidth < 768
-        const fallbackDist = (isMob ? 18 : 24) * window.innerHeight
+        const fallbackDist = (isMob ? 20 : 24) * window.innerHeight
         const st = tl.scrollTrigger
         const start = (st && typeof st.start === 'number') ? st.start : 0
         const end = (st && typeof st.end === 'number' && st.end > start) ? st.end : (start + fallbackDist)
@@ -957,7 +957,7 @@ export function LaunchesCinematicStack({
         const lenis = (window as unknown as { __lenis?: { resize: () => void; scrollTo: (target: number, opts?: { immediate?: boolean; duration?: number }) => void } }).__lenis
         if (lenis) {
           lenis.resize()
-          lenis.scrollTo(targetY, { immediate, duration: immediate ? 0 : 0.85 })
+          lenis.scrollTo(targetY, { immediate, duration: immediate ? 0 : 1.0 })
         } else {
           window.scrollTo({ top: targetY, behavior: immediate ? 'auto' : 'smooth' })
         }
@@ -997,13 +997,13 @@ export function LaunchesCinematicStack({
         } else {
           gsap.to(tl, {
             progress: targetProgress,
-            duration: 0.85,
+            duration: 1.0,
             ease: 'power2.out',
             overwrite: 'auto',
           })
           if (lenis) {
             lenis.resize()
-            lenis.scrollTo(targetY, { immediate: false, duration: 0.85 })
+            lenis.scrollTo(targetY, { immediate: false, duration: 1.0 })
           } else {
             window.scrollTo({ top: targetY, behavior: 'smooth' })
           }

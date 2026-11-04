@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import Lenis from 'lenis'
+import 'lenis/dist/lenis.css'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
@@ -17,16 +18,19 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (prefersReducedMotion) return
 
-    // Initialize global Lenis with balanced, responsive cinematic momentum
+    // Initialize global Lenis with balanced, responsive cinematic momentum across mobile touch & desktop wheel
     const lenis = new Lenis({
       autoRaf: false, // Frame-locked to GSAP ticker below
-      duration: 1.0,
+      duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
-      syncTouch: false, // Prevents intercepting native touch gestures and browser scrollbar dragging
-      wheelMultiplier: 1.0,
+      syncTouch: true, // Smooth, controlled touch momentum on mobile screens
+      syncTouchLerp: 0.08, // Soft, cushioned deceleration on finger release
+      touchInertiaExponent: 1.25, // Natural touch inertia preventing explosive over-scroll
+      touchMultiplier: 0.85, // Balanced finger tracking distance
+      wheelMultiplier: 0.85, // Softens notch-wheel steps on desktop mice
       infinite: false,
     })
 

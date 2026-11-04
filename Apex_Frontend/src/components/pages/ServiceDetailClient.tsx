@@ -94,11 +94,12 @@ export function ServiceDetailClient({
         }
       }
 
-      // Fast, responsive scroll distance: 1 swift scroll/swipe per card!
+      // Balanced, luxury scroll distance across mobile and desktop:
+      // Smooth, natural 1-swipe/wheel turn per property card and section transition
       const totalCards = Math.max(1, cardElements.length)
       const scrollDistance = isMob
-        ? 320 + totalCards * 160
-        : 450 + totalCards * 220
+        ? 1400 + totalCards * 500
+        : 1800 + totalCards * 650
 
       const tl = gsap.timeline({
         scrollTrigger: {
@@ -107,29 +108,29 @@ export function ServiceDetailClient({
           end: `+=${scrollDistance}`,
           pin: pinEl,
           pinSpacing: true,
-          scrub: isMob ? 0.2 : 0.35,
+          scrub: isMob ? 0.75 : 0.85,
           anticipatePin: 1,
           invalidateOnRefresh: true,
         },
       })
 
       // ─── STAGE 1: Hero Section holds briefly ───
-      tl.to({}, { duration: 0.05 })
+      tl.to({}, { duration: 0.15 })
 
       // ─── STAGE 2: Section 2 (Signature Properties) slides up over Section 1 while Section 1 fades ───
       tl.to(s2, {
         yPercent: 0,
-        duration: 0.6,
+        duration: 0.8,
         ease: "power2.out",
       }, 'stage2')
       tl.to(s1, {
         opacity: 0,
-        duration: 0.35,
+        duration: 0.5,
         ease: "power1.out",
-      }, 'stage2+=0.25')
+      }, 'stage2+=0.3')
 
       // ─── STAGE 3: Card 0 holds briefly ───
-      tl.to({}, { duration: 0.05 })
+      tl.to({}, { duration: 0.25 })
 
       // ─── STAGE 4: Scroll-scrubbed stacked cards reveal with parallax & zero void ───
       for (let i = 1; i < cardElements.length; i++) {
@@ -141,7 +142,7 @@ export function ServiceDetailClient({
           yPercent: 0,
           scale: 1,
           opacity: 1,
-          duration: 0.6,
+          duration: 0.8,
           ease: "power2.out",
         })
 
@@ -152,7 +153,7 @@ export function ServiceDetailClient({
             scale: 0.94,
             y: -14,
             opacity: 0.7,
-            duration: 0.6,
+            duration: 0.8,
             ease: "power2.out",
           },
           "<"
@@ -166,34 +167,34 @@ export function ServiceDetailClient({
               scale: 0.88,
               y: -26,
               opacity: 0.45,
-              duration: 0.6,
+              duration: 0.8,
               ease: "power2.out",
             },
             "<"
           )
         }
 
-        // Brief hold per card
-        tl.to({}, { duration: 0.05 })
+        // Brief hold per card so user can clearly view property
+        tl.to({}, { duration: 0.25 })
       }
 
       // ─── STAGE 5: Hold all stacked cards briefly ───
-      tl.to({}, { duration: 0.05 })
+      tl.to({}, { duration: 0.2 })
 
       // ─── STAGE 6: Section 3 (Structured Deliverables) slides up over Section 2 while Section 2 fades ───
       tl.to(s3, {
         yPercent: 0,
-        duration: 0.6,
+        duration: 0.8,
         ease: "power2.out",
       }, 'stage6')
       tl.to(s2, {
         opacity: 0,
-        duration: 0.35,
+        duration: 0.5,
         ease: "power1.out",
-      }, 'stage6+=0.25')
+      }, 'stage6+=0.3')
 
       // ─── STAGE 7: Hold Section 3 pinned for reading & clicking Enquire / Next ───
-      tl.to({}, { duration: 0.3 })
+      tl.to({}, { duration: 0.4 })
       ScrollTrigger.refresh()
       setIsGsapReady(true)
     }, container)

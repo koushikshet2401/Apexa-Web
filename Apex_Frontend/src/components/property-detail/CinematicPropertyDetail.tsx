@@ -237,7 +237,7 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
 
     const ctx = gsap.context(() => {
       const isMob = window.innerWidth < 768
-      const scrollDist = isMob ? 600 : 900
+      const scrollDist = isMob ? 2400 : 3000
 
       // Set initial state
       gsap.set(s1, { yPercent: 0, opacity: 1 })
@@ -252,7 +252,7 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
           end: `+=${scrollDist}`,
           pin: pinEl,
           pinSpacing: true,
-          scrub: isMob ? 0.2 : 0.25,
+          scrub: isMob ? 0.75 : 0.85,
           anticipatePin: 1,
           invalidateOnRefresh: true,
         },
@@ -261,36 +261,36 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
       // STAGE 1: Section 2 (Property Specs, Price, Highlights) slides up over Section 1
       tl.to(s2, {
         yPercent: 0,
-        duration: 0.8,
+        duration: 1.0,
         ease: 'power2.out',
       })
-      tl.to({}, { duration: 0.15 })
+      tl.to({}, { duration: 0.3 })
 
       // STAGE 2: Section 3 (Architectural Spaces & Finishes) slides up over Section 2 while Section 2 fades
       tl.to(s3, {
         yPercent: 0,
-        duration: 0.8,
+        duration: 1.0,
         ease: 'power2.out',
       }, 'stage2')
       tl.to(s2, {
         opacity: 0,
-        duration: 0.4,
+        duration: 0.5,
         ease: 'power1.out',
-      }, 'stage2+=0.35')
-      tl.to({}, { duration: 0.15 })
+      }, 'stage2+=0.4')
+      tl.to({}, { duration: 0.35 })
 
       // STAGE 3: Section 4 (Enquiry Form) slides up over Section 3 while Section 3 fades
       tl.to(s4, {
         yPercent: 0,
-        duration: 0.8,
+        duration: 1.0,
         ease: 'power2.out',
       }, 'stage3')
       tl.to(s3, {
         opacity: 0,
-        duration: 0.4,
+        duration: 0.5,
         ease: 'power1.out',
-      }, 'stage3+=0.35')
-      tl.to({}, { duration: 0.15 })
+      }, 'stage3+=0.4')
+      tl.to({}, { duration: 0.4 })
 
       ScrollTrigger.refresh()
       setIsGsapReady(true)
