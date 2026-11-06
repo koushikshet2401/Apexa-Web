@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
@@ -18,12 +18,21 @@ import {
   X,
   ExternalLink,
   Shield,
+  Users,
 } from 'lucide-react'
 
 interface NavItem {
   name: string
   href: string
   icon: React.ElementType
+}
+
+interface AdminProfile {
+  id: string
+  email: string
+  name?: string | null
+  role?: string | null
+  roleDescription?: string | null
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -36,6 +45,7 @@ const NAV_ITEMS: NavItem[] = [
   { name: 'Homepage', href: '/admin/homepage', icon: Home },
   { name: 'Enquiries', href: '/admin/enquiries', icon: Mail },
   { name: 'Media', href: '/admin/media', icon: ImageIcon },
+  { name: 'Team & Roles', href: '/admin/users', icon: Users },
 ]
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
@@ -43,6 +53,18 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
+  const [profile, setProfile] = useState<AdminProfile | null>(null)
+
+  useEffect(() => {
+    if (pathname === '/admin/login') return
+
+    fetch('/api/admin/auth/me')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) setProfile(data)
+      })
+      .catch(() => {})
+  }, [pathname])
 
   // If on login page, render clean layout without sidebar
   if (pathname === '/admin/login') {
@@ -118,11 +140,25 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               <X className="w-5 h-5" />
             </button>
           </div>
-          <div className="mt-3 flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#040810] border border-white/5">
-            <Shield className="w-3.5 h-3.5 text-[#7DD3FC]" />
-            <span className="text-[10px] uppercase tracking-wider font-mono text-gray-400">
-              Authenticated Admin
-            </span>
+
+          {/* Admin User Profile Card */}
+          <div className="mt-3 p-2.5 rounded bg-[#040810] border border-white/5 space-y-1">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Shield className="w-3.5 h-3.5 text-[#7DD3FC] shrink-0" />
+                <span className="text-[11px] font-medium text-white truncate">
+                  {profile?.name || profile?.email?.split('@')[0] || 'Administrator'}
+                </span>
+              </div>
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#7DD3FC]/15 text-[#7DD3FC] font-mono tracking-wider font-semibold uppercase">
+                {profile?.role || 'SUPER_ADMIN'}
+              </span>
+            </div>
+            {profile?.email && (
+              <p className="text-[10px] text-gray-400 truncate pl-5 font-mono">
+                {profile.email}
+              </p>
+            )}
           </div>
         </div>
 
@@ -174,7 +210,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           <button
             onClick={handleLogout}
             disabled={loggingOut}
-            className="flex items-center gap-2.5 w-full px-3.5 py-2.5 rounded-md text-xs text-rose-400/90 hover:text-rose-300 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all font-medium disabled:opacity-50"
+            className="flex items-center gap-2.5 w-full px-3.5 py-2.5 rounded-md text-xs text-rose-400/90 hover:text-rose-300 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all font-medium disabled:opacity-50 cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             <span>{loggingOut ? 'Signing out...' : 'Sign Out'}</span>

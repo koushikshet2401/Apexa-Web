@@ -1,27 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { DeleteObjectCommand } from '@aws-sdk/client-s3'
-import { promises as fs } from 'fs'
 import path from 'path'
-import { requireAdmin } from '@/lib/adminAuth'
+import { requirePermission, PERMISSIONS } from '@/lib/rbac'
 import { r2, isR2Configured, R2_BUCKET_NAME } from '@/lib/r2'
+import { validateUploadPath, safeUnlinkUploadFile } from '@/lib/pathSecurity'
 
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ key: string[] }> }
 ) {
-  const auth = await requireAdmin(request)
+  const auth = await requirePermission(request, PERMISSIONS.MEDIA_DELETE)
   if (auth instanceof Response) return auth
 
   try {
     const { key: keySegments } = await params
     const rawKey = Array.isArray(keySegments) ? keySegments.join('/') : keySegments
-    const decodedKey = decodeURIComponent(rawKey)
 
-    if (!decodedKey) {
+    if (!rawKey) {
       return NextResponse.json({ error: 'Key is required' }, { status: 400 })
     }
 
     if (isR2Configured()) {
+      const decodedKey = decodeURIComponent(rawKey)
       const command = new DeleteObjectCommand({
         Bucket: R2_BUCKET_NAME,
         Key: decodedKey,
@@ -30,14 +30,21 @@ export async function DELETE(
       return NextResponse.json({ ok: true, message: 'Deleted from R2' })
     }
 
-    // Local fallback deletion
+    // Local fallback deletion with containment validation
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads')
-    const filePath = path.join(uploadsDir, decodedKey)
+    const pathCheck = await validateUploadPath(rawKey, uploadsDir)
+
+    if (!pathCheck.valid) {
+      return NextResponse.json(
+        { error: pathCheck.error || 'Invalid file key: Directory traversal attempt blocked.' },
+        { status: 400 }
+      )
+    }
 
     try {
-      await fs.unlink(filePath)
+      await safeUnlinkUploadFile(pathCheck.safePath, uploadsDir)
     } catch {
-      // File may already be absent
+      // File may already be absent or deletion failed
     }
 
     return NextResponse.json({ ok: true, message: 'Deleted locally' })

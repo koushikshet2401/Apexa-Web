@@ -7,39 +7,112 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ==========================================
+// MODULE A: ADMIN USERS, RBAC & ACTIVITY
+// ==========================================
+
 model AdminUser {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String             @id @default(cuid())
+  email          String             @unique
+  passwordHash   String
+  name           String?
+  isActive       Boolean            @default(true)
+  lastLoginAt    DateTime?
+  roleId         String?
+  role           AdminRole?         @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  closedDeals    Deal[]             @relation("DealClosedBy")
+  archivedProps  Property[]         @relation("PropertyArchivedBy")
+  restoredProps  Property[]         @relation("PropertyRestoredBy")
+  activityLogs   AdminActivityLog[]
+  enquiryNotes   EnquiryNote[]
+  enquiryReplies EnquiryReply[]
+  assignedEnquiries Enquiry[]         @relation("EnquiryAssignedTo")
+  closedEnquiries   Enquiry[]         @relation("EnquiryClosedBy")
+  authorizedAdjustments DealFinancialAdjustment[] @relation("AdjustmentAuthorizedBy")
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@index([roleId])
 }
+
+model AdminRole {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  description String?
+  isSystem    Boolean          @default(false)
+  users       AdminUser[]
+  permissions RolePermission[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model AdminPermission {
+  id          String           @id @default(cuid())
+  module      String // "PROPERTIES", "DEALS", "ENQUIRIES", "USERS", "ANALYTICS"
+  action      String // "CREATE", "READ", "UPDATE", "DELETE", "PUBLISH", "CLOSE_DEAL"
+  description String?
+  roles       RolePermission[]
+
+  @@unique([module, action])
+  @@index([module])
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         AdminRole       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   AdminPermission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+}
+
+model AdminActivityLog {
+  id         String     @id @default(cuid())
+  adminId    String?
+  admin      AdminUser? @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  adminEmail String
+  action     String // "PROJECT_CREATED", "DEAL_CLOSED", "PROJECT_ARCHIVED", etc.
+  entityType String // "Property", "Deal", "Enquiry", "AdminUser"
+  entityId   String
+  summary    String
+  metadata   Json?
+  ipAddress  String?
+  createdAt  DateTime   @default(now())
+
+  @@index([entityType, entityId])
+  @@index([adminId, createdAt])
+  @@index([createdAt])
+}
+
+// ==========================================
+// MODULE B: COUNTRIES & SERVICE CATEGORIES
+// ==========================================
 
 model Country {
   id             String     @id @default(cuid())
-  slug           String     @unique   // "dubai", "thailand", "malaysia", "australia", "georgia"
+  slug           String     @unique // "dubai", "thailand", "malaysia", "australia", "georgia"
   name           String
-  displayName    String               // e.g. "Dubai / UAE"
+  displayName    String
   region         String
-  cities         String               // "DUBAI · PALM JUMEIRAH · ABU DHABI"
+  cities         String
   tagline        String?
   description    String?
   heroVideoUrl   String?
   heroVideoThumb String?
-  cardImage      String?              // country card image shown in collection carousel
+  cardImage      String?
   displayOrder   Int        @default(0)
   isPublished    Boolean    @default(true)
+  properties     Property[]
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
-  properties     Property[]
 
   @@index([isPublished, displayOrder])
 }
 
 model ServiceCategory {
   id              String            @id @default(cuid())
-  slug            String            @unique   // "luxury-villas", "sky-residences", etc.
+  slug            String            @unique
   name            String
   subtitle        String?
   tagline         String?
@@ -49,64 +122,108 @@ model ServiceCategory {
   videoUrl        String?
   displayOrder    Int               @default(0)
   isPublished     Boolean           @default(true)
+  properties      PropertyService[]
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
-  properties      PropertyService[]
 
   @@index([isPublished, displayOrder])
 }
 
+// ==========================================
+// MODULE C, D, G: PROPERTY & LIFECYCLE
+// ==========================================
+
 model Property {
-  id               String            @id @default(cuid())
-  slug             String            @unique
+  id               String   @id @default(cuid())
+  slug             String   @unique
   name             String
   cardLabel        String?
   tagline          String?
   shortDescription String?
   description      String?
-  type             String?           // "residential", "mixed_use", etc.
-  beds             String?           // e.g. "3–4 Bedrooms"
-  baths            String?
-  area             String?
-  price            String?
-  cityName         String?
-  locationLine     String?           // "DUBAI MARITIME CITY, UAE"
-  mainVideoUrl     String?
-  mainVideoThumb   String?
-  mainImage        String?
-  highlights       String[]          @default([])
-  layoutVariant    Int               @default(1)
-  isPublished      Boolean           @default(false)
-  isDraft          Boolean           @default(true)
-  isFeaturedLaunch Boolean           @default(false)
-  launchOrder      Int?              // lower = newer = shown first in Latest Launches
-  isSpaceInRound   Boolean           @default(false)
-  spaceOrder       Int?
-  launchDate       DateTime?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  countryId        String?
-  country          Country?          @relation(fields: [countryId], references: [id])
-  images           PropertyImage[]
-  services         PropertyService[]
-  enquiries        Enquiry[]
+  type             String?
 
-  @@index([isPublished, isFeaturedLaunch, launchOrder])
-  @@index([isPublished, isFeaturedLaunch, launchOrder, launchDate, createdAt])
-  @@index([isPublished, countryId])
+  // Textual display specs (backward compatible)
+  beds  String?
+  baths String?
+  area  String?
+  price String? // Formatted display copy ("AED 8.2M", "₹ 12.5 Cr")
+
+  // Structured numeric specs & financial precision
+  askingPriceNumeric Decimal? @db.Decimal(18, 2)
+  askingCurrency     String? // ISO 4217 code (e.g. "AED", "INR", "EUR", "USD")
+  isPOA              Boolean  @default(false)
+  bedroomsCount      Int?
+  bathroomsCount     Decimal? @db.Decimal(3, 1)
+  areaNumeric        Decimal? @db.Decimal(10, 2)
+  areaUnit           String?  @default("sqft")
+
+  // Location & coordinates (validated lat: -90..90, lng: -180..180)
+  cityName     String?
+  locationLine String?
+  latitude     Float?
+  longitude    Float?
+
+  // Media references
+  mainVideoUrl    String?
+  mainVideoThumb  String?
+  mainImage       String?
+  spaceRoundImage String? // Conditional Spaces in the Round image
+  highlights      String[] @default([])
+  layoutVariant   Int      @default(1)
+
+  // Decoupled lifecycle & visibility states
+  isPublished       Boolean @default(false)
+  isDraft           Boolean @default(true)
+  isPubliclyVisible Boolean @default(false) // Defaults to false for drafts; initialized to true only for published
+  hasCompletedDeal  Boolean @default(false)
+
+  // Curation flags
+  isFeaturedLaunch Boolean   @default(false)
+  launchOrder      Int?
+  launchDate       DateTime?
+  isSpaceInRound   Boolean   @default(false)
+  spaceOrder       Int?
+
+  // Recoverable archiving (soft delete)
+  isArchived     Boolean    @default(false)
+  archivedAt     DateTime?
+  archivedReason String?
+  archivedById   String?
+  archivedBy     AdminUser? @relation("PropertyArchivedBy", fields: [archivedById], references: [id], onDelete: SetNull)
+  restoredAt     DateTime?
+  restoredById   String?
+  restoredBy     AdminUser? @relation("PropertyRestoredBy", fields: [restoredById], references: [id], onDelete: SetNull)
+
+  // Relations
+  countryId          String?
+  country            Country?                    @relation(fields: [countryId], references: [id], onDelete: SetNull)
+  images             PropertyImage[]
+  services           PropertyService[]
+  enquiries          Enquiry[]
+  deals              Deal[]
+  valuationSnapshots PropertyValuationSnapshot[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Audited composite performance indexes
+  @@index([isArchived, isPublished])
   @@index([countryId, isPublished, createdAt])
+  @@index([isPublished, isFeaturedLaunch, launchOrder, launchDate, createdAt])
   @@index([isPublished, isSpaceInRound, spaceOrder])
-  @@index([countryId])
   @@index([createdAt])
 }
 
 model PropertyImage {
-  id         String   @id @default(cuid())
-  url        String
-  alt        String?
-  order      Int      @default(0)
-  propertyId String
-  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  url         String
+  alt         String?
+  description String? // Image-specific architectural description
+  isCover     Boolean  @default(false)
+  order       Int      @default(0)
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
   @@index([propertyId, order])
 }
@@ -121,6 +238,218 @@ model PropertyService {
   @@index([serviceId])
 }
 
+// ==========================================
+// MODULE E & F: DEALS & SOLD PROJECTS
+// ==========================================
+
+enum DealStatus {
+  INQUIRY
+  CONTACTED
+  OFFER_MADE
+  UNDER_CONTRACT
+  COMPLETED
+  LOST
+}
+
+model Deal {
+  id                  String     @id @default(cuid())
+  dealRef             String     @unique
+  propertyId          String
+  property            Property   @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  buyerName           String?
+  buyerContact        String?
+  actualSalePrice     Decimal?   @db.Decimal(18, 2)
+  saleCurrency        String? // ISO 4217 code
+  actualSalePriceBase Decimal?   @db.Decimal(18, 2) // Master base currency (PENDING APPROVAL)
+  status              DealStatus @default(INQUIRY)
+  keepPubliclyVisible Boolean    @default(false) // Choice at closure
+  closedAt            DateTime?
+  closedById          String?
+  closedBy            AdminUser?                @relation("DealClosedBy", fields: [closedById], references: [id], onDelete: SetNull)
+  notes               String?
+  adjustments         DealFinancialAdjustment[]
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+
+  @@index([status, closedAt])
+  @@index([propertyId])
+  @@index([closedAt])
+}
+
+model SupportedCurrency {
+  code          String   @id @db.VarChar(3)
+  name          String
+  symbol        String
+  minorUnits    Int      @default(2)
+  isOperational Boolean  @default(true)
+  createdAt     DateTime @default(now())
+}
+
+model DealFinancialAdjustment {
+  id                 String    @id @default(cuid())
+  dealId             String
+  deal               Deal      @relation(fields: [dealId], references: [id], onDelete: Restrict)
+  adjustmentSequence Int
+  previousSalePrice  Decimal   @db.Decimal(18, 2)
+  previousCurrency   String    @db.VarChar(3)
+  adjustedSalePrice  Decimal   @db.Decimal(18, 2)
+  adjustedCurrency   String    @db.VarChar(3)
+  adjustmentReason   String
+  legalContractRef   String
+  authorizedById     String
+  authorizedBy       AdminUser @relation("AdjustmentAuthorizedBy", fields: [authorizedById], references: [id], onDelete: Restrict)
+  createdAt          DateTime  @default(now())
+
+  @@unique([dealId, adjustmentSequence])
+  @@index([dealId, adjustmentSequence(sort: Desc)])
+}
+
+// ==========================================
+// MODULE H: MULTI-CURRENCY & AUDITABLE VALUATION
+// ==========================================
+
+model ExchangeRate {
+  id             String   @id @default(cuid())
+  fromCurrency   String // "AED", "INR", "EUR", "THB", "MYR", "AUD", "GEL"
+  toBaseCurrency String // Master base currency (PENDING APPROVAL)
+  rateToBase     Decimal  @db.Decimal(18, 8) // High-precision conversion rate to avoid FX truncation
+  effectiveDate  DateTime @db.Date
+  source         String? // "MANUAL", "API_SYNC"
+  createdAt      DateTime @default(now())
+
+  @@unique([fromCurrency, toBaseCurrency, effectiveDate])
+  @@index([fromCurrency, effectiveDate])
+}
+
+model PropertyValuationSnapshot {
+  id                 String   @id @default(cuid())
+  propertyId         String
+  property           Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  askingPriceNumeric Decimal  @db.Decimal(18, 2)
+  askingCurrency     String
+  baseCurrency       String // Master base currency (PENDING APPROVAL)
+  exchangeRate       Decimal  @db.Decimal(18, 8)
+  rateEffectiveDate  DateTime @db.Date
+  rateSource         String
+  convertedValuation Decimal  @db.Decimal(18, 2)
+  snapshotDate       DateTime @default(now())
+  createdById        String?
+
+  @@index([propertyId, snapshotDate(sort: Desc)])
+  @@index([snapshotDate(sort: Desc)])
+}
+
+// ==========================================
+// MODULE I: WEBSITE VISITOR ANALYTICS
+// ==========================================
+
+model DailyAnalytics {
+  date             DateTime @id @db.Date // YYYY-MM-DD
+  totalVisits      Int      @default(0) // Repeat visits count again
+  pageViews        Int      @default(0) // Page impression volume
+  projectViews     Int      @default(0)
+  countryViews     Int      @default(0)
+  enquiriesCount   Int      @default(0)
+  qualifyingVisits Int      @default(0)
+}
+
+model AnalyticsEvent {
+  id             String    @id @default(cuid())
+  eventType      String    // "PAGE_VIEW", "PROJECT_VIEW", "COUNTRY_VIEW", "ENQUIRY_SUBMITTED", "PROJECT_ADDED", "DEAL_CLOSED"
+  path           String?
+  entityType     String?   // "Property", "Country", "Enquiry", "Deal"
+  entityId       String?   // propertyId, countrySlug, etc.
+  country        String?   // visitor country or geo if available
+  visitorHash    String?   // anonymous one-way non-PII hash for repeat visit detection
+  idempotencyKey String?   @unique // prevents accidental duplicate events within time window
+  metadata       Json?
+  createdAt      DateTime  @default(now())
+
+  @@index([eventType, createdAt(sort: Desc)])
+  @@index([entityType, entityId])
+  @@index([createdAt(sort: Desc)])
+  @@index([visitorHash])
+}
+
+// ==========================================
+// MODULE J: ENQUIRIES & COMMUNICATION
+// ==========================================
+
+model Enquiry {
+  id              String         @id @default(cuid())
+  enquiryRef      String         @unique
+  name            String
+  email           String
+  phone           String
+  country         String?
+  subject         String?
+  source          String?        @default("WEBSITE_CONTACT") // "WEBSITE_CONTACT", "PROJECT_SHOWCASE", "PHONE_INQUIRY", "DIRECT_EMAIL"
+  serviceInterest String?
+  message         String?
+  propertyId      String?
+  property        Property?      @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  status          String         @default("NEW") // "NEW", "READ", "IN_PROGRESS", "CLOSED"
+  isRead          Boolean        @default(false)
+  readAt          DateTime?
+  assignedAdminId String?
+  assignedAdmin   AdminUser?     @relation("EnquiryAssignedTo", fields: [assignedAdminId], references: [id], onDelete: SetNull)
+  isClosed        Boolean        @default(false)
+  closedAt        DateTime?
+  closedById      String?
+  closedBy        AdminUser?     @relation("EnquiryClosedBy", fields: [closedById], references: [id], onDelete: SetNull)
+  notes           EnquiryNote[]
+  replies         EnquiryReply[]
+  submittedAt     DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt @default(now())
+  ipAddress       String?
+
+  @@index([status, submittedAt(sort: Desc)])
+  @@index([propertyId])
+  @@index([assignedAdminId])
+  @@index([country])
+  @@index([submittedAt(sort: Desc)])
+}
+
+model EnquiryNote {
+  id        String     @id @default(cuid())
+  enquiryId String
+  enquiry   Enquiry    @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+  authorId  String?
+  author    AdminUser? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  note      String
+  createdAt DateTime   @default(now())
+
+  @@index([enquiryId, createdAt])
+}
+
+model EnquiryReply {
+  id                String     @id @default(cuid())
+  enquiryId         String
+  enquiry           Enquiry    @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+  senderId          String?
+  sender            AdminUser? @relation(fields: [senderId], references: [id], onDelete: SetNull)
+  senderEmail       String?
+  recipient         String? // Email or phone number
+  channel           String     @default("EMAIL") // "EMAIL", "WHATSAPP"
+  direction         String     @default("OUTBOUND") // "OUTBOUND", "INBOUND"
+  deliveryStatus    String     @default("SENT") // "SENT", "DELIVERED", "READ", "FAILED", "PENDING"
+  idempotencyKey    String?    @unique
+  externalMessageId String?
+  subject           String?
+  body              String
+  failureReason     String?
+  metadata          Json?
+  sentAt            DateTime   @default(now())
+
+  @@index([enquiryId, sentAt(sort: Desc)])
+  @@index([deliveryStatus])
+  @@index([externalMessageId])
+}
+
+// ==========================================
+// MODULE K: HOMEPAGE CMS
+// ==========================================
+
 model HomepageContent {
   id               String   @id @default(cuid())
   heroVideoUrl     String?
@@ -130,22 +459,4 @@ model HomepageContent {
   oneTeamVideoUrl  String?
   advisoryVideoUrl String?
   updatedAt        DateTime @updatedAt
-}
-
-model Enquiry {
-  id              String    @id @default(cuid())
-  enquiryRef      String    @unique
-  name            String
-  email           String
-  phone           String
-  serviceInterest String?
-  message         String?
-  propertyId      String?
-  property        Property? @relation(fields: [propertyId], references: [id])
-  status          String    @default("new")   // "new", "read", "replied"
-  submittedAt     DateTime  @default(now())
-  ipAddress       String?
-
-  @@index([status, submittedAt])
-  @@index([propertyId])
 }

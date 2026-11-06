@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { requireAdmin } from '@/lib/adminAuth'
+import { requirePermission, PERMISSIONS } from '@/lib/rbac'
 import { r2, isR2Configured, R2_BUCKET_NAME, R2_PUBLIC_URL } from '@/lib/r2'
 
 const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.mp4']
 const ALLOWED_FOLDERS = ['properties', 'countries', 'services', 'homepage', 'general']
 
 export async function POST(request: NextRequest) {
-  const auth = await requireAdmin(request)
+  const auth = await requirePermission(request, PERMISSIONS.MEDIA_UPLOAD)
   if (auth instanceof Response) return auth
 
   try {

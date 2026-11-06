@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { requireAdmin } from '@/lib/adminAuth'
+import { requirePermission, PERMISSIONS } from '@/lib/rbac'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAdmin(request)
+  const auth = await requirePermission(request, PERMISSIONS.CONTENT_READ)
   if (auth instanceof Response) return auth
 
   try {
@@ -35,7 +35,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAdmin(request)
+  const auth = await requirePermission(request, PERMISSIONS.CONTENT_UPDATE)
   if (auth instanceof Response) return auth
 
   try {
@@ -99,7 +99,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAdmin(request)
+  const auth = await requirePermission(request, PERMISSIONS.CONTENT_UPDATE)
   if (auth instanceof Response) return auth
 
   try {

@@ -138,7 +138,7 @@ export async function LaunchesCinematicStackServer() {
       description: p.description || '',
       highlights: p.highlights || [],
       image: p.mainImage || p.images[0]?.url || '',
-      gallery: p.images.map((img) => img.url),
+      gallery: p.images.map((img: { url: string }) => img.url),
       layoutVariant: p.layoutVariant || 1,
       lat: 0,
       lng: 0,

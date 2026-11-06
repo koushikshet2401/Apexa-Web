@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { promises as fs } from 'fs'
 import path from 'path'
-import { requireAdmin } from '@/lib/adminAuth'
+import { requirePermission, PERMISSIONS } from '@/lib/rbac'
+import { validateUploadPath, safeWriteUploadFile } from '@/lib/pathSecurity'
 
 export async function PUT(request: NextRequest) {
-  const auth = await requireAdmin(request)
+  const auth = await requirePermission(request, PERMISSIONS.MEDIA_UPLOAD)
   if (auth instanceof Response) return auth
 
   try {
@@ -15,20 +15,25 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Missing key parameter' }, { status: 400 })
     }
 
+    const uploadsDir = path.join(process.cwd(), 'public', 'uploads')
+    const pathCheck = await validateUploadPath(key, uploadsDir)
+
+    if (!pathCheck.valid) {
+      return NextResponse.json(
+        { error: pathCheck.error || 'Invalid file path traversal attempt.' },
+        { status: 400 }
+      )
+    }
+
+    const safePath = pathCheck.safePath
     const arrayBuffer = await request.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
-    // Destination: public/uploads/<key>
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads')
-    const filePath = path.join(uploadsDir, key)
-    const fileDir = path.dirname(filePath)
-
-    await fs.mkdir(fileDir, { recursive: true })
-    await fs.writeFile(filePath, buffer)
+    await safeWriteUploadFile(safePath, buffer, uploadsDir)
 
     return NextResponse.json({
       ok: true,
-      publicUrl: `/uploads/${key}`,
+      publicUrl: `/uploads/${key.replace(/\\/g, '/')}`,
       key,
     })
   } catch (error) {

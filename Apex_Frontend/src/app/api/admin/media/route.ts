@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { ListObjectsV2Command } from '@aws-sdk/client-s3'
 import { promises as fs } from 'fs'
 import path from 'path'
-import { requireAdmin } from '@/lib/adminAuth'
+import { requirePermission, PERMISSIONS } from '@/lib/rbac'
 import { r2, isR2Configured, R2_BUCKET_NAME, R2_PUBLIC_URL } from '@/lib/r2'
 
 export async function GET(request: NextRequest) {
-  const auth = await requireAdmin(request)
+  const auth = await requirePermission(request, PERMISSIONS.MEDIA_READ)
   if (auth instanceof Response) return auth
 
   try {
