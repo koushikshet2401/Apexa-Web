@@ -28,7 +28,7 @@ export async function POST(
     }
 
     const body = await request.json()
-    const { assignedAdminId } = body
+    const assignedAdminId = body.assignedAdminId || body.adminId
 
     let newAdmin: { id: string; name: string | null; email: string } | null = null
 

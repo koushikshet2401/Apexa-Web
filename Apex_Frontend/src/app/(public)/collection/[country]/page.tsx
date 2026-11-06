@@ -27,7 +27,6 @@ export async function generateStaticParams() {
   }
 }
 
-
 export async function generateMetadata({
   params,
 }: {
@@ -82,7 +81,11 @@ export default async function CollectionCountryPage({
       where: { slug: countrySlug },
       include: {
         properties: {
-          where: { isPublished: true },
+          where: {
+            isPublished: true,
+            isPubliclyVisible: true,
+            isArchived: false,
+          },
           include: {
             images: { orderBy: { order: 'asc' } },
           },

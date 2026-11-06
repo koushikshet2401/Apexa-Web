@@ -35,9 +35,20 @@ export default async function EditPropertyPage({
     notFound()
   }
 
+  const serializedProperty = {
+    ...property,
+    askingPriceNumeric: property.askingPriceNumeric ? property.askingPriceNumeric.toString() : null,
+    bathroomsCount: property.bathroomsCount ? property.bathroomsCount.toString() : null,
+    areaNumeric: property.areaNumeric ? property.areaNumeric.toString() : null,
+    launchDate: property.launchDate ? property.launchDate.toISOString() : null,
+    createdAt: property.createdAt ? property.createdAt.toISOString() : null,
+    updatedAt: property.updatedAt ? property.updatedAt.toISOString() : null,
+    archivedAt: property.archivedAt ? property.archivedAt.toISOString() : null,
+  }
+
   return (
     <PropertyForm
-      initialProperty={property}
+      initialProperty={serializedProperty}
       countries={countries}
       services={services}
     />

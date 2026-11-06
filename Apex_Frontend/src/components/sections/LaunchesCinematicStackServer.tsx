@@ -15,10 +15,12 @@ export async function LaunchesCinematicStackServer() {
 
   try {
     const results = await Promise.all([
-      // 1. Fetch top 3 featured launches
+      // 1. Fetch top 3 featured launches (strictly enforced canonical visibility)
       db.property.findMany({
         where: {
           isPublished: true,
+          isPubliclyVisible: true,
+          isArchived: false,
           isFeaturedLaunch: true,
         },
         orderBy: [
@@ -44,10 +46,12 @@ export async function LaunchesCinematicStackServer() {
         orderBy: { displayOrder: 'asc' },
       }),
 
-      // 3. Fetch space in round properties
+      // 3. Fetch space in round properties (strictly enforced canonical visibility)
       db.property.findMany({
         where: {
           isPublished: true,
+          isPubliclyVisible: true,
+          isArchived: false,
           isSpaceInRound: true,
         },
         orderBy: { spaceOrder: 'asc' },
@@ -137,7 +141,7 @@ export async function LaunchesCinematicStackServer() {
       shortDescription: p.shortDescription || '',
       description: p.description || '',
       highlights: p.highlights || [],
-      image: p.mainImage || p.images[0]?.url || '',
+      image: p.spaceRoundImage || p.mainImage || p.images[0]?.url || '',
       gallery: p.images.map((img: { url: string }) => img.url),
       layoutVariant: p.layoutVariant || 1,
       lat: 0,

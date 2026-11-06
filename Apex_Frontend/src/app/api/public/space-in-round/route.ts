@@ -6,6 +6,8 @@ export async function GET() {
     const properties = await db.property.findMany({
       where: {
         isPublished: true,
+        isPubliclyVisible: true,
+        isArchived: false,
         isSpaceInRound: true,
       },
       orderBy: {
@@ -40,6 +42,7 @@ export async function GET() {
     const data = properties.map((p) => {
       const countrySlug = p.country?.slug || 'dubai'
       const firstService = p.services[0]?.service
+      const displayImage = p.spaceRoundImage || p.mainImage || p.images[0]?.url || ''
       return {
         id: p.id,
         slug: p.slug,
@@ -56,12 +59,12 @@ export async function GET() {
         city: p.cityName || '',
         country: p.country?.displayName || p.country?.name || '',
         locationLine: p.locationLine,
-        mainImage: p.mainImage || p.images[0]?.url || '',
-        image: p.mainImage || p.images[0]?.url || '',
+        mainImage: displayImage,
+        image: displayImage,
         mainVideoUrl: p.mainVideoUrl,
         gallery: p.images.map((img) => img.url),
         layoutVariant: p.layoutVariant,
-        href: `/properties/${countrySlug}/${p.slug}`,
+        href: `/collection/${countrySlug}/${p.slug}`,
         services: firstService ? [firstService] : [],
       }
     })

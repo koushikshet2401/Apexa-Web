@@ -29,7 +29,15 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next()
     }
 
-    const token = request.cookies.get(SESSION_COOKIE_NAME)?.value
+    let token = request.cookies.get(SESSION_COOKIE_NAME)?.value
+
+    // Also support Authorization: Bearer header for REST API clients
+    if (!token) {
+      const authHeader = request.headers.get('authorization')
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7).trim()
+      }
+    }
 
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

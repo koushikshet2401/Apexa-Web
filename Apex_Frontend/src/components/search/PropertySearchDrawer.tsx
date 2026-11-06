@@ -290,6 +290,21 @@ export function PropertySearchDrawer({ isOpen, onClose }: PropertySearchDrawerPr
   // Has user performed search? (Images only show in results after search)
   const [hasSearched, setHasSearched] = useState(false)
   const [results, setResults] = useState<SearchPropertyItem[]>([])
+  const [liveProperties, setLiveProperties] = useState<SearchPropertyItem[]>(ALL_PROPERTIES)
+
+  // Fetch live published properties when search drawer is opened
+  useEffect(() => {
+    if (isOpen) {
+      fetch('/api/public/properties')
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (Array.isArray(data) && data.length > 0) {
+            setLiveProperties(data)
+          }
+        })
+        .catch(() => {})
+    }
+  }, [isOpen])
 
   // Pause Lenis and lock body scroll while modal is open
   useEffect(() => {
@@ -343,7 +358,7 @@ export function PropertySearchDrawer({ isOpen, onClose }: PropertySearchDrawerPr
   const handleExecuteSearch = () => {
     const query = searchQuery.trim().toLowerCase()
 
-    const matched = ALL_PROPERTIES.filter((p) => {
+    const matched = liveProperties.filter((p) => {
       // 1. Text Query Filter
       if (query) {
         const matchName = p.name.toLowerCase().includes(query)

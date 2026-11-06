@@ -12,6 +12,8 @@ export async function GET(
       where: {
         slug,
         isPublished: true,
+        isPubliclyVisible: true,
+        isArchived: false,
         OR: [
           { country: { slug: country } },
           { countryId: null },

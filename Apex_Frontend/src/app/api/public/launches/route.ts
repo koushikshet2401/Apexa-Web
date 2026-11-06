@@ -6,6 +6,8 @@ export async function GET() {
     const properties = await db.property.findMany({
       where: {
         isPublished: true,
+        isPubliclyVisible: true,
+        isArchived: false,
         isFeaturedLaunch: true,
       },
       orderBy: [
@@ -41,7 +43,7 @@ export async function GET() {
         videoSrc: p.mainVideoUrl || '/videos/luxury-palm-beach.mp4',
         mainVideoUrl: p.mainVideoUrl || '/videos/luxury-palm-beach.mp4',
         mainImage: p.mainImage || '',
-        href: `/properties/${countrySlug}/${p.slug}`,
+        href: `/collection/${countrySlug}/${p.slug}`,
         country: p.country,
       }
     })

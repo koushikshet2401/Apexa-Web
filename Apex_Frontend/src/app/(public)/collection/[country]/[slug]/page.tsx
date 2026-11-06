@@ -10,7 +10,11 @@ export const revalidate = 60
 export async function generateStaticParams() {
   try {
     const properties = await db.property.findMany({
-      where: { isPublished: true },
+      where: {
+        isPublished: true,
+        isPubliclyVisible: true,
+        isArchived: true,
+      },
       select: {
         slug: true,
         country: { select: { slug: true } },
@@ -29,7 +33,6 @@ export async function generateStaticParams() {
   }
 }
 
-
 export async function generateMetadata({
   params,
 }: {
@@ -45,6 +48,8 @@ export async function generateMetadata({
       where: { slug: resolvedSlug },
       select: {
         isPublished: true,
+        isPubliclyVisible: true,
+        isArchived: true,
         name: true,
         cityName: true,
         description: true,
@@ -54,7 +59,9 @@ export async function generateMetadata({
       },
     })
     if (record) {
-      if (!record.isPublished) notFound()
+      if (!record.isPublished || !record.isPubliclyVisible || record.isArchived) {
+        notFound()
+      }
       dbProperty = record
     }
   } catch {
@@ -112,11 +119,16 @@ export default async function CollectionPropertyPage({
         country: true,
         images: { orderBy: { order: 'asc' } },
         services: { include: { service: true } },
+        deals: {
+          where: { status: 'COMPLETED' },
+          select: { id: true, keepPubliclyVisible: true },
+        },
       },
     })
 
     if (record) {
-      if (!record.isPublished) {
+      // Canonical public visibility rule: only active published projects or visible acquired
+      if (!record.isPublished || !record.isPubliclyVisible || record.isArchived) {
         notFound()
       }
       dbProperty = record
@@ -128,18 +140,21 @@ export default async function CollectionPropertyPage({
   let property: any = null
 
   if (dbProperty) {
+    const isAcquired = dbProperty.hasCompletedDeal || (dbProperty.deals && dbProperty.deals.length > 0)
+
     property = {
       id: dbProperty.id,
       slug: dbProperty.slug,
       name: dbProperty.name,
-      cardLabel: dbProperty.cardLabel || dbProperty.name.toUpperCase(),
+      cardLabel: isAcquired ? 'ACQUIRED' : (dbProperty.cardLabel || dbProperty.name.toUpperCase()),
       country: dbProperty.country?.displayName || dbProperty.country?.name || country.toUpperCase(),
       city: dbProperty.cityName || '',
       type: dbProperty.type || 'residential',
       beds: dbProperty.beds || '3–4',
       baths: dbProperty.baths || '3',
       area: dbProperty.area || '',
-      price: dbProperty.price || 'Price on Application',
+      price: isAcquired ? 'Acquired' : (dbProperty.price || 'Price on Application'),
+      isAcquired,
       tagline: dbProperty.tagline || '',
       shortDescription: dbProperty.shortDescription || '',
       description: dbProperty.description || '',
