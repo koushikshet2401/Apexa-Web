@@ -24,18 +24,17 @@ export function escapeHtml(str: string | null | undefined): string {
 }
 
 export function isSmtpConfigured(): boolean {
-  return Boolean(
-    process.env.SMTP_HOST &&
-    process.env.SMTP_USER &&
-    process.env.SMTP_PASS
-  )
+  const host = (process.env.SMTP_HOST || '').trim()
+  const user = (process.env.SMTP_USER || '').trim()
+  const pass = (process.env.SMTP_PASS || '').trim()
+  return Boolean(host && user && pass)
 }
 
 function getTransporter() {
-  const host = process.env.SMTP_HOST
-  const port = parseInt(process.env.SMTP_PORT || '587', 10)
-  const user = process.env.SMTP_USER
-  const pass = process.env.SMTP_PASS
+  const host = (process.env.SMTP_HOST || '').trim()
+  const port = parseInt((process.env.SMTP_PORT || '587').trim(), 10)
+  const user = (process.env.SMTP_USER || '').trim()
+  const pass = (process.env.SMTP_PASS || '').trim()
 
   if (!host || !user || !pass) {
     return null

@@ -418,7 +418,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Time-series trend over the selected date range
-    let dailyTrend: Array<{ date: string; visits: number; pageViews: number }> = []
+    let dailyTrend: Array<{ date: string; visits: number; pageViews: number; projectAdditions: number; dealClosures: number }> = []
     try {
       const trendRecords = await db.dailyAnalytics.findMany({
         where: {
@@ -429,11 +429,60 @@ export async function GET(request: NextRequest) {
         },
         orderBy: { date: 'asc' },
       })
-      dailyTrend = trendRecords.map((r) => ({
-        date: r.date.toISOString().substring(0, 10),
-        visits: r.qualifyingVisits,
-        pageViews: r.pageViews,
-      }))
+
+      // Query project additions and deal closures grouped by date
+      const projectAdditionsMap = new Map<string, number>()
+      const dealClosuresMap = new Map<string, number>()
+
+      try {
+        const pRows = await db.$queryRaw<Array<{ date: string; count: number }>>`
+          SELECT TO_CHAR("createdAt", 'YYYY-MM-DD') AS date, COUNT(*)::INTEGER AS count
+          FROM "Property"
+          WHERE "createdAt" >= ${parsedRange.startDate} AND "createdAt" <= ${parsedRange.endDate}
+          GROUP BY TO_CHAR("createdAt", 'YYYY-MM-DD')
+        `
+        pRows.forEach((r) => projectAdditionsMap.set(r.date, Number(r.count)))
+
+        const dRows = await db.$queryRaw<Array<{ date: string; count: number }>>`
+          SELECT TO_CHAR("closedAt", 'YYYY-MM-DD') AS date, COUNT(*)::INTEGER AS count
+          FROM "Deal"
+          WHERE "status" = 'COMPLETED' AND "closedAt" IS NOT NULL
+            AND "closedAt" >= ${parsedRange.startDate} AND "closedAt" <= ${parsedRange.endDate}
+          GROUP BY TO_CHAR("closedAt", 'YYYY-MM-DD')
+        `
+        dRows.forEach((r) => dealClosuresMap.set(r.date, Number(r.count)))
+      } catch (trendQueryErr) {
+        console.warn('Could not query project additions or deal closures trend:', trendQueryErr)
+      }
+
+      if (trendRecords.length > 0) {
+        dailyTrend = trendRecords.map((r) => {
+          const dateStr = r.date.toISOString().substring(0, 10)
+          return {
+            date: dateStr,
+            visits: r.qualifyingVisits,
+            pageViews: r.pageViews,
+            projectAdditions: projectAdditionsMap.get(dateStr) || 0,
+            dealClosures: dealClosuresMap.get(dateStr) || 0,
+          }
+        })
+      } else {
+        // Generate points for the date range so graph always has points to display
+        const start = new Date(parsedRange.startDate)
+        const end = new Date(parsedRange.endDate)
+        const curr = new Date(start)
+        while (curr <= end) {
+          const dateStr = curr.toISOString().substring(0, 10)
+          dailyTrend.push({
+            date: dateStr,
+            visits: 0,
+            pageViews: 0,
+            projectAdditions: projectAdditionsMap.get(dateStr) || 0,
+            dealClosures: dealClosuresMap.get(dateStr) || 0,
+          })
+          curr.setUTCDate(curr.getUTCDate() + 1)
+        }
+      }
     } catch {
       dailyTrend = []
     }

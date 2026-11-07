@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Building2,
   Plus,
@@ -17,13 +17,14 @@ import {
   Archive,
   RotateCcw,
   DollarSign,
-  ChevronLeft,
-  ChevronRight,
   Eye,
   EyeOff,
   Award,
-  Filter,
+  Globe2,
+  X,
+  User,
 } from 'lucide-react'
+import { SUPPORTED_CURRENCY_CODES } from '@/config/currencies'
 
 interface PropertyItem {
   id: string
@@ -56,19 +57,13 @@ interface PropertyItem {
     id: string
     dealRef: string
     buyerName: string | null
+    buyerContact: string | null
     actualSalePrice: string | null
     saleCurrency: string | null
     status: string
     keepPubliclyVisible: boolean
     closedAt: string | null
     closedBy: { id: string; name: string | null; email: string } | null
-    adjustments: Array<{
-      adjustmentSequence: number
-      previousSalePrice: string
-      previousCurrency: string
-      adjustedSalePrice: string
-      adjustedCurrency: string
-    }>
   }>
   archivedBy: {
     id: string
@@ -87,12 +82,6 @@ interface CountryOption {
   slug: string
 }
 
-const SUPPORTED_CURRENCIES = [
-  'AED', 'USD', 'EUR', 'GBP', 'INR', 'THB', 'MYR', 'AUD', 'GEL', 'SGD', 'CHF', 'CAD', 'JPY'
-]
-
-const ITEMS_PER_PAGE = 10
-
 export default function PropertiesListClient({
   initialProperties,
   countries,
@@ -101,63 +90,68 @@ export default function PropertiesListClient({
   countries: CountryOption[]
 }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [properties, setProperties] = useState<PropertyItem[]>(initialProperties)
 
-  // Primary Sections: Current Projects | Sold Projects | Archived Projects
-  const [activeTab, setActiveTab] = useState<'current' | 'sold' | 'archived'>('current')
+  // Primary Sections: Current Projects | Sold Projects | Deleted Projects
+  const [activeTab, setActiveTab] = useState<'current' | 'sold' | 'archived'>(() => {
+    const tabParam = searchParams?.get('tab')
+    if (tabParam === 'sold' || tabParam === 'archived' || tabParam === 'current') {
+      return tabParam
+    }
+    return 'current'
+  })
 
-  // Sub-filters for Current Projects
-  const [currentSubFilter, setCurrentSubFilter] = useState<'all' | 'published' | 'draft'>('all')
+  useEffect(() => {
+    const tabParam = searchParams?.get('tab')
+    if (tabParam === 'sold' || tabParam === 'archived' || tabParam === 'current') {
+      setActiveTab(tabParam)
+    } else if (!tabParam) {
+      setActiveTab('current')
+    }
+  }, [searchParams])
 
-  // Sub-filters for Sold Projects
-  const [soldSubFilter, setSoldSubFilter] = useState<'all' | 'visible' | 'hidden'>('all')
-
-  // Country filter & search query
-  const [selectedCountryId, setSelectedCountryId] = useState<string>('all')
+  // Filters
   const [search, setSearch] = useState<string>('')
-  const [currentPage, setCurrentPage] = useState<number>(1)
+  const [selectedCountryId, setSelectedCountryId] = useState<string>('all')
 
   // Action states
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null)
-  const [archiveModalItem, setArchiveModalItem] = useState<PropertyItem | null>(null)
-  const [archiveReason, setArchiveReason] = useState<string>('')
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
-  // Reprice modal state
-  const [repriceItem, setRepriceItem] = useState<PropertyItem | null>(null)
-  const [repriceState, setRepriceState] = useState<'PRICED' | 'POA' | 'UNPRICED'>('PRICED')
-  const [repriceAmount, setRepriceAmount] = useState<string>('')
-  const [repriceCurrency, setRepriceCurrency] = useState<string>('AED')
-  const [repriceReason, setRepriceReason] = useState<string>('')
-  const [repriceLoading, setRepriceLoading] = useState<boolean>(false)
+  // 1. Delete / Archive Modal State
+  const [archiveModalItem, setArchiveModalItem] = useState<PropertyItem | null>(null)
+  const [archiveReason, setArchiveReason] = useState<string>('')
+
+  // 2. Close Deal Modal State
+  const [closeDealItem, setCloseDealItem] = useState<PropertyItem | null>(null)
+  const [dealSalePrice, setDealSalePrice] = useState<string>('')
+  const [dealCurrency, setDealCurrency] = useState<string>('AED')
+  const [dealKeepVisible, setDealKeepVisible] = useState<boolean>(true) // Option A default
+  const [dealBuyerName, setDealBuyerName] = useState<string>('')
+  const [dealBuyerContact, setDealBuyerContact] = useState<string>('')
+  const [dealNotes, setDealNotes] = useState<string>('')
+  const [dealLoading, setDealLoading] = useState<boolean>(false)
 
   // Categorize Properties
   const currentProjects = properties.filter((p) => !p.isArchived && p.deals.length === 0)
   const soldProjects = properties.filter((p) => !p.isArchived && p.deals.length > 0)
   const archivedProjects = properties.filter((p) => p.isArchived)
 
-  // Filter based on active tab and search
+  // Filter based on active tab, search, and country
   const displayedProperties = properties.filter((p) => {
-    // 1. Tab partitioning
     if (activeTab === 'current') {
       if (p.isArchived || p.deals.length > 0) return false
-      if (currentSubFilter === 'published' && !p.isPublished) return false
-      if (currentSubFilter === 'draft' && !p.isDraft) return false
     } else if (activeTab === 'sold') {
       if (p.isArchived || p.deals.length === 0) return false
-      const deal = p.deals[0]
-      if (soldSubFilter === 'visible' && !deal?.keepPubliclyVisible) return false
-      if (soldSubFilter === 'hidden' && deal?.keepPubliclyVisible) return false
     } else if (activeTab === 'archived') {
       if (!p.isArchived) return false
     }
 
-    // 2. Country filter
     if (selectedCountryId !== 'all' && p.country?.id !== selectedCountryId) {
       return false
     }
 
-    // 3. Search filter
     if (search.trim()) {
       const q = search.toLowerCase()
       const deal = p.deals[0]
@@ -172,63 +166,65 @@ export default function PropertiesListClient({
     return true
   })
 
-  // Pagination calculation
-  const totalPages = Math.max(1, Math.ceil(displayedProperties.length / ITEMS_PER_PAGE))
-  const paginatedProperties = displayedProperties.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  )
-
   const showToast = (type: 'success' | 'error', message: string) => {
     setToast({ type, message })
     setTimeout(() => setToast(null), 4000)
   }
 
-  // 1. Publish / Unpublish Action
+  // Toggle Publish / Draft
   const handleTogglePublish = async (prop: PropertyItem) => {
+    const isCurrentlyPublished = prop.isPublished
+    const endpoint = isCurrentlyPublished ? 'unpublish' : 'publish'
     setActionLoadingId(prop.id)
-    const isPublishing = !prop.isPublished
-    const endpoint = isPublishing
-      ? `/api/admin/properties/${prop.id}/publish`
-      : `/api/admin/properties/${prop.id}/unpublish`
 
     try {
-      const res = await fetch(endpoint, { method: 'POST' })
+      const res = await fetch(`/api/admin/properties/${prop.id}/${endpoint}`, {
+        method: 'POST',
+      })
       const data = await res.json()
+
       if (res.ok) {
         setProperties((prev) =>
           prev.map((item) =>
             item.id === prop.id
               ? {
                   ...item,
-                  isPublished: isPublishing,
-                  isDraft: !isPublishing,
-                  isPubliclyVisible: isPublishing,
+                  isPublished: !isCurrentlyPublished,
+                  isDraft: isCurrentlyPublished,
+                  isPubliclyVisible: !isCurrentlyPublished,
                 }
               : item
           )
         )
-        showToast('success', `Project successfully ${isPublishing ? 'published' : 'unpublished'}.`)
+        showToast(
+          'success',
+          `Project "${prop.name}" is now ${isCurrentlyPublished ? 'Draft' : 'Published'}.`
+        )
       } else {
         showToast('error', data.error || data.message || 'Action failed')
       }
     } catch {
-      showToast('error', 'Network error during publish toggle')
+      showToast('error', 'Network error updating project status')
     } finally {
       setActionLoadingId(null)
     }
   }
 
-  // 2. Archive Action
+  // Delete / Archive Confirmation
   const handleArchiveConfirm = async () => {
     if (!archiveModalItem) return
+    if (!archiveReason.trim()) {
+      showToast('error', 'A deletion reason is required to archive this project.')
+      return
+    }
+
     setActionLoadingId(archiveModalItem.id)
 
     try {
       const res = await fetch(`/api/admin/properties/${archiveModalItem.id}/archive`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason: archiveReason.trim() || 'Administrative archive' }),
+        body: JSON.stringify({ reason: archiveReason.trim() }),
       })
       const data = await res.json()
 
@@ -242,25 +238,25 @@ export default function PropertiesListClient({
                   isPublished: false,
                   isPubliclyVisible: false,
                   archivedAt: new Date().toISOString(),
-                  archivedReason: archiveReason.trim() || 'Administrative archive',
+                  archivedReason: archiveReason.trim(),
                 }
               : item
           )
         )
-        showToast('success', `Project moved to Deleted / Archived Projects.`)
+        showToast('success', `Project "${archiveModalItem.name}" moved to Deleted Projects.`)
         setArchiveModalItem(null)
         setArchiveReason('')
       } else {
-        showToast('error', data.error || data.message || 'Archive failed')
+        showToast('error', data.error || data.message || 'Delete action failed')
       }
     } catch {
-      showToast('error', 'Network error while archiving project')
+      showToast('error', 'Network error while deleting project')
     } finally {
       setActionLoadingId(null)
     }
   }
 
-  // 3. Restore Action
+  // Restore Action
   const handleRestore = async (prop: PropertyItem) => {
     setActionLoadingId(prop.id)
     try {
@@ -294,278 +290,168 @@ export default function PropertiesListClient({
     }
   }
 
-  // 4. Financial Repricing Action
-  const openRepriceModal = (prop: PropertyItem) => {
-    setRepriceItem(prop)
-    if (prop.isPOA) {
-      setRepriceState('POA')
-      setRepriceAmount('')
-      setRepriceCurrency(prop.askingCurrency || 'AED')
-    } else if (prop.askingPriceNumeric) {
-      setRepriceState('PRICED')
-      setRepriceAmount(prop.askingPriceNumeric)
-      setRepriceCurrency(prop.askingCurrency || 'AED')
-    } else {
-      setRepriceState('UNPRICED')
-      setRepriceAmount('')
-      setRepriceCurrency(prop.askingCurrency || 'AED')
-    }
-    setRepriceReason('')
+  // Close Deal Action
+  const openCloseDealModal = (prop: PropertyItem) => {
+    setCloseDealItem(prop)
+    setDealSalePrice(prop.askingPriceNumeric ? String(prop.askingPriceNumeric) : '')
+    setDealCurrency(prop.askingCurrency || 'AED')
+    setDealKeepVisible(true) // Option A default
+    setDealBuyerName('')
+    setDealBuyerContact('')
+    setDealNotes('')
   }
 
-  const handleRepriceSubmit = async (e: React.FormEvent) => {
+  const handleCloseDealSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!repriceItem) return
-    setRepriceLoading(true)
-
-    let payload: any = { pricingState: repriceState, reason: repriceReason.trim() || 'Executive repricing' }
-    if (repriceState === 'PRICED') {
-      const num = parseFloat(repriceAmount)
-      if (isNaN(num) || num <= 0) {
-        showToast('error', 'Please enter a valid positive numeric amount')
-        setRepriceLoading(false)
-        return
-      }
-      payload.askingPriceNumeric = num
-      payload.askingCurrency = repriceCurrency
+    if (!closeDealItem) return
+    if (!dealSalePrice || isNaN(parseFloat(dealSalePrice)) || parseFloat(dealSalePrice) <= 0) {
+      showToast('error', 'Please provide a valid sale price greater than zero.')
+      return
     }
 
     try {
-      const res = await fetch(`/api/admin/properties/${repriceItem.id}/price`, {
-        method: 'PATCH',
+      setDealLoading(true)
+      const res = await fetch(`/api/admin/properties/${closeDealItem.id}/close-deal`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          actualSalePrice: parseFloat(dealSalePrice),
+          currency: dealCurrency,
+          keepPubliclyVisible: dealKeepVisible,
+          buyerName: dealBuyerName.trim(),
+          buyerContact: dealBuyerContact.trim(),
+          notes: dealNotes.trim(),
+        }),
       })
-      const data = await res.json()
 
+      const data = await res.json()
       if (res.ok) {
         setProperties((prev) =>
           prev.map((item) =>
-            item.id === repriceItem.id
+            item.id === closeDealItem.id
               ? {
                   ...item,
-                  isPOA: repriceState === 'POA',
-                  askingPriceNumeric: repriceState === 'PRICED' ? repriceAmount : null,
-                  askingCurrency: repriceState === 'PRICED' ? repriceCurrency : null,
-                  price:
-                    repriceState === 'POA'
-                      ? 'Price on Application'
-                      : repriceState === 'PRICED'
-                      ? `${repriceCurrency} ${Number(repriceAmount).toLocaleString()}`
-                      : null,
+                  hasCompletedDeal: true,
+                  isPublished: dealKeepVisible,
+                  isPubliclyVisible: dealKeepVisible,
+                  deals: [data.deal],
                 }
               : item
           )
         )
-        showToast('success', `Project repriced successfully!`)
-        setRepriceItem(null)
+        showToast(
+          'success',
+          `Deal closed successfully! Moved to Soldout Projects (${
+            dealKeepVisible ? 'Option A: Public Acquired' : 'Option B: Unlisted Sold'
+          }).`
+        )
+        setCloseDealItem(null)
       } else {
-        showToast('error', data.error || data.message || 'Repricing failed')
+        showToast('error', data.error || 'Failed to close deal.')
       }
     } catch {
-      showToast('error', 'Network error during repricing')
+      showToast('error', 'Network error while closing deal.')
     } finally {
-      setRepriceLoading(false)
+      setDealLoading(false)
     }
   }
 
+  const getSectionTitle = () => {
+    if (activeTab === 'current') return 'Current Projects'
+    if (activeTab === 'sold') return 'Soldout Projects'
+    return 'Deleted Projects'
+  }
+
+  const getSectionDescription = () => {
+    if (activeTab === 'current') return 'Active portfolio properties grouped by country.'
+    if (activeTab === 'sold') return 'Completed transactions and buyer purchase records.'
+    return 'Soft-deleted projects with deletion reasons and restore capability.'
+  }
+
   return (
-    <div className="space-y-6 text-slate-900 dark:text-slate-100 transition-colors">
-      {/* Toast Notification */}
+    <div className="space-y-6">
+      {/* Toast Banner */}
       {toast && (
         <div
-          className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-lg shadow-xl text-xs font-mono flex items-center gap-2 border ${
+          className={`p-4 rounded-xl text-xs flex items-center gap-2.5 ${
             toast.type === 'success'
-              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/30'
-              : 'bg-rose-500/10 text-rose-600 dark:text-rose-300 border-rose-500/30'
+              ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
+              : 'bg-rose-500/10 border border-rose-500/20 text-rose-400'
           }`}
         >
-          {toast.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+          {toast.type === 'success' ? (
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 shrink-0" />
+          )}
           <span>{toast.message}</span>
         </div>
       )}
 
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-slate-200 dark:border-white/10">
+      {/* Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-white/10">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#0284C7] dark:text-[#7DD3FC]">
-              Portfolio Inventory
-            </span>
-          </div>
-          <h1 className="text-2xl font-display font-medium text-slate-900 dark:text-white tracking-wide">
-            Projects Management
+          <h1 className="text-xl md:text-2xl font-bold font-display tracking-tight text-white">
+            {getSectionTitle()}
           </h1>
-          <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
-            Browse active residences, review completed sales & visibility, manage recoverable archives.
-          </p>
+          <p className="text-xs text-gray-400 mt-1">{getSectionDescription()}</p>
         </div>
 
-        <Link
-          href="/admin/properties/new"
-          className="px-4 py-2.5 rounded-lg bg-[#0284C7] hover:bg-[#0369A1] text-white text-xs font-medium tracking-wide flex items-center gap-2 shadow-sm transition-all cursor-pointer self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add Project</span>
-        </Link>
+        {activeTab === 'current' && (
+          <Link
+            href="/admin/properties/new"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#7DD3FC] hover:bg-[#7DD3FC]/90 text-[#040810] font-bold text-xs transition-all shadow-[0_0_15px_rgba(125,211,252,0.25)]"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Project</span>
+          </Link>
+        )}
       </div>
 
-      {/* SECTION TABS (Section 1.B, 1.C, 1.D) */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-white/10 pb-1">
-        <button
-          onClick={() => {
-            setActiveTab('current')
-            setCurrentPage(1)
-          }}
-          className={`px-4 py-2 text-xs font-semibold tracking-wider transition-all border-b-2 cursor-pointer ${
-            activeTab === 'current'
-              ? 'border-[#0284C7] dark:border-[#7DD3FC] text-[#0284C7] dark:text-[#7DD3FC]'
-              : 'border-transparent text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white'
-          }`}
-        >
-          Current Projects ({currentProjects.length})
-        </button>
-        <button
-          onClick={() => {
-            setActiveTab('sold')
-            setCurrentPage(1)
-          }}
-          className={`px-4 py-2 text-xs font-semibold tracking-wider transition-all border-b-2 cursor-pointer flex items-center gap-1.5 ${
-            activeTab === 'sold'
-              ? 'border-amber-500 text-amber-600 dark:text-amber-400'
-              : 'border-transparent text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white'
-          }`}
-        >
-          <Award className="w-3.5 h-3.5" />
-          <span>Sold Projects ({soldProjects.length})</span>
-        </button>
-        <button
-          onClick={() => {
-            setActiveTab('archived')
-            setCurrentPage(1)
-          }}
-          className={`px-4 py-2 text-xs font-semibold tracking-wider transition-all border-b-2 cursor-pointer flex items-center gap-1.5 ${
-            activeTab === 'archived'
-              ? 'border-rose-500 text-rose-600 dark:text-rose-400'
-              : 'border-transparent text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white'
-          }`}
-        >
-          <Archive className="w-3.5 h-3.5" />
-          <span>Deleted / Archived ({archivedProjects.length})</span>
-        </button>
-      </div>
-
-      {/* Filters and Search Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Sub-Filters */}
-        <div className="flex items-center gap-1.5 p-1 rounded-lg bg-slate-100 dark:bg-[#070E1C] border border-slate-200 dark:border-white/10 w-fit">
-          {activeTab === 'current' && (
-            <>
-              <button
-                onClick={() => {
-                  setCurrentSubFilter('all')
-                  setCurrentPage(1)
-                }}
-                className={`px-3 py-1.5 rounded-md text-xs font-mono uppercase tracking-wider transition-all ${
-                  currentSubFilter === 'all'
-                    ? 'bg-white dark:bg-[#0B1528] text-[#0284C7] dark:text-[#7DD3FC] shadow-sm font-semibold'
-                    : 'text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white'
-                }`}
-              >
-                All Active ({currentProjects.length})
-              </button>
-              <button
-                onClick={() => {
-                  setCurrentSubFilter('published')
-                  setCurrentPage(1)
-                }}
-                className={`px-3 py-1.5 rounded-md text-xs font-mono uppercase tracking-wider transition-all ${
-                  currentSubFilter === 'published'
-                    ? 'bg-white dark:bg-[#0B1528] text-emerald-600 dark:text-emerald-400 shadow-sm font-semibold'
-                    : 'text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white'
-                }`}
-              >
-                Published ({currentProjects.filter((p) => p.isPublished).length})
-              </button>
-              <button
-                onClick={() => {
-                  setCurrentSubFilter('draft')
-                  setCurrentPage(1)
-                }}
-                className={`px-3 py-1.5 rounded-md text-xs font-mono uppercase tracking-wider transition-all ${
-                  currentSubFilter === 'draft'
-                    ? 'bg-white dark:bg-[#0B1528] text-amber-600 dark:text-amber-400 shadow-sm font-semibold'
-                    : 'text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white'
-                }`}
-              >
-                Draft ({currentProjects.filter((p) => p.isDraft).length})
-              </button>
-            </>
-          )}
-
-          {activeTab === 'sold' && (
-            <>
-              <button
-                onClick={() => {
-                  setSoldSubFilter('all')
-                  setCurrentPage(1)
-                }}
-                className={`px-3 py-1.5 rounded-md text-xs font-mono uppercase tracking-wider transition-all ${
-                  soldSubFilter === 'all'
-                    ? 'bg-white dark:bg-[#0B1528] text-amber-600 dark:text-amber-400 shadow-sm font-semibold'
-                    : 'text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white'
-                }`}
-              >
-                All Sold ({soldProjects.length})
-              </button>
-              <button
-                onClick={() => {
-                  setSoldSubFilter('visible')
-                  setCurrentPage(1)
-                }}
-                className={`px-3 py-1.5 rounded-md text-xs font-mono uppercase tracking-wider transition-all ${
-                  soldSubFilter === 'visible'
-                    ? 'bg-white dark:bg-[#0B1528] text-emerald-600 dark:text-emerald-400 shadow-sm font-semibold'
-                    : 'text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white'
-                }`}
-              >
-                Option A: Visible Acquired ({soldProjects.filter((p) => p.deals[0]?.keepPubliclyVisible).length})
-              </button>
-              <button
-                onClick={() => {
-                  setSoldSubFilter('hidden')
-                  setCurrentPage(1)
-                }}
-                className={`px-3 py-1.5 rounded-md text-xs font-mono uppercase tracking-wider transition-all ${
-                  soldSubFilter === 'hidden'
-                    ? 'bg-white dark:bg-[#0B1528] text-slate-800 dark:text-slate-300 shadow-sm font-semibold'
-                    : 'text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white'
-                }`}
-              >
-                Option B: Unlisted ({soldProjects.filter((p) => !p.deals[0]?.keepPubliclyVisible).length})
-              </button>
-            </>
-          )}
-
-          {activeTab === 'archived' && (
-            <span className="px-3 py-1.5 text-xs font-mono text-rose-600 dark:text-rose-400 font-semibold">
-              Recoverable Archives ({archivedProjects.length})
-            </span>
-          )}
+      {/* Tabs & Search Filter */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        {/* Navigation Tabs */}
+        <div className="flex items-center bg-[#070E1C] border border-white/10 rounded-lg p-1">
+          <Link
+            href="/admin/properties?tab=current"
+            className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wider rounded transition-colors ${
+              activeTab === 'current'
+                ? 'bg-[#7DD3FC]/15 text-[#7DD3FC] font-semibold border border-[#7DD3FC]/30'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Current ({currentProjects.length})
+          </Link>
+          <Link
+            href="/admin/properties?tab=sold"
+            className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wider rounded transition-colors ${
+              activeTab === 'sold'
+                ? 'bg-[#7DD3FC]/15 text-[#7DD3FC] font-semibold border border-[#7DD3FC]/30'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Soldout ({soldProjects.length})
+          </Link>
+          <Link
+            href="/admin/properties?tab=archived"
+            className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wider rounded transition-colors ${
+              activeTab === 'archived'
+                ? 'bg-[#7DD3FC]/15 text-[#7DD3FC] font-semibold border border-[#7DD3FC]/30'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Deleted ({archivedProjects.length})
+          </Link>
         </div>
 
-        {/* Country Filter & Search Input */}
+        {/* Country Filter & Search */}
         <div className="flex items-center gap-3">
           <select
             value={selectedCountryId}
-            onChange={(e) => {
-              setSelectedCountryId(e.target.value)
-              setCurrentPage(1)
-            }}
-            aria-label="Filter by destination country"
-            className="bg-white dark:bg-[#070E1C] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-[#7DD3FC]"
+            onChange={(e) => setSelectedCountryId(e.target.value)}
+            className="bg-[#070E1C] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
           >
-            <option value="all">All Destinations</option>
+            <option value="all">All Countries</option>
             {countries.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.displayName || c.name}
@@ -573,272 +459,258 @@ export default function PropertiesListClient({
             ))}
           </select>
 
-          <div className="relative min-w-[240px]">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <div className="relative min-w-[220px]">
+            <Search className="w-4 h-4 text-gray-500 absolute left-3 top-2.5 pointer-events-none" />
             <input
               type="text"
               value={search}
-              onChange={(e) => {
-                setSearch(e.target.value)
-                setCurrentPage(1)
-              }}
-              placeholder="Search projects, buyers..."
-              className="w-full bg-white dark:bg-[#070E1C] border border-slate-200 dark:border-white/10 rounded-lg pl-9 pr-3.5 py-2 text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-[#7DD3FC]"
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search projects..."
+              className="w-full bg-[#070E1C] border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
             />
           </div>
         </div>
       </div>
 
-      {/* Main Table */}
-      <div className="bg-white dark:bg-[#070E1C] border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
-        {paginatedProperties.length === 0 ? (
-          <div className="p-12 text-center space-y-3">
-            <Building2 className="w-8 h-8 text-slate-400 mx-auto" />
-            <p className="text-xs text-slate-500 dark:text-gray-400 font-mono">
-              No projects found matching the selected criteria.
-            </p>
-          </div>
-        ) : (
+      {/* MAIN CONTENT AREA */}
+      {displayedProperties.length === 0 ? (
+        <div className="py-20 text-center bg-[#070E1C] border border-white/10 rounded-xl space-y-3">
+          <Building2 className="w-10 h-10 text-gray-600 mx-auto" />
+          <h3 className="text-sm font-semibold text-white">No projects found</h3>
+          <p className="text-xs text-gray-400">
+            {search ? 'No projects match your search criteria.' : 'No projects recorded in this section.'}
+          </p>
+        </div>
+      ) : activeTab === 'current' ? (
+        /* CURRENT PROJECTS GROUPED BY COUNTRY */
+        <div className="space-y-6">
+          {countries.map((c) => {
+            const countryProjects = displayedProperties.filter((p) => p.country?.id === c.id)
+            if (countryProjects.length === 0) return null
+
+            return (
+              <div
+                key={c.id}
+                className="bg-[#070E1C] border border-white/10 rounded-xl overflow-hidden shadow-sm"
+              >
+                {/* Country Section Header */}
+                <div className="px-5 py-3.5 bg-[#040810]/70 border-b border-white/10 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <Globe2 className="w-4 h-4 text-[#7DD3FC]" />
+                    <h3 className="text-sm font-semibold text-white tracking-wide font-display">
+                      {c.displayName || c.name}
+                    </h3>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 text-gray-400 border border-white/5">
+                      {countryProjects.length} {countryProjects.length === 1 ? 'Project' : 'Projects'}
+                    </span>
+                  </div>
+                  <span className="text-xs font-mono text-gray-400">{c.region}</span>
+                </div>
+
+                {/* Country Projects Table */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="text-gray-400 font-mono uppercase text-[10px] tracking-wider border-b border-white/5 bg-[#070E1C]">
+                      <tr>
+                        <th className="py-3 px-5">Project</th>
+                        <th className="py-3 px-5">Status</th>
+                        <th className="py-3 px-5">Asking Price</th>
+                        <th className="py-3 px-5">Badges</th>
+                        <th className="py-3 px-5 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {countryProjects.map((p) => {
+                        const countrySlug = p.country?.slug || 'dubai'
+                        const publicUrl = `/collection/${countrySlug}/${p.slug}`
+                        return (
+                          <tr key={p.id} className="hover:bg-white/[0.02] transition-colors">
+                            {/* Project Name & City */}
+                            <td className="py-3.5 px-5">
+                              <div className="font-semibold text-white text-sm">{p.name}</div>
+                              <div className="text-[11px] text-gray-400 font-mono mt-0.5">
+                                {p.locationLine || p.cityName || 'Prime Location'}
+                              </div>
+                            </td>
+
+                            {/* Status Toggle */}
+                            <td className="py-3.5 px-5">
+                              <button
+                                onClick={() => handleTogglePublish(p)}
+                                disabled={actionLoadingId === p.id}
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider border transition-all cursor-pointer ${
+                                  p.isPublished
+                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                                    : 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20'
+                                }`}
+                                title="Click to toggle publish status"
+                              >
+                                {p.isPublished ? (
+                                  <>
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                                    <span>Published</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <FileEdit className="w-3 h-3 text-amber-400" />
+                                    <span>Draft</span>
+                                  </>
+                                )}
+                              </button>
+                            </td>
+
+                            {/* Asking Price */}
+                            <td className="py-3.5 px-5 font-mono">
+                              {p.isPOA ? (
+                                <span className="text-purple-400 font-semibold text-[11px]">POA</span>
+                              ) : p.askingPriceNumeric ? (
+                                <div className="text-white text-xs">
+                                  <span className="text-[#7DD3FC] font-semibold">{p.askingCurrency}</span>{' '}
+                                  {Number(p.askingPriceNumeric).toLocaleString()}
+                                </div>
+                              ) : (
+                                <span className="text-gray-500 text-[11px]">Unpriced</span>
+                              )}
+                            </td>
+
+                            {/* Badges */}
+                            <td className="py-3.5 px-5 space-x-1.5">
+                              {p.isFeaturedLaunch && (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-mono text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">
+                                  <Flame className="w-3 h-3" /> Launch #{p.launchOrder ?? 1}
+                                </span>
+                              )}
+                              {p.isSpaceInRound && (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-mono text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded">
+                                  <Orbit className="w-3 h-3" /> Space in Round
+                                </span>
+                              )}
+                              {!p.isFeaturedLaunch && !p.isSpaceInRound && (
+                                <span className="text-gray-500 font-mono">—</span>
+                              )}
+                            </td>
+
+                            {/* EXACT FOUR ACTIONS: View, Edit, Close Deal, Delete */}
+                            <td className="py-3.5 px-5 text-right whitespace-nowrap">
+                              <div className="inline-flex items-center gap-1.5">
+                                <Link
+                                  href={publicUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 text-[11px] inline-flex items-center gap-1 transition-colors"
+                                  title="View Project on live website"
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5 text-[#7DD3FC]" />
+                                  <span>View Project</span>
+                                </Link>
+
+                                <Link
+                                  href={`/admin/properties/${p.id}`}
+                                  className="px-2.5 py-1 rounded bg-[#7DD3FC]/10 hover:bg-[#7DD3FC]/20 text-[#7DD3FC] border border-[#7DD3FC]/30 text-[11px] inline-flex items-center gap-1 transition-colors font-medium"
+                                  title="Edit Project details"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                  <span>Edit Project</span>
+                                </Link>
+
+                                <button
+                                  onClick={() => openCloseDealModal(p)}
+                                  className="px-2.5 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[11px] inline-flex items-center gap-1 transition-colors font-medium cursor-pointer"
+                                  title="Close Deal and move to Soldout Project"
+                                >
+                                  <Award className="w-3.5 h-3.5" />
+                                  <span>Close Deal</span>
+                                </button>
+
+                                <button
+                                  onClick={() => setArchiveModalItem(p)}
+                                  className="px-2.5 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-[11px] inline-flex items-center gap-1 transition-colors cursor-pointer"
+                                  title="Delete Project (moves to Deleted Projects)"
+                                >
+                                  <Archive className="w-3.5 h-3.5" />
+                                  <span>Delete Project</span>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      ) : activeTab === 'sold' ? (
+        /* SOLDOUT PROJECTS TABLE */
+        <div className="bg-[#070E1C] border border-white/10 rounded-xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 dark:bg-[#040810]/70 text-slate-500 dark:text-gray-400 font-mono uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-white/5">
+              <thead className="bg-[#040810]/70 text-gray-400 font-mono uppercase text-[10px] tracking-wider border-b border-white/5">
                 <tr>
-                  <th className="py-3 px-5">Project & Route</th>
-                  <th className="py-3 px-5">Destination</th>
-                  {activeTab === 'current' && (
-                    <>
-                      <th className="py-3 px-5">Status</th>
-                      <th className="py-3 px-5">Asking Price</th>
-                      <th className="py-3 px-5">Curations</th>
-                    </>
-                  )}
-                  {activeTab === 'sold' && (
-                    <>
-                      <th className="py-3 px-5">Sale Price & Currency</th>
-                      <th className="py-3 px-5">Buyer / Client</th>
-                      <th className="py-3 px-5">Closure Date</th>
-                      <th className="py-3 px-5">Public Visibility</th>
-                    </>
-                  )}
-                  {activeTab === 'archived' && (
-                    <>
-                      <th className="py-3 px-5">Archived On</th>
-                      <th className="py-3 px-5">Archived By</th>
-                      <th className="py-3 px-5">Reason</th>
-                    </>
-                  )}
+                  <th className="py-3 px-5">Project Name</th>
+                  <th className="py-3 px-5">Country</th>
+                  <th className="py-3 px-5">Buyer Information</th>
+                  <th className="py-3 px-5">Sale Price & Currency</th>
+                  <th className="py-3 px-5">Deal Information</th>
                   <th className="py-3 px-5 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                {paginatedProperties.map((p) => {
+              <tbody className="divide-y divide-white/5">
+                {displayedProperties.map((p) => {
                   const countrySlug = p.country?.slug || 'dubai'
                   const publicUrl = `/collection/${countrySlug}/${p.slug}`
                   const deal = p.deals[0]
-                  const adj = deal?.adjustments[0]
 
                   return (
-                    <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
-                      {/* Name & Route */}
+                    <tr key={p.id} className="hover:bg-white/[0.02] transition-colors">
                       <td className="py-4 px-5">
-                        <div className="font-medium text-slate-900 dark:text-white text-sm">{p.name}</div>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[11px] text-slate-500 dark:text-gray-400 font-mono">{publicUrl}</span>
-                          <span className="text-[10px] text-slate-400 dark:text-gray-500 font-mono">
-                            ({p._count.images} images)
-                          </span>
-                        </div>
+                        <div className="font-semibold text-white text-sm">{p.name}</div>
+                        <div className="text-[11px] text-gray-500 font-mono mt-0.5">{publicUrl}</div>
                       </td>
-
-                      {/* Destination */}
-                      <td className="py-4 px-5 text-slate-600 dark:text-gray-300">
+                      <td className="py-4 px-5 text-gray-300">
                         {p.country?.displayName || p.country?.name || 'Unassigned'}
                       </td>
-
-                      {/* CURRENT TAB SPECIFIC COLUMNS */}
-                      {activeTab === 'current' && (
-                        <>
-                          <td className="py-4 px-5">
-                            <button
-                              onClick={() => handleTogglePublish(p)}
-                              disabled={actionLoadingId === p.id}
-                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider border transition-all cursor-pointer ${
-                                p.isPublished
-                                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20'
-                                  : 'bg-amber-500/10 text-amber-600 dark:text-amber-300 border-amber-500/30 hover:bg-amber-500/20'
-                              }`}
-                              title="Click to toggle publish status"
-                            >
-                              {p.isPublished ? (
-                                <>
-                                  <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                                  <span>Published</span>
-                                </>
-                              ) : (
-                                <>
-                                  <FileEdit className="w-3 h-3 text-amber-500" />
-                                  <span>Draft</span>
-                                </>
-                              )}
-                            </button>
-                          </td>
-
-                          <td className="py-4 px-5 font-mono">
-                            {p.isPOA ? (
-                              <span className="text-indigo-600 dark:text-indigo-400 font-semibold text-[11px]">POA</span>
-                            ) : p.askingPriceNumeric ? (
-                              <div className="text-slate-900 dark:text-white text-xs">
-                                <span className="text-[#0284C7] dark:text-[#7DD3FC] font-semibold">{p.askingCurrency}</span>{' '}
-                                {Number(p.askingPriceNumeric).toLocaleString()}
-                              </div>
-                            ) : (
-                              <span className="text-slate-400 dark:text-gray-500 text-[11px]">Unpriced</span>
-                            )}
-                          </td>
-
-                          <td className="py-4 px-5 space-x-1.5">
-                            {p.isFeaturedLaunch && (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-mono text-amber-600 dark:text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">
-                                <Flame className="w-3 h-3" /> Launch #{p.launchOrder ?? 1}
-                              </span>
-                            )}
-                            {p.isSpaceInRound && (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-mono text-indigo-600 dark:text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded">
-                                <Orbit className="w-3 h-3" /> Space #{p.spaceOrder ?? 1}
-                              </span>
-                            )}
-                            {!p.isFeaturedLaunch && !p.isSpaceInRound && (
-                              <span className="text-slate-400 dark:text-gray-500 font-mono">—</span>
-                            )}
-                          </td>
-                        </>
-                      )}
-
-                      {/* SOLD TAB SPECIFIC COLUMNS (Section 1.C) */}
-                      {activeTab === 'sold' && (
-                        <>
-                          <td className="py-4 px-5 font-mono">
-                            <div className="text-amber-600 dark:text-amber-400 font-semibold text-xs">
-                              {deal?.saleCurrency}{' '}
-                              {deal?.actualSalePrice ? Number(deal.actualSalePrice).toLocaleString() : '—'}
-                            </div>
-                            {adj && (
-                              <div className="text-[10px] text-slate-500 dark:text-gray-400 mt-0.5">
-                                Adj: {adj.adjustedCurrency} {Number(adj.adjustedSalePrice).toLocaleString()}
-                              </div>
-                            )}
-                          </td>
-
-                          <td className="py-4 px-5">
-                            <div className="text-slate-800 dark:text-gray-200 font-medium">
-                              {deal?.buyerName || 'Private Client'}
-                            </div>
-                            <div className="text-[10px] font-mono text-slate-500 dark:text-gray-400">
-                              Ref: {deal?.dealRef}
-                            </div>
-                          </td>
-
-                          <td className="py-4 px-5 text-slate-500 dark:text-gray-400 font-mono text-[11px]">
-                            {deal?.closedAt
-                              ? new Date(deal.closedAt).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric',
-                                })
-                              : '—'}
-                          </td>
-
-                          <td className="py-4 px-5">
-                            {deal?.keepPubliclyVisible ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30">
-                                <Eye className="w-3 h-3" /> Option A (Visible Acquired)
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-slate-500/10 text-slate-600 dark:text-gray-400 border border-slate-500/20">
-                                <EyeOff className="w-3 h-3" /> Option B (Unlisted Sold)
-                              </span>
-                            )}
-                          </td>
-                        </>
-                      )}
-
-                      {/* ARCHIVED TAB SPECIFIC COLUMNS (Section 1.D) */}
-                      {activeTab === 'archived' && (
-                        <>
-                          <td className="py-4 px-5 font-mono text-slate-500 dark:text-gray-400 text-[11px]">
-                            {p.archivedAt
-                              ? new Date(p.archivedAt).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric',
-                                })
-                              : '—'}
-                          </td>
-
-                          <td className="py-4 px-5 text-slate-700 dark:text-gray-300">
-                            {p.archivedBy?.name || p.archivedBy?.email || 'Administrator'}
-                          </td>
-
-                          <td className="py-4 px-5 text-slate-600 dark:text-gray-400 italic text-xs max-w-xs truncate">
-                            &quot;{p.archivedReason || 'Administrative archive'}&quot;
-                          </td>
-                        </>
-                      )}
-
-                      {/* Actions Column */}
-                      <td className="py-4 px-5 text-right space-x-1 whitespace-nowrap">
-                        {/* Live Site Link */}
+                      <td className="py-4 px-5">
+                        <div className="text-white font-medium">{deal?.buyerName || 'Private Client'}</div>
+                        {deal?.buyerContact && (
+                          <div className="text-[11px] text-gray-400 font-mono mt-0.5">{deal.buyerContact}</div>
+                        )}
+                      </td>
+                      <td className="py-4 px-5 font-mono">
+                        <div className="text-amber-400 font-bold text-xs">
+                          {deal?.saleCurrency}{' '}
+                          {deal?.actualSalePrice ? Number(deal.actualSalePrice).toLocaleString() : '—'}
+                        </div>
+                      </td>
+                      <td className="py-4 px-5">
+                        <div className="text-[11px] font-mono text-gray-300">Ref: {deal?.dealRef}</div>
+                        <div className="text-[10px] text-gray-500 mt-0.5">
+                          {deal?.closedAt ? new Date(deal.closedAt).toLocaleDateString() : '—'}
+                        </div>
+                        <div className="mt-1">
+                          {deal?.keepPubliclyVisible ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                              <Eye className="w-3 h-3" /> Option A (Visible Acquired)
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-white/5 text-gray-400 border border-white/10">
+                              <EyeOff className="w-3 h-3" /> Option B (Unlisted Sold)
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-5 text-right whitespace-nowrap">
                         <Link
                           href={publicUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-1.5 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04] inline-flex items-center"
-                          title="View on Live Site"
+                          className="px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 text-[11px] inline-flex items-center gap-1"
                         >
-                          <ExternalLink className="w-4 h-4" />
+                          <ExternalLink className="w-3.5 h-3.5 text-[#7DD3FC]" />
+                          <span>View Project</span>
                         </Link>
-
-                        {/* Edit Link (Current only) */}
-                        {activeTab === 'current' && (
-                          <>
-                            <Link
-                              href={`/admin/properties/${p.id}`}
-                              className="p-1.5 rounded-md text-slate-500 dark:text-gray-400 hover:text-[#0284C7] dark:hover:text-[#7DD3FC] hover:bg-slate-100 dark:hover:bg-white/[0.04] inline-flex items-center"
-                              title="Edit Project"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </Link>
-
-                            <button
-                              onClick={() => openRepriceModal(p)}
-                              className="p-1.5 rounded-md text-slate-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-white/[0.04] inline-flex items-center cursor-pointer"
-                              title="Financial Repricing"
-                            >
-                              <DollarSign className="w-4 h-4" />
-                            </button>
-
-                            <button
-                              onClick={() => setArchiveModalItem(p)}
-                              className="p-1.5 rounded-md text-slate-500 dark:text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-500/10 inline-flex items-center cursor-pointer"
-                              title="Archive Project"
-                            >
-                              <Archive className="w-4 h-4" />
-                            </button>
-                          </>
-                        )}
-
-                        {/* Restore Button (Archived only) */}
-                        {activeTab === 'archived' && (
-                          <button
-                            onClick={() => handleRestore(p)}
-                            disabled={actionLoadingId === p.id}
-                            className="px-2.5 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-xs font-mono inline-flex items-center gap-1 cursor-pointer"
-                            title="Restore Project to Draft"
-                          >
-                            <RotateCcw className="w-3.5 h-3.5" />
-                            <span>Restore</span>
-                          </button>
-                        )}
                       </td>
                     </tr>
                   )
@@ -846,189 +718,267 @@ export default function PropertiesListClient({
               </tbody>
             </table>
           </div>
-        )}
-
-        {/* Pagination Bar */}
-        {totalPages > 1 && (
-          <div className="p-4 border-t border-slate-200 dark:border-white/5 flex items-center justify-between text-xs font-mono text-slate-500 dark:text-gray-400">
-            <div>
-              Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to{' '}
-              {Math.min(currentPage * ITEMS_PER_PAGE, displayedProperties.length)} of{' '}
-              {displayedProperties.length} projects
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="p-1.5 rounded border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 disabled:opacity-30 cursor-pointer"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <span>
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="p-1.5 rounded border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 disabled:opacity-30 cursor-pointer"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ARCHIVE MODAL (Section 1.D) */}
-      {archiveModalItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-[#070E1C] border border-rose-500/30 rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4">
-            <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400">
-              <Archive className="w-5 h-5" />
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Archive Project</h3>
-            </div>
-            <p className="text-xs text-slate-600 dark:text-gray-300 leading-relaxed">
-              Moving <strong className="text-slate-900 dark:text-white">{archiveModalItem.name}</strong> to the Deleted / Archived section.
-              The project will be unpublished and hidden from public discovery, but all records and media remain safely preserved.
-            </p>
-            <div>
-              <label className="block text-[11px] font-mono text-slate-500 dark:text-gray-400 mb-1">
-                Archive Reason (Required for audit trail)
-              </label>
-              <textarea
-                value={archiveReason}
-                onChange={(e) => setArchiveReason(e.target.value)}
-                placeholder="e.g. Delisted by owner request, superseded by new phase..."
-                rows={2}
-                className="w-full bg-slate-50 dark:bg-[#040810] border border-slate-200 dark:border-white/10 rounded-lg p-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#7DD3FC]"
-              />
-            </div>
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-white/5">
-              <button
-                type="button"
-                onClick={() => setArchiveModalItem(null)}
-                className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-[#0B1528] text-xs text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/10"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleArchiveConfirm}
-                disabled={Boolean(actionLoadingId)}
-                className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-xs text-white font-medium disabled:opacity-50 cursor-pointer"
-              >
-                {actionLoadingId ? 'Archiving...' : 'Archive Project'}
-              </button>
-            </div>
+        </div>
+      ) : (
+        /* DELETED PROJECTS TABLE */
+        <div className="bg-[#070E1C] border border-white/10 rounded-xl overflow-hidden shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-[#040810]/70 text-gray-400 font-mono uppercase text-[10px] tracking-wider border-b border-white/5">
+                <tr>
+                  <th className="py-3 px-5">Project Name</th>
+                  <th className="py-3 px-5">Country</th>
+                  <th className="py-3 px-5">Reason for Deletion</th>
+                  <th className="py-3 px-5">Date Deleted</th>
+                  <th className="py-3 px-5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {displayedProperties.map((p) => {
+                  return (
+                    <tr key={p.id} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="py-4 px-5 font-semibold text-white text-sm">{p.name}</td>
+                      <td className="py-4 px-5 text-gray-300">
+                        {p.country?.displayName || p.country?.name || 'Unassigned'}
+                      </td>
+                      <td className="py-4 px-5 text-rose-300 italic text-xs max-w-sm">
+                        &quot;{p.archivedReason || 'Administrative deletion'}&quot;
+                      </td>
+                      <td className="py-4 px-5 font-mono text-gray-400 text-xs">
+                        {p.archivedAt ? new Date(p.archivedAt).toLocaleDateString() : '—'}
+                      </td>
+                      <td className="py-4 px-5 text-right whitespace-nowrap">
+                        <button
+                          onClick={() => handleRestore(p)}
+                          disabled={actionLoadingId === p.id}
+                          className="px-3 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                          title="Restore Project (preserves all data, sets as Draft)"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span>Restore</span>
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
 
-      {/* FINANCIAL REPRICING MODAL (Section 1.B Repricing) */}
-      {repriceItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <form
-            onSubmit={handleRepriceSubmit}
-            className="bg-white dark:bg-[#070E1C] border border-indigo-500/30 rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4"
-          >
-            <div className="flex items-center gap-3 text-indigo-600 dark:text-indigo-400">
-              <DollarSign className="w-5 h-5" />
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-                Financial Repricing — {repriceItem.name}
-              </h3>
-            </div>
-            <p className="text-xs text-slate-600 dark:text-gray-300 leading-relaxed">
-              Updates the official asking price and currency with immutable audit log recording.
-            </p>
-
-            {/* Pricing State Selection */}
-            <div className="space-y-1.5">
-              <label className="block text-[11px] font-mono text-slate-500 dark:text-gray-400">Pricing State</label>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { id: 'PRICED', label: 'Priced' },
-                  { id: 'POA', label: 'POA' },
-                  { id: 'UNPRICED', label: 'Unpriced' },
-                ].map((st) => (
-                  <button
-                    key={st.id}
-                    type="button"
-                    onClick={() => setRepriceState(st.id as any)}
-                    className={`py-2 px-3 text-xs font-mono rounded-lg border transition-all text-center ${
-                      repriceState === st.id
-                        ? 'bg-indigo-500/10 border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold'
-                        : 'border-slate-200 dark:border-white/10 text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white'
-                    }`}
-                  >
-                    {st.label}
-                  </button>
-                ))}
+      {/* CLOSE DEAL MODAL */}
+      {closeDealItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-[#070E1C] border border-white/10 rounded-2xl shadow-2xl max-w-lg w-full p-6 text-white space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                  <Award className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white">Close Deal & Mark as Sold</h3>
+                  <p className="text-[11px] text-gray-400 truncate max-w-xs">{closeDealItem.name}</p>
+                </div>
               </div>
+              <button
+                onClick={() => setCloseDealItem(null)}
+                className="text-gray-400 hover:text-white p-1 rounded transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            {/* Amount and Currency inputs (only if PRICED) */}
-            {repriceState === 'PRICED' && (
-              <div className="grid grid-cols-3 gap-2">
-                <div className="col-span-1">
-                  <label className="block text-[11px] font-mono text-slate-500 dark:text-gray-400 mb-1">Currency</label>
+            <form onSubmit={handleCloseDealSubmit} className="space-y-4 text-xs">
+              {/* Financial Sale Details */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-2">
+                  <label className="text-gray-300 block mb-1 font-medium">
+                    Actual Sale Price <span className="text-[#7DD3FC]">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={dealSalePrice}
+                    onChange={(e) => setDealSalePrice(e.target.value)}
+                    required
+                    placeholder="e.g. 14500000"
+                    className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
+                  />
+                </div>
+                <div>
+                  <label className="text-gray-300 block mb-1 font-medium">Currency</label>
                   <select
-                    value={repriceCurrency}
-                    onChange={(e) => setRepriceCurrency(e.target.value)}
-                    aria-label="Select ISO 4217 Currency"
-                    className="w-full bg-slate-50 dark:bg-[#040810] border border-slate-200 dark:border-white/10 rounded-lg p-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-400"
+                    value={dealCurrency}
+                    onChange={(e) => setDealCurrency(e.target.value)}
+                    className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
                   >
-                    {SUPPORTED_CURRENCIES.map((cur) => (
+                    {SUPPORTED_CURRENCY_CODES.map((cur) => (
                       <option key={cur} value={cur}>
                         {cur}
                       </option>
                     ))}
                   </select>
                 </div>
-                <div className="col-span-2">
-                  <label className="block text-[11px] font-mono text-slate-500 dark:text-gray-400 mb-1">Asking Amount</label>
+              </div>
+
+              {/* Buyer Information */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-gray-300 block mb-1 font-medium">Buyer / Client Name</label>
                   <input
-                    type="number"
-                    step="any"
-                    value={repriceAmount}
-                    onChange={(e) => setRepriceAmount(e.target.value)}
-                    placeholder="e.g. 45000000"
-                    required
-                    className="w-full bg-slate-50 dark:bg-[#040810] border border-slate-200 dark:border-white/10 rounded-lg p-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-400"
+                    type="text"
+                    value={dealBuyerName}
+                    onChange={(e) => setDealBuyerName(e.target.value)}
+                    placeholder="e.g. Al Habtoor Investment Office"
+                    className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
+                  />
+                </div>
+                <div>
+                  <label className="text-gray-300 block mb-1 font-medium">Buyer Contact</label>
+                  <input
+                    type="text"
+                    value={dealBuyerContact}
+                    onChange={(e) => setDealBuyerContact(e.target.value)}
+                    placeholder="e.g. contact@office.ae"
+                    className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
                   />
                 </div>
               </div>
-            )}
+
+              {/* Option A vs Option B Public Visibility */}
+              <div className="space-y-2 pt-2">
+                <label className="text-gray-300 block font-medium">Website Public Visibility Workflow</label>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setDealKeepVisible(true)}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                      dealKeepVisible
+                        ? 'bg-emerald-500/15 border-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.2)]'
+                        : 'bg-[#040810] border-white/10 text-gray-400 hover:border-white/20'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 font-semibold text-xs text-emerald-400 mb-1">
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Option A</span>
+                    </div>
+                    <p className="text-[10px] text-gray-400 leading-tight">
+                      Keep publicly visible with luxury &quot;Acquired / Sold&quot; showcase badge.
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setDealKeepVisible(false)}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                      !dealKeepVisible
+                        ? 'bg-amber-500/15 border-amber-500 text-white shadow-[0_0_12px_rgba(245,158,11,0.2)]'
+                        : 'bg-[#040810] border-white/10 text-gray-400 hover:border-white/20'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 font-semibold text-xs text-amber-400 mb-1">
+                      <EyeOff className="w-3.5 h-3.5" />
+                      <span>Option B</span>
+                    </div>
+                    <p className="text-[10px] text-gray-400 leading-tight">
+                      Delist from public website immediately and preserve in Soldout Projects.
+                    </p>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-gray-300 block mb-1 font-medium">Internal Notes</label>
+                <textarea
+                  rows={2}
+                  value={dealNotes}
+                  onChange={(e) => setDealNotes(e.target.value)}
+                  placeholder="Legal contract reference, notary details, commission notes..."
+                  className="w-full bg-[#040810] border border-white/10 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setCloseDealItem(null)}
+                  className="px-4 py-2 text-xs text-gray-400 hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={dealLoading}
+                  className="px-5 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-[#040810] font-bold text-xs transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)] disabled:opacity-50 cursor-pointer"
+                >
+                  {dealLoading ? 'Completing Deal...' : 'Complete & Close Deal'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE / ARCHIVE MODAL */}
+      {archiveModalItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-[#070E1C] border border-white/10 rounded-2xl shadow-2xl max-w-md w-full p-6 text-white space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400">
+                  <Archive className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white">Delete Project</h3>
+                  <p className="text-[11px] text-gray-400">Move project to Deleted Projects</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setArchiveModalItem(null)}
+                className="text-gray-400 hover:text-white p-1 rounded transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-300 leading-relaxed">
+              Are you sure you want to delete <span className="font-semibold text-white">&quot;{archiveModalItem.name}&quot;</span>?
+              This will unpublish the project from the public website and move it to Deleted Projects. All records remain recoverable.
+            </p>
 
             <div>
-              <label className="block text-[11px] font-mono text-slate-500 dark:text-gray-400 mb-1">
-                Reason for Reprice
+              <label className="text-xs text-gray-300 block mb-1 font-medium">
+                Reason for Deletion <span className="text-rose-400">*</span>
               </label>
-              <input
-                type="text"
-                value={repriceReason}
-                onChange={(e) => setRepriceReason(e.target.value)}
-                placeholder="e.g. Annual Q4 portfolio repricing adjustment..."
-                className="w-full bg-slate-50 dark:bg-[#040810] border border-slate-200 dark:border-white/10 rounded-lg p-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-400"
+              <textarea
+                rows={3}
+                value={archiveReason}
+                onChange={(e) => setArchiveReason(e.target.value)}
+                placeholder="Required: State why this project is being removed (e.g., Client requested withdrawal, zoning change)..."
+                className="w-full bg-[#040810] border border-white/10 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-rose-400"
+                required
               />
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-white/5">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
               <button
                 type="button"
-                onClick={() => setRepriceItem(null)}
-                className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-[#0B1528] text-xs text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/10"
+                onClick={() => setArchiveModalItem(null)}
+                className="px-4 py-2 text-xs text-gray-400 hover:text-white transition-colors"
               >
                 Cancel
               </button>
               <button
-                type="submit"
-                disabled={repriceLoading}
-                className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs text-white font-medium disabled:opacity-50 cursor-pointer"
+                type="button"
+                disabled={!archiveReason.trim() || actionLoadingId === archiveModalItem.id}
+                onClick={handleArchiveConfirm}
+                className="px-5 py-2 rounded-lg bg-rose-500 hover:bg-rose-600 text-white font-semibold text-xs transition-all shadow-[0_0_15px_rgba(244,63,94,0.3)] disabled:opacity-40 cursor-pointer"
               >
-                {repriceLoading ? 'Saving...' : 'Confirm Reprice'}
+                {actionLoadingId === archiveModalItem.id ? 'Deleting...' : 'Confirm Deletion'}
               </button>
             </div>
-          </form>
+          </div>
         </div>
       )}
     </div>

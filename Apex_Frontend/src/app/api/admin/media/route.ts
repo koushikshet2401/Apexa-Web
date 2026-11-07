@@ -3,7 +3,7 @@ import { ListObjectsV2Command } from '@aws-sdk/client-s3'
 import { promises as fs } from 'fs'
 import path from 'path'
 import { requirePermission, PERMISSIONS } from '@/lib/rbac'
-import { r2, isR2Configured, R2_BUCKET_NAME, R2_PUBLIC_URL } from '@/lib/r2'
+import { r2, isR2Configured, getR2BucketName, getR2PublicUrl } from '@/lib/r2'
 
 export async function GET(request: NextRequest) {
   const auth = await requirePermission(request, PERMISSIONS.MEDIA_READ)
@@ -15,17 +15,19 @@ export async function GET(request: NextRequest) {
 
     // If R2 is configured, query R2 bucket
     if (isR2Configured()) {
+      const bucketName = getR2BucketName()
+      const publicBase = getR2PublicUrl()
       const command = new ListObjectsV2Command({
-        Bucket: R2_BUCKET_NAME,
+        Bucket: bucketName,
         Prefix: folder && folder !== 'all' ? `${folder}/` : undefined,
       })
 
       const response = await r2.send(command)
       const objects = (response.Contents || []).map((item) => {
         const key = item.Key || ''
-        const publicUrl = R2_PUBLIC_URL
-          ? `${R2_PUBLIC_URL}/${key}`
-          : `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${R2_BUCKET_NAME}/${key}`
+        const publicUrl = publicBase
+          ? `${publicBase}/${key}`
+          : `https://${(process.env.R2_ACCOUNT_ID || '').trim()}.r2.cloudflarestorage.com/${bucketName}/${key}`
 
         const isVideo = key.endsWith('.mp4') || key.endsWith('.mov')
         const contentType = isVideo ? 'video/mp4' : 'image/jpeg'

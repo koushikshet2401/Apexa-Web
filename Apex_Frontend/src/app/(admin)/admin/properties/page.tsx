@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 import { db } from '@/lib/db'
 import PropertiesListClient from '@/components/admin/PropertiesListClient'
 
@@ -49,9 +49,11 @@ export default async function AdminPropertiesPage() {
   }))
 
   return (
-    <PropertiesListClient
-      initialProperties={properties as any}
-      countries={countries}
-    />
+    <Suspense fallback={<div className="p-8 text-xs font-mono text-gray-400">Loading Portfolio Inventory...</div>}>
+      <PropertiesListClient
+        initialProperties={properties as any}
+        countries={countries}
+      />
+    </Suspense>
   )
 }

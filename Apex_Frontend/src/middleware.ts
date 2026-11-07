@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { jwtVerify } from 'jose/jwt/verify'
+import { jwtVerify } from 'jose'
 
 const SESSION_COOKIE_NAME = 'apex_admin_session'
 

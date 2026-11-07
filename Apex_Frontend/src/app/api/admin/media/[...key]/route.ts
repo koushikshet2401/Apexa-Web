@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { DeleteObjectCommand } from '@aws-sdk/client-s3'
 import path from 'path'
 import { requirePermission, PERMISSIONS } from '@/lib/rbac'
-import { r2, isR2Configured, R2_BUCKET_NAME } from '@/lib/r2'
+import { r2, isR2Configured, getR2BucketName } from '@/lib/r2'
 import { validateUploadPath, safeUnlinkUploadFile } from '@/lib/pathSecurity'
 
 export async function DELETE(
@@ -23,7 +23,7 @@ export async function DELETE(
     if (isR2Configured()) {
       const decodedKey = decodeURIComponent(rawKey)
       const command = new DeleteObjectCommand({
-        Bucket: R2_BUCKET_NAME,
+        Bucket: getR2BucketName(),
         Key: decodedKey,
       })
       await r2.send(command)

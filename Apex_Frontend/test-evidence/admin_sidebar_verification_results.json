@@ -1,0 +1,207 @@
+[
+  {
+    "test": "Admin Authentication",
+    "status": "PASSED",
+    "details": "Successfully logged in as admin@apexpacificholdings.com"
+  },
+  {
+    "test": "Dashboard Authorization Guard",
+    "status": "PASSED",
+    "details": "Dashboard loaded with zero unauthorized errors."
+  },
+  {
+    "test": "Dashboard Live Metrics Render",
+    "status": "PASSED",
+    "details": "Executive metrics header and valuations rendered."
+  },
+  {
+    "test": "Sidebar Element: Brand Emblem & Header",
+    "status": "PASSED",
+    "details": "Present in sidebar"
+  },
+  {
+    "test": "Sidebar Element: Admin Profile Card",
+    "status": "PASSED",
+    "details": "Present in sidebar"
+  },
+  {
+    "test": "Sidebar Element: Overview Header",
+    "status": "PASSED",
+    "details": "Present in sidebar"
+  },
+  {
+    "test": "Sidebar Element: Dashboard Nav Link",
+    "status": "PASSED",
+    "details": "Present in sidebar"
+  },
+  {
+    "test": "Sidebar Element: Portfolio Header",
+    "status": "PASSED",
+    "details": "Present in sidebar"
+  },
+  {
+    "test": "Sidebar Element: Current Projects Nav Link",
+    "status": "PASSED",
+    "details": "Present in sidebar"
+  },
+  {
+    "test": "Sidebar Element: Add New Project Nav Link",
+    "status": "PASSED",
+    "details": "Present in sidebar"
+  },
+  {
+    "test": "Sidebar Element: Sold Projects Nav Link",
+    "status": "PASSED",
+    "details": "Present in sidebar"
+  },
+  {
+    "test": "Sidebar Element: Archived / Deleted Projects Nav Link",
+    "status": "PASSED",
+    "details": "Present in sidebar"
+  },
+  {
+    "test": "Sidebar Element: Curation & Content Header",
+    "status": "PASSED",
+    "details": "Present in sidebar"
+  },
+  {
+    "test": "Sidebar Element: Countries Nav Link",
+    "status": "PASSED",
+    "details": "Present in sidebar"
+  },
+  {
+    "test": "Sidebar Element: Services Nav Link",
+    "status": "PASSED",
+    "details": "Present in sidebar"
+  },
+  {
+    "test": "Sidebar Element: Latest Launches Nav Link",
+    "status": "PASSED",
+    "details": "Present in sidebar"
+  },
+  {
+    "test": "Sidebar Element: Spaces in the Round Nav Link",
+    "status": "PASSED",
+    "details": "Present in sidebar"
+  },
+  {
+    "test": "Sidebar Element: Homepage / CMS Nav Link",
+    "status": "PASSED",
+    "details": "Present in sidebar"
+  },
+  {
+    "test": "Sidebar Element: Communications Header",
+    "status": "PASSED",
+    "details": "Present in sidebar"
+  },
+  {
+    "test": "Sidebar Element: Enquiries Nav Link",
+    "status": "PASSED",
+    "details": "Present in sidebar"
+  },
+  {
+    "test": "Sidebar Element: System & Assets Header",
+    "status": "PASSED",
+    "details": "Present in sidebar"
+  },
+  {
+    "test": "Sidebar Element: Media Management Nav Link",
+    "status": "PASSED",
+    "details": "Present in sidebar"
+  },
+  {
+    "test": "Sidebar Element: Team & Roles Nav Link",
+    "status": "PASSED",
+    "details": "Present in sidebar"
+  },
+  {
+    "test": "Sidebar Element: Live Website Link",
+    "status": "PASSED",
+    "details": "Present in sidebar"
+  },
+  {
+    "test": "Sidebar Element: Sign Out Button",
+    "status": "PASSED",
+    "details": "Present in sidebar"
+  },
+  {
+    "test": "Route Navigation [Dashboard] (/admin)",
+    "status": "PASSED",
+    "details": "HTTP 200, Found text \"Portfolio & Business Intelligence\": true"
+  },
+  {
+    "test": "Route Navigation [Current Projects] (/admin/properties)",
+    "status": "PASSED",
+    "details": "HTTP 200, Found text \"Projects Management\": true"
+  },
+  {
+    "test": "Route Navigation [Add New Project] (/admin/properties/new)",
+    "status": "PASSED",
+    "details": "HTTP 200, Found text \"New Project Listing\": true"
+  },
+  {
+    "test": "Route Navigation [Sold Projects] (/admin/properties?tab=sold)",
+    "status": "PASSED",
+    "details": "HTTP 200, Found text \"Sold Projects\": true"
+  },
+  {
+    "test": "Route Navigation [Archived Projects] (/admin/properties?tab=archived)",
+    "status": "PASSED",
+    "details": "HTTP 200, Found text \"Deleted / Archived\": true"
+  },
+  {
+    "test": "Route Navigation [Countries] (/admin/countries)",
+    "status": "PASSED",
+    "details": "HTTP 200, Found text \"Countries & Destinations\": true"
+  },
+  {
+    "test": "Route Navigation [Services] (/admin/services)",
+    "status": "PASSED",
+    "details": "HTTP 200, Found text \"Services & Sectors\": true"
+  },
+  {
+    "test": "Route Navigation [Latest Launches] (/admin/launches)",
+    "status": "PASSED",
+    "details": "HTTP 200, Found text \"Latest Launches\": true"
+  },
+  {
+    "test": "Route Navigation [Spaces in the Round] (/admin/space-in-round)",
+    "status": "PASSED",
+    "details": "HTTP 200, Found text \"Spaces in the Round\": true"
+  },
+  {
+    "test": "Route Navigation [Homepage / CMS] (/admin/homepage)",
+    "status": "PASSED",
+    "details": "HTTP 200, Found text \"Homepage Content & Media\": true"
+  },
+  {
+    "test": "Route Navigation [Enquiries] (/admin/enquiries)",
+    "status": "PASSED",
+    "details": "HTTP 200, Found text \"Enquiries\": true"
+  },
+  {
+    "test": "Route Navigation [Media Management] (/admin/media)",
+    "status": "PASSED",
+    "details": "HTTP 200, Found text \"Media Library\": true"
+  },
+  {
+    "test": "Route Navigation [Team & Roles] (/admin/users)",
+    "status": "PASSED",
+    "details": "HTTP 200, Found text \"Team & Role-Based Access\": true"
+  },
+  {
+    "test": "Sidebar Expandable Group Toggle",
+    "status": "PASSED",
+    "details": "Collapsed: true, Re-expanded: true"
+  },
+  {
+    "test": "Administrator Profile Modal",
+    "status": "PASSED",
+    "details": "Title: true, Email: true, Role: true, Session: true"
+  },
+  {
+    "test": "Mobile Sidebar Drawer Responsiveness",
+    "status": "PASSED",
+    "details": "Drawer visible on mobile: true"
+  }
+]

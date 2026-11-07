@@ -1,0 +1,146 @@
+[
+  {
+    "id": "R2_CONFIG_CHECK",
+    "category": "Cloudflare R2",
+    "name": "R2 Environment Configuration Check",
+    "status": "PASSED",
+    "evidence": "Account ID: [CONFIGURED, len=32], AccessKey: [CONFIGURED, len=32], SecretKey: [CONFIGURED, len=64], Bucket: apex-media",
+    "details": "All required R2 credentials and bucket variables present in environment without exposing secrets."
+  },
+  {
+    "id": "R2_CONNECTIVITY",
+    "category": "Cloudflare R2",
+    "name": "R2 Bucket Connectivity & Authentication",
+    "status": "PASSED",
+    "evidence": "Connected to bucket \"apex-media\" on endpoint https://1c43181badc93cabcea18e8e2432ab58.r2.cloudflarestorage.com. KeyCount: 1",
+    "details": "Successfully connected and authenticated against Cloudflare R2 bucket."
+  },
+  {
+    "id": "R2_UPLOAD_IMAGE",
+    "category": "Cloudflare R2",
+    "name": "R2 Test Image Upload",
+    "status": "PASSED",
+    "evidence": "Key: verification-test/test-image-1794036192586.png, Bytes: 70, ContentType: image/png",
+    "details": "Test PNG image uploaded directly to Cloudflare R2 bucket."
+  },
+  {
+    "id": "R2_UPLOAD_VIDEO",
+    "category": "Cloudflare R2",
+    "name": "R2 Test Video Upload",
+    "status": "PASSED",
+    "evidence": "Key: verification-test/test-video-1794036193683.mp4, Bytes: 24, ContentType: video/mp4",
+    "details": "Test MP4 video uploaded directly to Cloudflare R2 bucket."
+  },
+  {
+    "id": "R2_OBJECT_EXISTENCE",
+    "category": "Cloudflare R2",
+    "name": "R2 Object Existence Verification",
+    "status": "PASSED",
+    "evidence": "Image size: 70B (expected 70B), Video size: 24B (expected 24B)",
+    "details": "Both image and video confirmed physically present in R2 bucket via HeadObject."
+  },
+  {
+    "id": "R2_RETRIEVAL_INTEGRITY",
+    "category": "Cloudflare R2",
+    "name": "R2 Retrieval, Content-Type & File Integrity",
+    "status": "PASSED",
+    "evidence": "Image Content-Type: image/png, Video Content-Type: video/mp4",
+    "details": "Retrieved both media items; verified exact content types and byte streams."
+  },
+  {
+    "id": "R2_ERROR_HANDLING",
+    "category": "Cloudflare R2",
+    "name": "R2 Upload Failure Error Handling & Resilience",
+    "status": "PASSED",
+    "evidence": "Invalid bucket upload failed as expected: true",
+    "details": "Failed R2 uploads produce explicit errors without corrupting media catalog."
+  },
+  {
+    "id": "R2_ADMIN_MEDIA_MODE",
+    "category": "Cloudflare R2",
+    "name": "Admin Media Library R2 Dispatch Mode Verification",
+    "status": "PASSED",
+    "evidence": "Presigned URL domain matches R2 endpoint: true",
+    "details": "Admin media library creates authentic R2 presigned URLs without falling back to local storage."
+  },
+  {
+    "id": "R2_CLEANUP",
+    "category": "Cloudflare R2",
+    "name": "R2 Test Artifact Cleanup",
+    "status": "PASSED",
+    "evidence": "Deleted keys: verification-test/test-image-1794036192586.png, verification-test/test-video-1794036193683.mp4",
+    "details": "All temporary test images and videos removed cleanly from R2 bucket."
+  },
+  {
+    "id": "SMTP_CONFIG_CHECK",
+    "category": "Gmail SMTP",
+    "name": "SMTP Environment Configuration Check",
+    "status": "PASSED",
+    "evidence": "Host: smtp.gmail.com, Port: 587, User: [CONFIGURED, len=30], Pass: [CONFIGURED, len=16], STARTTLS enabled",
+    "details": "Gmail SMTP configuration validated on port 587 with STARTTLS without exposing secrets."
+  },
+  {
+    "id": "SMTP_AUTHENTICATION",
+    "category": "Gmail SMTP",
+    "name": "SMTP Authentication & STARTTLS Handshake",
+    "status": "PASSED",
+    "evidence": "Authenticated successfully with smtp.gmail.com:587",
+    "details": "SMTP handshake and authentication passed against Gmail mailserver."
+  },
+  {
+    "id": "SMTP_TEST_EMAIL",
+    "category": "Gmail SMTP",
+    "name": "Direct Test Email Dispatch to ADMIN_EMAIL",
+    "status": "PASSED",
+    "evidence": "Delivered to: apexspacificholdings@gmail.com, MessageId: <f867b18d-f91a-51e1-17f1-bf13d34e1b64@gmail.com>",
+    "details": "Live test email dispatched and accepted by mailserver."
+  },
+  {
+    "id": "SMTP_ENQUIRY_NOTIFICATION",
+    "category": "Gmail SMTP",
+    "name": "Public Enquiry Administrative Notification",
+    "status": "PASSED",
+    "evidence": "EnquiryRef: APX-TEST-202554, Notification MessageId: <5d0ae6f5-a2e2-4efb-59db-1e0cab5e4b56@gmail.com>",
+    "details": "Live public enquiry notification email successfully delivered to administrator."
+  },
+  {
+    "id": "SMTP_ADMIN_REPLY",
+    "category": "Gmail SMTP",
+    "name": "Admin Enquiry Reply Delivery & Database Persistence",
+    "status": "PASSED",
+    "evidence": "Reply ID: cmw62u5eq0002uex0ii44s6vf, Status in DB: SENT, MessageId: <a19af971-4924-4113-3969-e29353ef32b3@gmail.com>",
+    "details": "Admin reply dispatched via SMTP and recorded in PostgreSQL with status SENT."
+  },
+  {
+    "id": "SMTP_IDEMPOTENCY_RETRY",
+    "category": "Gmail SMTP",
+    "name": "Retry Mechanics & Duplicate Send Prevention",
+    "status": "PASSED",
+    "evidence": "Idempotency key \"idempotency-test-1794036207849\" matched original record ID: cmw62u5ey0004uex0l0mcmr8x",
+    "details": "Duplicate delivery request safely intercepted by idempotency filter preventing duplicate emails."
+  },
+  {
+    "id": "SMTP_FAILURE_HANDLING",
+    "category": "Gmail SMTP",
+    "name": "SMTP Failure Handling & DB Failure Status Tracking",
+    "status": "PASSED",
+    "evidence": "Captured failure: true, DB deliveryStatus: FAILED, Reason: Connection timeout or invalid host",
+    "details": "SMTP transmission failures are safely captured and persisted with FAILED status without crashing application."
+  },
+  {
+    "id": "SEC_GIT_EXCLUSION",
+    "category": "Security & DB Safety",
+    "name": "Environment Files Excluded from Git Tracking",
+    "status": "PASSED",
+    "evidence": ".env and .env*.local patterns present in .gitignore: true",
+    "details": "All secrets kept strictly in untracked local environment files."
+  },
+  {
+    "id": "SEC_PROD_DB_ISOLATION",
+    "category": "Security & DB Safety",
+    "name": "Production Database (apex) Zero Mutation Guarantee",
+    "status": "PASSED",
+    "evidence": "Production migrations: 1 (only baseline init_schema), Properties: 6",
+    "details": "Live production database apex remains 100% untouched, unmigrated, and protected."
+  }
+]

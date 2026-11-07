@@ -6,23 +6,23 @@ import Link from 'next/link'
 import {
   ArrowLeft,
   Save,
-  Archive,
-  Plus,
   CheckCircle2,
   AlertCircle,
-  ExternalLink,
-  X,
-  DollarSign,
+  Plus,
+  Trash2,
+  Film,
+  Image as ImageIcon,
+  Globe,
   MapPin,
   Sparkles,
+  Orbit,
+  Flame,
+  DollarSign,
+  Briefcase,
+  Layers,
 } from 'lucide-react'
 import MediaField from './MediaField'
-import {
-  SUPPORTED_CURRENCY_REGISTRY,
-  SUPPORTED_CURRENCY_CODES,
-  validateCurrencyMinorUnits,
-  formatCurrencyAmount,
-} from '@/config/currencies'
+import { SUPPORTED_CURRENCY_CODES } from '@/config/currencies'
 
 interface CountryOption {
   id: string
@@ -37,11 +37,12 @@ interface ServiceOption {
   slug: string
 }
 
-interface PropertyImage {
-  id: string
+interface GalleryImageItem {
+  id?: string
   url: string
-  alt: string | null
-  order: number
+  alt?: string
+  description?: string
+  order?: number
 }
 
 interface PropertyFormProps {
@@ -49,8 +50,6 @@ interface PropertyFormProps {
   countries: CountryOption[]
   services: ServiceOption[]
 }
-
-type PricingState = 'PRICED' | 'POA' | 'UNPRICED'
 
 export default function PropertyForm({
   initialProperty,
@@ -60,104 +59,80 @@ export default function PropertyForm({
   const router = useRouter()
   const isEditing = Boolean(initialProperty?.id)
 
-  // 1. Core Identity & Location
+  // 1. Basic Information
   const [name, setName] = useState(initialProperty?.name || '')
   const [slug, setSlug] = useState(initialProperty?.slug || '')
-  const [autoSlug, setAutoSlug] = useState(!isEditing)
-  const [countryId, setCountryId] = useState(initialProperty?.countryId || '')
-  const [type, setType] = useState(initialProperty?.type || 'residential')
-  const [cityName, setCityName] = useState(initialProperty?.cityName || '')
-  const [locationLine, setLocationLine] = useState(initialProperty?.locationLine || '')
-  const [latitude, setLatitude] = useState<string | number>(initialProperty?.latitude ?? '')
-  const [longitude, setLongitude] = useState<string | number>(initialProperty?.longitude ?? '')
-
-  // 2. Pricing Engine State
-  const initialPricingState: PricingState = initialProperty?.isPOA
-    ? 'POA'
-    : initialProperty?.askingPriceNumeric !== null && initialProperty?.askingPriceNumeric !== undefined
-    ? 'PRICED'
-    : initialProperty?.price && initialProperty.price.toLowerCase().includes('poa')
-    ? 'POA'
-    : initialProperty?.price
-    ? 'PRICED'
-    : 'UNPRICED'
-
-  const [pricingState, setPricingState] = useState<PricingState>(initialPricingState)
-  const [askingCurrency, setAskingCurrency] = useState(
-    initialProperty?.askingCurrency || 'USD'
-  )
-  const [askingPriceNumeric, setAskingPriceNumeric] = useState<string | number>(
-    initialProperty?.askingPriceNumeric ?? ''
-  )
-  const [displayPriceText, setDisplayPriceText] = useState(initialProperty?.price || '')
-  const [priceChangeReason, setPriceChangeReason] = useState('')
-
-  // 3. Quantitative & Descriptive Specs
-  const [beds, setBeds] = useState(initialProperty?.beds || '')
-  const [baths, setBaths] = useState(initialProperty?.baths || '')
-  const [area, setArea] = useState(initialProperty?.area || '')
-  const [bedroomsCount, setBedroomsCount] = useState<string | number>(
-    initialProperty?.bedroomsCount ?? ''
-  )
-  const [bathroomsCount, setBathroomsCount] = useState<string | number>(
-    initialProperty?.bathroomsCount ?? ''
-  )
-  const [areaNumeric, setAreaNumeric] = useState<string | number>(
-    initialProperty?.areaNumeric ?? ''
-  )
-  const [areaUnit, setAreaUnit] = useState(initialProperty?.areaUnit || 'sqft')
-  const [cardLabel, setCardLabel] = useState(initialProperty?.cardLabel || '')
-  const [layoutVariant, setLayoutVariant] = useState(initialProperty?.layoutVariant || 1)
-
-  // 4. Editorial Narrative
-  const [tagline, setTagline] = useState(initialProperty?.tagline || '')
-  const [shortDescription, setShortDescription] = useState(initialProperty?.shortDescription || '')
   const [description, setDescription] = useState(initialProperty?.description || '')
-  const [highlights, setHighlights] = useState<string[]>(
-    Array.isArray(initialProperty?.highlights) ? initialProperty.highlights : []
-  )
-  const [newHighlight, setNewHighlight] = useState('')
-
-  // 5. Media Assets
-  const [mainImage, setMainImage] = useState(initialProperty?.mainImage || '')
-  const [mainVideoUrl, setMainVideoUrl] = useState(initialProperty?.mainVideoUrl || '')
-  const [mainVideoThumb, setMainVideoThumb] = useState(initialProperty?.mainVideoThumb || '')
-  const [spaceRoundImage, setSpaceRoundImage] = useState(initialProperty?.spaceRoundImage || '')
-
-  // 6. Curation Flags
-  const [isFeaturedLaunch, setIsFeaturedLaunch] = useState(Boolean(initialProperty?.isFeaturedLaunch))
-  const [launchOrder, setLaunchOrder] = useState<string | number>(initialProperty?.launchOrder ?? '')
-  const [launchDate, setLaunchDate] = useState(
-    initialProperty?.launchDate ? new Date(initialProperty.launchDate).toISOString().split('T')[0] : ''
-  )
-  const [isSpaceInRound, setIsSpaceInRound] = useState(Boolean(initialProperty?.isSpaceInRound))
-  const [spaceOrder, setSpaceOrder] = useState<string | number>(initialProperty?.spaceOrder ?? '')
-
-  // 7. Services
+  const [tagline, setTagline] = useState(initialProperty?.tagline || '')
+  const [countryId, setCountryId] = useState(initialProperty?.countryId || (countries[0]?.id || ''))
+  
+  // Selected Service Categories
   const initialServiceIds =
     initialProperty?.services?.map((s: any) => s.serviceId || s.service?.id) || []
   const [selectedServices, setSelectedServices] = useState<string[]>(initialServiceIds)
 
-  // 8. Gallery Images
-  const [images, setImages] = useState<PropertyImage[]>(initialProperty?.images || [])
-  const [newImageUrl, setNewImageUrl] = useState('')
-  const [newImageAlt, setNewImageAlt] = useState('')
-  const [addingImage, setAddingImage] = useState(false)
+  // 2. Pricing & Address
+  const [isPOA, setIsPOA] = useState<boolean>(Boolean(initialProperty?.isPOA))
+  const [askingPriceNumeric, setAskingPriceNumeric] = useState<string>(
+    initialProperty?.askingPriceNumeric ? String(initialProperty.askingPriceNumeric) : ''
+  )
+  const [askingCurrency, setAskingCurrency] = useState<string>(
+    initialProperty?.askingCurrency || 'AED'
+  )
+  const [locationLine, setLocationLine] = useState(initialProperty?.locationLine || '')
+  const [cityName, setCityName] = useState(initialProperty?.cityName || '')
+  const [latitude, setLatitude] = useState<string>(
+    initialProperty?.latitude !== null && initialProperty?.latitude !== undefined
+      ? String(initialProperty.latitude)
+      : ''
+  )
+  const [longitude, setLongitude] = useState<string>(
+    initialProperty?.longitude !== null && initialProperty?.longitude !== undefined
+      ? String(initialProperty.longitude)
+      : ''
+  )
 
-  // 9. Status & Controls
-  const [isPublished, setIsPublished] = useState(Boolean(initialProperty?.isPublished))
-  const [isDraft, setIsDraft] = useState(
-    initialProperty?.isDraft !== undefined ? Boolean(initialProperty.isDraft) : !initialProperty?.isPublished
+  // 3. Media Assets
+  const [mainVideoUrl, setMainVideoUrl] = useState(initialProperty?.mainVideoUrl || '')
+  const [mainImage, setMainImage] = useState(initialProperty?.mainImage || '')
+  
+  // Multiple Gallery Images with Individual Descriptions
+  const initialGalleryImages: GalleryImageItem[] = (initialProperty?.images || []).map((img: any) => ({
+    id: img.id,
+    url: img.url,
+    alt: img.alt || '',
+    description: img.description || img.alt || '',
+    order: img.order || 0,
+  }))
+  const [images, setImages] = useState<GalleryImageItem[]>(initialGalleryImages)
+  const [newImageUrl, setNewImageUrl] = useState('')
+  const [newImageDescription, setNewImageDescription] = useState('')
+
+  // 4. Curation Flags
+  const [isFeaturedLaunch, setIsFeaturedLaunch] = useState<boolean>(
+    Boolean(initialProperty?.isFeaturedLaunch)
+  )
+  const [launchOrder, setLaunchOrder] = useState<string>(
+    initialProperty?.launchOrder ? String(initialProperty.launchOrder) : '1'
+  )
+  const [isSpaceInRound, setIsSpaceInRound] = useState<boolean>(
+    Boolean(initialProperty?.isSpaceInRound)
+  )
+  const [spaceRoundImage, setSpaceRoundImage] = useState(
+    initialProperty?.spaceRoundImage || ''
+  )
+
+  // Status & Submission
+  const [isPublished, setIsPublished] = useState<boolean>(
+    Boolean(initialProperty?.isPublished)
   )
   const [saving, setSaving] = useState(false)
-  const [archiving, setArchiving] = useState(false)
-  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false)
-  const [archiveReason, setArchiveReason] = useState('')
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
+  // Auto-generate slug from name if creating
   const handleNameChange = (val: string) => {
     setName(val)
-    if (autoSlug) {
+    if (!isEditing) {
       setSlug(
         val
           .toLowerCase()
@@ -165,17 +140,6 @@ export default function PropertyForm({
           .replace(/(^-|-$)+/g, '')
       )
     }
-  }
-
-  const addHighlight = () => {
-    if (newHighlight.trim()) {
-      setHighlights([...highlights, newHighlight.trim()])
-      setNewHighlight('')
-    }
-  }
-
-  const removeHighlight = (idx: number) => {
-    setHighlights(highlights.filter((_, i) => i !== idx))
   }
 
   const toggleService = (id: string) => {
@@ -186,243 +150,141 @@ export default function PropertyForm({
     }
   }
 
-  const handleAddImage = async () => {
+  const handleAddGalleryImage = () => {
     if (!newImageUrl.trim()) return
-    if (!isEditing) {
-      setToast({ type: 'error', message: 'Please save the property before adding gallery images.' })
+    const newImg: GalleryImageItem = {
+      url: newImageUrl.trim(),
+      alt: newImageDescription.trim() || name,
+      description: newImageDescription.trim(),
+      order: images.length,
+    }
+    setImages([...images, newImg])
+    setNewImageUrl('')
+    setNewImageDescription('')
+  }
+
+  const handleRemoveGalleryImage = async (index: number) => {
+    const imgToRemove = images[index]
+    if (isEditing && imgToRemove?.id && initialProperty?.id) {
+      try {
+        await fetch(
+          `/api/admin/properties/${initialProperty.id}/images?imageId=${imgToRemove.id}`,
+          { method: 'DELETE' }
+        )
+      } catch (err) {
+        console.error('Error deleting image from server:', err)
+      }
+    }
+    setImages(images.filter((_, idx) => idx !== index))
+  }
+
+  const handleSubmit = async (publishImmediately: boolean) => {
+    if (!name.trim()) {
+      setToast({ type: 'error', message: 'Project Name is required.' })
       return
     }
 
-    setAddingImage(true)
-    try {
-      const res = await fetch(`/api/admin/properties/${initialProperty.id}/images`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: newImageUrl.trim(), alt: newImageAlt.trim() }),
-      })
-      const data = await res.json()
-      if (res.ok) {
-        setImages([...images, data])
-        setNewImageUrl('')
-        setNewImageAlt('')
-        setToast({ type: 'success', message: 'Image added successfully' })
-      } else {
-        setToast({ type: 'error', message: data.error || 'Failed to add image' })
-      }
-    } catch {
-      setToast({ type: 'error', message: 'Network error adding image' })
-    } finally {
-      setAddingImage(false)
+    if (!countryId) {
+      setToast({ type: 'error', message: 'Please select a Country.' })
+      return
     }
-  }
 
-  const handleDeleteImage = async (imageId: string) => {
-    try {
-      const res = await fetch(
-        `/api/admin/properties/${initialProperty.id}/images?imageId=${imageId}`,
-        { method: 'DELETE' }
-      )
-      if (res.ok) {
-        setImages(images.filter((img) => img.id !== imageId))
-        setToast({ type: 'success', message: 'Image removed' })
-      } else {
-        const data = await res.json()
-        setToast({ type: 'error', message: data.error || 'Failed to delete image' })
-      }
-    } catch {
-      setToast({ type: 'error', message: 'Network error deleting image' })
-    }
-  }
-
-  const handleArchive = async () => {
-    if (!isEditing) return
-    setArchiving(true)
-
-    try {
-      const res = await fetch(`/api/admin/properties/${initialProperty.id}/archive`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason: archiveReason.trim() || 'Archived via project edit form' }),
-      })
-
-      if (res.ok) {
-        setToast({ type: 'success', message: 'Project moved to Deleted / Archived Projects.' })
-        setShowArchiveConfirm(false)
-        setTimeout(() => {
-          router.push('/admin/properties')
-          router.refresh()
-        }, 800)
-      } else {
-        const data = await res.json()
-        setToast({ type: 'error', message: data.error || 'Failed to archive project' })
-      }
-    } catch {
-      setToast({ type: 'error', message: 'Network error archiving project' })
-    } finally {
-      setArchiving(false)
-    }
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSaving(true)
-    setToast(null)
-
-    // Validate Pricing State
-    let askingNum: number | null = null
-    let askingCur: string | null = null
-    let isPOAVal = false
-
-    if (pricingState === 'PRICED') {
-      if (askingPriceNumeric === '' || askingPriceNumeric === null || isNaN(Number(askingPriceNumeric))) {
-        setToast({ type: 'error', message: 'Please enter a valid asking price amount.' })
-        setSaving(false)
-        return
-      }
-      askingNum = Number(askingPriceNumeric)
-      if (askingNum <= 0) {
-        setToast({ type: 'error', message: 'Asking price must be greater than zero.' })
-        setSaving(false)
-        return
-      }
-      if (!askingCurrency) {
-        setToast({ type: 'error', message: 'Please select an asking currency.' })
-        setSaving(false)
-        return
-      }
-      askingCur = askingCurrency.toUpperCase()
-
-      // Validate ISO 4217 minor units
-      if (!validateCurrencyMinorUnits(askingNum, askingCur)) {
-        const def = askingCur ? SUPPORTED_CURRENCY_REGISTRY[askingCur] : undefined
-        setToast({
-          type: 'error',
-          message: `${askingCur} does not permit decimal fractions (${def?.minorUnits ?? 2} minor units allowed).`,
-        })
-        setSaving(false)
-        return
-      }
-    } else if (pricingState === 'POA') {
-      isPOAVal = true
-      askingNum = null
-      askingCur = null
-    } else {
-      // UNPRICED
-      isPOAVal = false
-      askingNum = null
-      askingCur = null
+    if (!isPOA && (!askingPriceNumeric || parseFloat(askingPriceNumeric) <= 0)) {
+      setToast({ type: 'error', message: 'Please provide an Asking Price or enable Price on Application (POA).' })
+      return
     }
 
     try {
+      setSaving(true)
+      setToast(null)
+
+      const payload = {
+        name: name.trim(),
+        slug: slug.trim() || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
+        countryId,
+        tagline: tagline.trim() || null,
+        description: description.trim() || null,
+        locationLine: locationLine.trim() || null,
+        cityName: cityName.trim() || null,
+        latitude: latitude !== '' ? parseFloat(latitude) : null,
+        longitude: longitude !== '' ? parseFloat(longitude) : null,
+        mainVideoUrl: mainVideoUrl.trim() || null,
+        mainImage: mainImage.trim() || null,
+        images: images.map((img, idx) => ({
+          url: img.url,
+          alt: img.description || img.alt || name,
+          description: img.description || img.alt || '',
+          order: idx,
+        })),
+        serviceIds: selectedServices,
+        isFeaturedLaunch,
+        launchOrder: isFeaturedLaunch && launchOrder !== '' ? parseInt(launchOrder, 10) : null,
+        isSpaceInRound,
+        spaceRoundImage: isSpaceInRound ? spaceRoundImage.trim() || null : null,
+        isPOA,
+        askingPriceNumeric: !isPOA && askingPriceNumeric ? parseFloat(askingPriceNumeric) : null,
+        askingCurrency: !isPOA ? askingCurrency : null,
+        isPublished: publishImmediately,
+      }
+
       if (!isEditing) {
-        // CREATION FLOW: POST /api/admin/properties
-        const createPayload = {
-          name: name.trim(),
-          slug: slug.trim(),
-          countryId: countryId || null,
-          cardLabel: cardLabel || null,
-          tagline: tagline || null,
-          shortDescription: shortDescription || null,
-          description: description || null,
-          type,
-          beds: beds || null,
-          baths: baths || null,
-          area: area || null,
-          bedroomsCount: bedroomsCount !== '' ? parseInt(bedroomsCount.toString(), 10) : null,
-          bathroomsCount: bathroomsCount !== '' ? bathroomsCount.toString() : null,
-          areaNumeric: areaNumeric !== '' ? areaNumeric.toString() : null,
-          areaUnit: areaUnit || 'sqft',
-          latitude: latitude !== '' ? parseFloat(latitude.toString()) : null,
-          longitude: longitude !== '' ? parseFloat(longitude.toString()) : null,
-          cityName: cityName || null,
-          locationLine: locationLine || null,
-          mainVideoUrl: mainVideoUrl || null,
-          mainVideoThumb: mainVideoThumb || null,
-          mainImage: mainImage || null,
-          spaceRoundImage: isSpaceInRound ? spaceRoundImage || null : null,
-          highlights,
-          layoutVariant: Number(layoutVariant),
-          isFeaturedLaunch,
-          launchOrder: isFeaturedLaunch && launchOrder !== '' ? Number(launchOrder) : null,
-          launchDate: isFeaturedLaunch && launchDate ? launchDate : null,
-          isSpaceInRound,
-          spaceOrder: isSpaceInRound && spaceOrder !== '' ? Number(spaceOrder) : null,
-          serviceIds: selectedServices,
-          // Pricing
-          isPOA: isPOAVal,
-          askingPriceNumeric: askingNum,
-          askingCurrency: askingCur,
-        }
-
+        // CREATE NEW PROJECT
         const res = await fetch('/api/admin/properties', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(createPayload),
+          body: JSON.stringify(payload),
         })
 
         const data = await res.json()
         if (!res.ok) {
-          setToast({ type: 'error', message: data.error || 'Failed to create project' })
-          setSaving(false)
-          return
+          throw new Error(data.error || 'Failed to create project')
         }
 
-        setToast({ type: 'success', message: 'Project created successfully in DRAFT state!' })
+        setToast({
+          type: 'success',
+          message: publishImmediately
+            ? 'Project created and published successfully!'
+            : 'Project created as Draft successfully!',
+        })
+
         setTimeout(() => {
-          router.push(`/admin/properties/${data.id}`)
+          router.push('/admin/properties?tab=current')
           router.refresh()
         }, 800)
       } else {
-        // EDIT FLOW:
-        // 1. Descriptive update via PATCH /api/admin/properties/[id] (NEVER sends financial fields)
-        const descriptivePayload = {
-          name: name.trim(),
-          slug: slug.trim(),
-          countryId: countryId || null,
-          cardLabel: cardLabel || null,
-          tagline: tagline || null,
-          shortDescription: shortDescription || null,
-          description: description || null,
-          type,
-          beds: beds || null,
-          baths: baths || null,
-          area: area || null,
-          bedroomsCount: bedroomsCount !== '' ? parseInt(bedroomsCount.toString(), 10) : null,
-          bathroomsCount: bathroomsCount !== '' ? bathroomsCount.toString() : null,
-          areaNumeric: areaNumeric !== '' ? areaNumeric.toString() : null,
-          areaUnit: areaUnit || 'sqft',
-          latitude: latitude !== '' ? parseFloat(latitude.toString()) : null,
-          longitude: longitude !== '' ? parseFloat(longitude.toString()) : null,
-          cityName: cityName || null,
-          locationLine: locationLine || null,
-          mainVideoUrl: mainVideoUrl || null,
-          mainVideoThumb: mainVideoThumb || null,
-          mainImage: mainImage || null,
-          spaceRoundImage: isSpaceInRound ? spaceRoundImage || null : null,
-          highlights,
-          layoutVariant: Number(layoutVariant),
-          isFeaturedLaunch,
-          launchOrder: isFeaturedLaunch && launchOrder !== '' ? Number(launchOrder) : null,
-          launchDate: isFeaturedLaunch && launchDate ? launchDate : null,
-          isSpaceInRound,
-          spaceOrder: isSpaceInRound && spaceOrder !== '' ? Number(spaceOrder) : null,
-          serviceIds: selectedServices,
+        // EDIT EXISTING PROJECT
+        // 1. Update descriptive fields
+        const descPayload = {
+          name: payload.name,
+          slug: payload.slug,
+          countryId: payload.countryId,
+          tagline: payload.tagline,
+          description: payload.description,
+          locationLine: payload.locationLine,
+          cityName: payload.cityName,
+          latitude: payload.latitude,
+          longitude: payload.longitude,
+          mainVideoUrl: payload.mainVideoUrl,
+          mainImage: payload.mainImage,
+          spaceRoundImage: payload.spaceRoundImage,
+          serviceIds: payload.serviceIds,
+          isFeaturedLaunch: payload.isFeaturedLaunch,
+          launchOrder: payload.launchOrder,
+          isSpaceInRound: payload.isSpaceInRound,
         }
 
         const descRes = await fetch(`/api/admin/properties/${initialProperty.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(descriptivePayload),
+          body: JSON.stringify(descPayload),
         })
 
         if (!descRes.ok) {
-          const data = await descRes.json()
-          setToast({ type: 'error', message: data.error || 'Failed to update descriptive project details' })
-          setSaving(false)
-          return
+          const errData = await descRes.json()
+          throw new Error(errData.error || 'Failed to update project details')
         }
 
-        // 2. Check if pricing changed
+        // 2. Update price if changed
         const currentInitialNum =
           initialProperty.askingPriceNumeric !== null && initialProperty.askingPriceNumeric !== undefined
             ? Number(initialProperty.askingPriceNumeric)
@@ -431,907 +293,573 @@ export default function PropertyForm({
         const currentInitialPOA = Boolean(initialProperty.isPOA)
 
         const pricingChanged =
-          currentInitialPOA !== isPOAVal ||
-          currentInitialCur !== askingCur ||
-          currentInitialNum !== askingNum
+          currentInitialPOA !== isPOA ||
+          currentInitialCur !== (isPOA ? null : askingCurrency) ||
+          currentInitialNum !== (isPOA ? null : parseFloat(askingPriceNumeric))
 
         if (pricingChanged) {
-          const reason = priceChangeReason.trim() || 'Administrative price update via project edit form'
-          const priceRes = await fetch(`/api/admin/properties/${initialProperty.id}/price`, {
+          await fetch(`/api/admin/properties/${initialProperty.id}/price`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              reason,
-              isPOA: isPOAVal,
-              askingPriceNumeric: askingNum,
-              askingCurrency: askingCur,
+              reason: 'Administrative price update via project edit form',
+              isPOA,
+              askingPriceNumeric: !isPOA && askingPriceNumeric ? parseFloat(askingPriceNumeric) : null,
+              askingCurrency: !isPOA ? askingCurrency : null,
             }),
           })
+        }
 
-          if (!priceRes.ok) {
-            const priceData = await priceRes.json()
-            setToast({
-              type: 'error',
-              message: `Descriptive details saved, but price update failed: ${priceData.error || 'Unknown error'}`,
+        // 3. Save new gallery images if any were added
+        const existingImageUrls = new Set((initialProperty.images || []).map((img: any) => img.url))
+        for (const img of images) {
+          if (!existingImageUrls.has(img.url)) {
+            await fetch(`/api/admin/properties/${initialProperty.id}/images`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                url: img.url,
+                alt: img.description || img.alt || name,
+                description: img.description || '',
+              }),
             })
-            setSaving(false)
-            return
           }
         }
 
-        setToast({ type: 'success', message: 'Project details and pricing updated successfully!' })
-        setPriceChangeReason('')
-        router.refresh()
+        // 4. Update publish status if toggled
+        if (publishImmediately && !initialProperty.isPublished) {
+          await fetch(`/api/admin/properties/${initialProperty.id}/publish`, { method: 'POST' })
+        } else if (!publishImmediately && initialProperty.isPublished) {
+          await fetch(`/api/admin/properties/${initialProperty.id}/unpublish`, { method: 'POST' })
+        }
+
+        setToast({ type: 'success', message: 'Project changes saved successfully!' })
+        setTimeout(() => {
+          router.push('/admin/properties?tab=current')
+          router.refresh()
+        }, 800)
       }
-    } catch {
-      setToast({ type: 'error', message: 'An unexpected network error occurred' })
+    } catch (err: any) {
+      setToast({ type: 'error', message: err.message || 'An error occurred while saving project.' })
     } finally {
       setSaving(false)
     }
   }
 
   return (
-    <div className="space-y-8 max-w-5xl">
-      {/* Toast Notification */}
-      {toast && (
-        <div
-          className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border text-xs font-mono transition-all animate-in slide-in-from-bottom-2 ${
-            toast.type === 'success'
-              ? 'bg-[#0B1528] border-emerald-500/40 text-emerald-300'
-              : 'bg-[#0B1528] border-rose-500/40 text-rose-300'
-          }`}
-        >
-          {toast.type === 'success' ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-          ) : (
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-          )}
-          <span>{toast.message}</span>
-          <button onClick={() => setToast(null)} className="ml-2 text-gray-400 hover:text-white">
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
-
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-white/10">
+    <div className="max-w-5xl mx-auto space-y-6 pb-12">
+      {/* Top Header & Breadcrumb */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-white/10">
         <div>
           <Link
-            href="/admin/properties"
-            className="text-gray-400 hover:text-white flex items-center gap-1.5 text-xs font-mono mb-2"
+            href="/admin/properties?tab=current"
+            className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-white mb-2 transition-colors"
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to Projects
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to Current Projects</span>
           </Link>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-display font-medium text-white tracking-wide">
-              {isEditing ? `Edit: ${initialProperty.name}` : 'New Project Listing'}
-            </h1>
-            {isEditing && (
-              <span
-                className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider ${
-                  initialProperty.isArchived
-                    ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                    : initialProperty.isPublished
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                    : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                }`}
-              >
-                {initialProperty.isArchived ? 'Archived' : initialProperty.isPublished ? 'Published' : 'Draft'}
-              </span>
-            )}
-          </div>
+          <h1 className="text-xl md:text-2xl font-bold font-display tracking-tight text-white">
+            {isEditing ? `Edit Project: ${initialProperty.name}` : 'Add Project'}
+          </h1>
           <p className="text-xs text-gray-400 mt-1">
-            Configure residence specifications, multi-currency pricing, curation showcases, and publication status.
+            Complete and straightforward project creation and publication form.
           </p>
         </div>
 
+        {/* Action Buttons */}
         <div className="flex items-center gap-3">
-          {isEditing && (
-            <>
-              {initialProperty.isPublished && (
-                <Link
-                  href={`/collection/${initialProperty.country?.slug || 'dubai'}/${initialProperty.slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3.5 py-2 rounded-lg bg-[#070E1C] border border-white/10 hover:border-white/20 text-xs text-gray-300 hover:text-white flex items-center gap-1.5 transition-all"
-                >
-                  <span>Live Preview</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </Link>
-              )}
-              {!initialProperty.isArchived && (
-                <button
-                  type="button"
-                  onClick={() => setShowArchiveConfirm(true)}
-                  className="px-3.5 py-2 rounded-lg bg-rose-500/10 border border-rose-500/20 hover:border-rose-500/40 text-xs text-rose-300 hover:text-rose-200 flex items-center gap-1.5 transition-all"
-                >
-                  <Archive className="w-3.5 h-3.5" />
-                  <span>Archive</span>
-                </button>
-              )}
-            </>
-          )}
-
           <button
-            onClick={handleSubmit}
+            type="button"
+            onClick={() => handleSubmit(false)}
             disabled={saving}
-            className="px-5 py-2 rounded-lg bg-[#CBD5E1] hover:bg-white text-[#040810] text-xs font-medium tracking-wide flex items-center gap-2 shadow-[0_0_15px_rgba(203,213,225,0.15)] disabled:opacity-50 transition-all cursor-pointer"
+            className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-gray-300 hover:text-white transition-all cursor-pointer disabled:opacity-50"
           >
-            <Save className="w-3.5 h-3.5" />
-            <span>{saving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Project'}</span>
+            {saving ? 'Saving...' : 'Save Draft'}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSubmit(true)}
+            disabled={saving}
+            className="px-5 py-2 rounded-lg bg-[#7DD3FC] hover:bg-[#7DD3FC]/90 text-[#040810] text-xs font-bold transition-all shadow-[0_0_15px_rgba(125,211,252,0.25)] cursor-pointer disabled:opacity-50"
+          >
+            {saving ? 'Publishing...' : 'Publish Project'}
           </button>
         </div>
       </div>
 
-      {/* Main Form */}
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* 1. Core Identity & Location */}
-        <div className="bg-[#070E1C] border border-white/10 rounded-xl p-6 space-y-5">
-          <h2 className="text-xs font-mono uppercase tracking-wider text-[#7DD3FC] flex items-center gap-2">
-            <MapPin className="w-3.5 h-3.5" />
-            <span>1. Core Identity & Location</span>
-          </h2>
+      {toast && (
+        <div
+          className={`p-4 rounded-xl text-xs flex items-center gap-2.5 ${
+            toast.type === 'success'
+              ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
+              : 'bg-rose-500/10 border border-rose-500/20 text-rose-400'
+          }`}
+        >
+          {toast.type === 'success' ? (
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 shrink-0" />
+          )}
+          <span>{toast.message}</span>
+        </div>
+      )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">
-                Project Name *
-              </label>
+      {/* SECTION 1: PROJECT IDENTITY & DESTINATION */}
+      <div className="bg-[#070E1C] border border-white/10 rounded-xl p-6 space-y-5">
+        <div className="flex items-center gap-2 pb-3 border-b border-white/10">
+          <Globe className="w-4 h-4 text-[#7DD3FC]" />
+          <h2 className="text-sm font-semibold text-white tracking-wide">Project Identity & Destination</h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs text-gray-300 block mb-1.5 font-medium">
+              Project Name <span className="text-[#7DD3FC]">*</span>
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => handleNameChange(e.target.value)}
+              className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
+              placeholder="e.g. The Royal Atlantis Penthouse"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-gray-300 block mb-1.5 font-medium">
+              Country Destination <span className="text-[#7DD3FC]">*</span>
+            </label>
+            <select
+              value={countryId}
+              onChange={(e) => setCountryId(e.target.value)}
+              className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
+              required
+            >
+              {countries.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.displayName || c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className="text-xs text-gray-300 block mb-1.5 font-medium">Tagline / Short Summary</label>
+          <input
+            type="text"
+            value={tagline}
+            onChange={(e) => setTagline(e.target.value)}
+            className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
+            placeholder="e.g. Ultra-luxury waterfront masterpiece on Palm Jumeirah"
+          />
+        </div>
+
+        <div>
+          <label className="text-xs text-gray-300 block mb-1.5 font-medium">Project Description</label>
+          <textarea
+            rows={4}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full bg-[#040810] border border-white/10 rounded-lg p-3 text-xs text-white focus:outline-none focus:border-[#7DD3FC] resize-y"
+            placeholder="Detailed architectural narrative, materials, lifestyle attributes..."
+          />
+        </div>
+
+        {/* Service Category Selection */}
+        <div>
+          <label className="text-xs text-gray-300 block mb-2 font-medium">
+            Service Category <span className="text-gray-500">(Luxury Villa, Commercial, Waterfront Residence, Sky Residence)</span>
+          </label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            {services.map((s) => {
+              const selected = selectedServices.includes(s.id)
+              return (
+                <button
+                  type="button"
+                  key={s.id}
+                  onClick={() => toggleService(s.id)}
+                  className={`p-3 rounded-lg border text-left text-xs transition-all cursor-pointer ${
+                    selected
+                      ? 'bg-[#7DD3FC]/15 border-[#7DD3FC] text-[#7DD3FC] font-semibold shadow-[0_0_12px_rgba(125,211,252,0.15)]'
+                      : 'bg-[#040810] border-white/10 text-gray-400 hover:text-white hover:border-white/20'
+                  }`}
+                >
+                  <Briefcase className={`w-3.5 h-3.5 mb-1.5 ${selected ? 'text-[#7DD3FC]' : 'text-gray-500'}`} />
+                  <span className="block truncate">{s.name}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION 2: PRICING & LOCATION */}
+      <div className="bg-[#070E1C] border border-white/10 rounded-xl p-6 space-y-5">
+        <div className="flex items-center gap-2 pb-3 border-b border-white/10">
+          <DollarSign className="w-4 h-4 text-emerald-400" />
+          <h2 className="text-sm font-semibold text-white tracking-wide">Pricing & Map Location</h2>
+        </div>
+
+        {/* Pricing */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+          <div className="sm:col-span-2">
+            <label className="text-xs text-gray-300 block mb-1.5 font-medium">Asking Price Amount</label>
+            <div className="relative">
               <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => handleNameChange(e.target.value)}
-                placeholder="e.g. The Meridian Penthouse"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
+                type="number"
+                step="any"
+                disabled={isPOA}
+                value={askingPriceNumeric}
+                onChange={(e) => setAskingPriceNumeric(e.target.value)}
+                placeholder={isPOA ? 'Price on Application' : 'e.g. 15000000'}
+                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC] disabled:opacity-50"
               />
             </div>
+          </div>
 
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5 flex items-center justify-between">
-                <span>Slug URL *</span>
-                <span className="text-[10px] text-gray-500">
-                  {autoSlug ? '(Auto-sync enabled)' : '(Custom)'}
-                </span>
-              </label>
-              <input
-                type="text"
-                required
-                value={slug}
-                onChange={(e) => {
-                  setSlug(e.target.value)
-                  setAutoSlug(false)
-                }}
-                placeholder="e.g. the-meridian-penthouse"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-[#7DD3FC] font-mono placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
-              <p className="mt-1 text-[11px] font-mono text-gray-500">
-                URL: /collection/{countries.find((c) => c.id === countryId)?.slug || countries.find((c) => c.id === countryId)?.name?.toLowerCase().replace(/\s+/g, '-') || initialProperty?.country?.slug || 'dubai'}/{slug || 'project-slug'}
-              </p>
-            </div>
+          <div>
+            <label className="text-xs text-gray-300 block mb-1.5 font-medium">Currency</label>
+            <select
+              disabled={isPOA}
+              value={askingCurrency}
+              onChange={(e) => setAskingCurrency(e.target.value)}
+              className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC] disabled:opacity-50"
+            >
+              {SUPPORTED_CURRENCY_CODES.map((cur) => (
+                <option key={cur} value={cur}>
+                  {cur}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
 
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">
-                Destination Country
-              </label>
-              <select
-                value={countryId}
-                onChange={(e) => setCountryId(e.target.value)}
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
-              >
-                <option value="">Select Destination...</option>
-                {countries.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.displayName || c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+        <label className="inline-flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={isPOA}
+            onChange={(e) => setIsPOA(e.target.checked)}
+            className="rounded border-white/20 text-[#7DD3FC] focus:ring-0 bg-transparent w-4 h-4"
+          />
+          <span className="text-xs text-gray-300 font-medium">Price on Application (POA)</span>
+        </label>
 
+        {/* Address and Map Location */}
+        <div className="pt-2 border-t border-white/5 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">
-                Project Type
-              </label>
-              <select
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
-              >
-                <option value="residential">Residential Residence</option>
-                <option value="mixed_use">Mixed-Use Landmark</option>
-                <option value="commercial">Commercial Estate</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">
-                City Name
-              </label>
-              <input
-                type="text"
-                value={cityName}
-                onChange={(e) => setCityName(e.target.value)}
-                placeholder="e.g. Dubai"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">
-                Location Line (Subtitle)
-              </label>
+              <label className="text-xs text-gray-300 block mb-1.5 font-medium">Project Address / Location Line</label>
               <input
                 type="text"
                 value={locationLine}
                 onChange={(e) => setLocationLine(e.target.value)}
-                placeholder="e.g. DUBAI MARITIME CITY, UAE"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
+                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
+                placeholder="e.g. Crescent Road, Palm Jumeirah"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">
-                Latitude Coordinates
-              </label>
+              <label className="text-xs text-gray-300 block mb-1.5 font-medium">City</label>
+              <input
+                type="text"
+                value={cityName}
+                onChange={(e) => setCityName(e.target.value)}
+                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
+                placeholder="e.g. Dubai"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs text-gray-300 block mb-1.5 font-medium">Map Latitude</label>
               <input
                 type="number"
                 step="any"
                 value={latitude}
                 onChange={(e) => setLatitude(e.target.value)}
-                placeholder="e.g. 25.276987"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
+                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-[#7DD3FC]"
+                placeholder="e.g. 25.1325"
               />
             </div>
-
             <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">
-                Longitude Coordinates
-              </label>
+              <label className="text-xs text-gray-300 block mb-1.5 font-medium">Map Longitude</label>
               <input
                 type="number"
                 step="any"
                 value={longitude}
                 onChange={(e) => setLongitude(e.target.value)}
-                placeholder="e.g. 55.296249"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
+                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-[#7DD3FC]"
+                placeholder="e.g. 55.1189"
               />
             </div>
           </div>
         </div>
+      </div>
 
-        {/* 2. Deterministic Three-State Pricing Engine */}
-        <div className="bg-[#070E1C] border border-white/10 rounded-xl p-6 space-y-5">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xs font-mono uppercase tracking-wider text-[#7DD3FC] flex items-center gap-2">
-              <DollarSign className="w-3.5 h-3.5" />
-              <span>2. Multi-Currency Pricing State</span>
-            </h2>
-            <span className="text-[11px] font-mono text-gray-400">
-              State: <strong className="text-white">{pricingState}</strong>
-            </span>
-          </div>
-
-          {/* Pricing State Switcher */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <button
-              type="button"
-              onClick={() => setPricingState('PRICED')}
-              className={`p-3.5 rounded-lg border text-left transition-all ${
-                pricingState === 'PRICED'
-                  ? 'bg-[#0B1528] border-[#7DD3FC] text-white shadow-[0_0_15px_rgba(125,211,252,0.1)]'
-                  : 'bg-[#040810] border-white/5 text-gray-400 hover:border-white/20'
-              }`}
-            >
-              <div className="text-xs font-medium text-white">1. Priced Listing</div>
-              <div className="text-[11px] text-gray-400 mt-0.5">
-                Fixed monetary amount with coupled ISO 4217 currency.
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setPricingState('POA')}
-              className={`p-3.5 rounded-lg border text-left transition-all ${
-                pricingState === 'POA'
-                  ? 'bg-[#0B1528] border-amber-400 text-white shadow-[0_0_15px_rgba(251,191,36,0.1)]'
-                  : 'bg-[#040810] border-white/5 text-gray-400 hover:border-white/20'
-              }`}
-            >
-              <div className="text-xs font-medium text-white">2. Price on Application (POA)</div>
-              <div className="text-[11px] text-gray-400 mt-0.5">
-                Premium bespoke pricing available exclusively upon enquiry.
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setPricingState('UNPRICED')}
-              className={`p-3.5 rounded-lg border text-left transition-all ${
-                pricingState === 'UNPRICED'
-                  ? 'bg-[#0B1528] border-slate-400 text-white shadow-[0_0_15px_rgba(148,163,184,0.1)]'
-                  : 'bg-[#040810] border-white/5 text-gray-400 hover:border-white/20'
-              }`}
-            >
-              <div className="text-xs font-medium text-white">3. Unpriced / In Development</div>
-              <div className="text-[11px] text-gray-400 mt-0.5">
-                Pricing pending release or architectural valuation.
-              </div>
-            </button>
-          </div>
-
-          {/* Conditional Pricing Fields */}
-          {pricingState === 'PRICED' && (
-            <div className="p-4 rounded-lg bg-[#040810] border border-white/5 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-mono text-gray-300 mb-1.5">
-                    Currency (13 Supported ISO 4217) *
-                  </label>
-                  <select
-                    value={askingCurrency}
-                    onChange={(e) => setAskingCurrency(e.target.value)}
-                    className="w-full bg-[#070E1C] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
-                  >
-                    {SUPPORTED_CURRENCY_CODES.map((code) => {
-                      const def = SUPPORTED_CURRENCY_REGISTRY[code]
-                      return (
-                        <option key={code} value={code}>
-                          {code} - {def.name} ({def.symbol})
-                        </option>
-                      )
-                    })}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-mono text-gray-300 mb-1.5">
-                    Asking Price Numeric *
-                  </label>
-                  <input
-                    type="number"
-                    step={askingCurrency === 'JPY' ? '1' : '0.01'}
-                    required
-                    value={askingPriceNumeric}
-                    onChange={(e) => setAskingPriceNumeric(e.target.value)}
-                    placeholder={askingCurrency === 'JPY' ? 'e.g. 500000000' : 'e.g. 3850000.00'}
-                    className="w-full bg-[#070E1C] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-                  />
-                  {askingCurrency === 'JPY' && (
-                    <p className="text-[10px] text-amber-400 mt-1 font-mono">
-                      Notice: JPY has 0 minor units (integers only).
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-mono text-gray-300 mb-1.5">
-                    Formatted Preview
-                  </label>
-                  <div className="w-full bg-[#070E1C]/50 border border-white/5 rounded-lg px-3.5 py-2.5 text-xs text-emerald-400 font-mono">
-                    {askingPriceNumeric && !isNaN(Number(askingPriceNumeric))
-                      ? formatCurrencyAmount(Number(askingPriceNumeric), askingCurrency)
-                      : '—'}
-                  </div>
-                </div>
-              </div>
-
-              {isEditing && (
-                <div className="pt-3 border-t border-white/5">
-                  <label className="block text-xs font-mono text-gray-300 mb-1.5">
-                    Repricing Audit Reason (Required if updating price)
-                  </label>
-                  <input
-                    type="text"
-                    value={priceChangeReason}
-                    onChange={(e) => setPriceChangeReason(e.target.value)}
-                    placeholder="e.g. Q4 Market valuation repricing adjustment"
-                    className="w-full bg-[#070E1C] border border-white/10 rounded-lg px-3.5 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          {pricingState === 'POA' && (
-            <div className="p-4 rounded-lg bg-[#040810] border border-amber-500/20 text-xs text-amber-300 font-mono">
-              ✓ Property will display "Price on Application" on the public website and portfolio listings.
-            </div>
-          )}
-
-          {pricingState === 'UNPRICED' && (
-            <div className="p-4 rounded-lg bg-[#040810] border border-white/5 text-xs text-gray-400 font-mono">
-              ✓ Property will display "Price on Request" without monetary amounts.
-            </div>
-          )}
+      {/* SECTION 3: PROJECT MEDIA & GALLERY */}
+      <div className="bg-[#070E1C] border border-white/10 rounded-xl p-6 space-y-5">
+        <div className="flex items-center gap-2 pb-3 border-b border-white/10">
+          <ImageIcon className="w-4 h-4 text-[#7DD3FC]" />
+          <h2 className="text-sm font-semibold text-white tracking-wide">Project Media Assets</h2>
         </div>
 
-        {/* 3. Specs & Layout */}
-        <div className="bg-[#070E1C] border border-white/10 rounded-xl p-6 space-y-5">
-          <h2 className="text-xs font-mono uppercase tracking-wider text-[#7DD3FC]">
-            3. Quantitative Specifications & Layout
-          </h2>
+        {/* Project Thumbnail Image */}
+        <div>
+          <MediaField
+            label="Project Thumbnail Image (Main Showcase Image)"
+            value={mainImage}
+            onChange={(url) => setMainImage(url)}
+            accept="image/*"
+            folder="properties"
+            placeholder="/images/... or https://..."
+          />
+        </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">Bedrooms Display</label>
-              <input
-                type="text"
-                value={beds}
-                onChange={(e) => setBeds(e.target.value)}
-                placeholder="e.g. 3–4 Bedrooms"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">Bedrooms Count (Numeric)</label>
-              <input
-                type="number"
-                value={bedroomsCount}
-                onChange={(e) => setBedroomsCount(e.target.value)}
-                placeholder="e.g. 4"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">Bathrooms Display</label>
-              <input
-                type="text"
-                value={baths}
-                onChange={(e) => setBaths(e.target.value)}
-                placeholder="e.g. 4 Baths"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">Bathrooms Count (Numeric)</label>
-              <input
-                type="number"
-                step="0.5"
-                value={bathroomsCount}
-                onChange={(e) => setBathroomsCount(e.target.value)}
-                placeholder="e.g. 4.5"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
-            </div>
+        {/* Project Video */}
+        <div>
+          <MediaField
+            label="Project Video (MP4 / WebM)"
+            value={mainVideoUrl}
+            onChange={(url) => setMainVideoUrl(url)}
+            accept="video/mp4"
+            folder="properties"
+            placeholder="/videos/... or https://..."
+          />
+        </div>
+
+        {/* Multiple Project Images with Individual Image Descriptions */}
+        <div className="pt-3 border-t border-white/10 space-y-4">
+          <div>
+            <h3 className="text-xs font-semibold text-white uppercase tracking-wider font-mono">
+              Multiple Project Images & Descriptions
+            </h3>
+            <p className="text-[11px] text-gray-400 mt-0.5">
+              Add individual gallery images with bespoke descriptions for each image.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-2">
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">Area Display</label>
-              <input
-                type="text"
-                value={area}
-                onChange={(e) => setArea(e.target.value)}
-                placeholder="e.g. 4,200 sq ft"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
+          {/* Add Image Inputs */}
+          <div className="p-4 rounded-xl bg-[#040810] border border-white/10 space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-mono text-gray-300 block mb-1">Image URL</label>
+                <input
+                  type="text"
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                  placeholder="/images/... or https://..."
+                  className="w-full bg-[#070E1C] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-mono text-gray-300 block mb-1">Individual Image Description</label>
+                <input
+                  type="text"
+                  value={newImageDescription}
+                  onChange={(e) => setNewImageDescription(e.target.value)}
+                  placeholder="e.g. Master suite with panoramic Gulf views and private terrace"
+                  className="w-full bg-[#070E1C] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">Area (Numeric)</label>
-              <input
-                type="number"
-                value={areaNumeric}
-                onChange={(e) => setAreaNumeric(e.target.value)}
-                placeholder="e.g. 4200"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">Area Unit</label>
-              <select
-                value={areaUnit}
-                onChange={(e) => setAreaUnit(e.target.value)}
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
+
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={handleAddGalleryImage}
+                disabled={!newImageUrl.trim()}
+                className="px-4 py-1.5 rounded-lg bg-[#7DD3FC]/15 hover:bg-[#7DD3FC]/25 text-[#7DD3FC] border border-[#7DD3FC]/30 text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-40 cursor-pointer"
               >
-                <option value="sqft">Square Feet (sq ft)</option>
-                <option value="sqm">Square Meters (sq m)</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">Card Badge Label</label>
-              <input
-                type="text"
-                value={cardLabel}
-                onChange={(e) => setCardLabel(e.target.value)}
-                placeholder="e.g. SKY RESIDENCE"
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Image</span>
+              </button>
             </div>
           </div>
 
-          <div className="pt-2">
-            <label className="block text-xs font-mono text-gray-300 mb-1.5">Layout Variant</label>
-            <select
-              value={layoutVariant}
-              onChange={(e) => setLayoutVariant(Number(e.target.value))}
-              className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
-            >
-              <option value={1}>Variant 1 — Cinematic Ultra-Wide Hero</option>
-              <option value={2}>Variant 2 — Split Dual-Column Architectural</option>
-              <option value={3}>Variant 3 — Minimal Luxury Editorial</option>
-            </select>
-          </div>
-        </div>
-
-        {/* 4. Narrative & Highlights */}
-        <div className="bg-[#070E1C] border border-white/10 rounded-xl p-6 space-y-5">
-          <h2 className="text-xs font-mono uppercase tracking-wider text-[#7DD3FC]">
-            4. Editorial Narrative & Highlights
-          </h2>
-
-          <div>
-            <label className="block text-xs font-mono text-gray-300 mb-1.5">Tagline</label>
-            <input
-              type="text"
-              value={tagline}
-              onChange={(e) => setTagline(e.target.value)}
-              placeholder="e.g. Where Skyline Meets Waterfront Sanctuary"
-              className="w-full bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-mono text-gray-300 mb-1.5">Short Description</label>
-            <textarea
-              rows={2}
-              value={shortDescription}
-              onChange={(e) => setShortDescription(e.target.value)}
-              placeholder="Brief summary displayed on cards..."
-              className="w-full bg-[#040810] border border-white/10 rounded-lg p-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-mono text-gray-300 mb-1.5">Full Description</label>
-            <textarea
-              rows={4}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Detailed architectural description..."
-              className="w-full bg-[#040810] border border-white/10 rounded-lg p-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-mono text-gray-300 mb-2">
-              Property Highlights List
-            </label>
-            <div className="space-y-2 mb-3">
-              {highlights.map((h, idx) => (
+          {/* Gallery Images List */}
+          {images.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              {images.map((img, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between p-2 rounded bg-[#040810] border border-white/5 text-xs text-gray-300"
+                  className="p-3 rounded-xl bg-[#040810] border border-white/10 flex items-start gap-3 relative group"
                 >
-                  <span>• {h}</span>
+                  <div className="w-20 h-16 rounded-lg bg-black/40 border border-white/10 overflow-hidden shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={img.url}
+                      alt={img.description || 'Project image'}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        ;(e.currentTarget as any).src = '/images/placeholder.jpg'
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex-1 min-w-0 pr-6">
+                    <span className="text-[10px] font-mono text-gray-500 uppercase">Image #{idx + 1}</span>
+                    <p className="text-xs text-white font-medium line-clamp-2 mt-0.5">
+                      {img.description || 'No description provided'}
+                    </p>
+                    <p className="text-[10px] text-gray-500 font-mono truncate mt-1">{img.url}</p>
+                  </div>
+
                   <button
                     type="button"
-                    onClick={() => removeHighlight(idx)}
-                    className="text-gray-500 hover:text-rose-400 p-1"
+                    onClick={() => handleRemoveGalleryImage(idx)}
+                    className="absolute top-2.5 right-2.5 text-gray-500 hover:text-rose-400 p-1 transition-colors cursor-pointer"
+                    title="Remove Image"
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               ))}
             </div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newHighlight}
-                onChange={(e) => setNewHighlight(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    addHighlight()
-                  }
-                }}
-                placeholder="Type a highlight (e.g. Private Marina Slip) and press Add"
-                className="flex-1 bg-[#040810] border border-white/10 rounded-lg px-3.5 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
-              <button
-                type="button"
-                onClick={addHighlight}
-                className="px-3.5 py-2 rounded-lg bg-[#0B1528] border border-white/10 text-xs text-gray-300 hover:text-white"
-              >
-                Add Highlight
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* 5. Primary Media Assets */}
-        <div className="bg-[#070E1C] border border-white/10 rounded-xl p-6 space-y-5">
-          <h2 className="text-xs font-mono uppercase tracking-wider text-[#7DD3FC]">
-            5. Primary Media Assets
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <MediaField
-              label="Main Cover Image"
-              value={mainImage}
-              onChange={setMainImage}
-              folder="properties"
-              accept="image/*"
-              placeholder="/images/properties/damac-riverside.jpg"
-            />
-            <MediaField
-              label="Main Video URL"
-              value={mainVideoUrl}
-              onChange={setMainVideoUrl}
-              folder="properties"
-              accept="video/mp4"
-              placeholder="/videos/properties/meridian.mp4"
-            />
-            <MediaField
-              label="Video Thumbnail"
-              value={mainVideoThumb}
-              onChange={setMainVideoThumb}
-              folder="properties"
-              accept="image/*"
-              placeholder="/images/properties/thumb-1.jpg"
-            />
-          </div>
-        </div>
-
-        {/* 6. Associated Services */}
-        <div className="bg-[#070E1C] border border-white/10 rounded-xl p-6 space-y-4">
-          <h2 className="text-xs font-mono uppercase tracking-wider text-[#7DD3FC]">
-            6. Associated Services & Sectors
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-            {services.map((svc) => (
-              <label
-                key={svc.id}
-                className="flex items-center gap-3 p-3 rounded-lg bg-[#040810] border border-white/5 hover:border-white/10 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedServices.includes(svc.id)}
-                  onChange={() => toggleService(svc.id)}
-                  className="rounded border-white/20 bg-transparent text-[#7DD3FC] focus:ring-0"
-                />
-                <span className="text-xs text-gray-300">{svc.name}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* 7. Curation & Homepage Showcases */}
-        <div className="bg-[#070E1C] border border-white/10 rounded-xl p-6 space-y-6">
-          <h2 className="text-xs font-mono uppercase tracking-wider text-[#7DD3FC] flex items-center gap-2">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>7. Homepage Curation & Showcases</span>
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Featured Launch */}
-            <div className="p-4 rounded-lg bg-[#040810] border border-white/5 space-y-3">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isFeaturedLaunch}
-                  onChange={(e) => setIsFeaturedLaunch(e.target.checked)}
-                  className="rounded border-white/20 text-amber-400 focus:ring-0"
-                />
-                <span className="text-xs font-medium text-white">Featured New Launch</span>
-              </label>
-              <p className="text-[11px] text-gray-500">
-                Display in the Featured Launches section on the public homepage.
-              </p>
-              {isFeaturedLaunch && (
-                <div className="space-y-3 pt-2 border-t border-white/5">
-                  <div>
-                    <label className="block text-[10px] font-mono text-gray-400 mb-1">
-                      Launch Order Sequence (1, 2, 3...)
-                    </label>
-                    <input
-                      type="number"
-                      value={launchOrder}
-                      onChange={(e) => setLaunchOrder(e.target.value)}
-                      placeholder="1"
-                      className="w-full bg-[#070E1C] border border-white/10 rounded px-2.5 py-1.5 text-xs text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-mono text-gray-400 mb-1">
-                      Launch Date
-                    </label>
-                    <input
-                      type="date"
-                      value={launchDate}
-                      onChange={(e) => setLaunchDate(e.target.value)}
-                      className="w-full bg-[#070E1C] border border-white/10 rounded px-2.5 py-1.5 text-xs text-white"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Space in Round */}
-            <div className="p-4 rounded-lg bg-[#040810] border border-white/5 space-y-3">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isSpaceInRound}
-                  onChange={(e) => setIsSpaceInRound(e.target.checked)}
-                  className="rounded border-white/20 text-indigo-400 focus:ring-0"
-                />
-                <span className="text-xs font-medium text-white">Spaces in the Round Showcase</span>
-              </label>
-              <p className="text-[11px] text-gray-500">
-                Feature inside the 360 Spaces in the Round carousel.
-              </p>
-              {isSpaceInRound && (
-                <div className="space-y-3 pt-2 border-t border-white/5">
-                  <div>
-                    <label className="block text-[10px] font-mono text-gray-400 mb-1">
-                      Carousel Sequence Order (1, 2, 3...)
-                    </label>
-                    <input
-                      type="number"
-                      value={spaceOrder}
-                      onChange={(e) => setSpaceOrder(e.target.value)}
-                      placeholder="1"
-                      className="w-full bg-[#070E1C] border border-white/10 rounded px-2.5 py-1.5 text-xs text-white"
-                    />
-                  </div>
-                  <div>
-                    <MediaField
-                      label="Conditional Spaces in the Round Image"
-                      value={spaceRoundImage}
-                      onChange={setSpaceRoundImage}
-                      folder="properties"
-                      accept="image/*"
-                      placeholder="Panoramic showcase image URL"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* 8. Gallery Images */}
-        <div className="bg-[#070E1C] border border-white/10 rounded-xl p-6 space-y-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xs font-mono uppercase tracking-wider text-[#7DD3FC]">
-                8. Gallery Images ({images.length})
-              </h2>
-              <p className="text-xs text-gray-400 mt-0.5">
-                Interior, exterior, and architectural detail gallery photographs.
-              </p>
-            </div>
-          </div>
-
-          {/* Add Image Bar */}
-          <div className="p-4 rounded-lg bg-[#040810] border border-white/5 space-y-3">
-            <MediaField
-              label="Add Image to Gallery"
-              value={newImageUrl}
-              onChange={setNewImageUrl}
-              folder="properties"
-              accept="image/*"
-              placeholder="Paste URL, click 'Upload File', or 'From Library'"
-            />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
-              <input
-                type="text"
-                value={newImageAlt}
-                onChange={(e) => setNewImageAlt(e.target.value)}
-                placeholder="Caption / Alt text"
-                className="md:col-span-2 bg-[#070E1C] border border-white/10 rounded-lg px-3.5 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
-              />
-              <button
-                type="button"
-                onClick={handleAddImage}
-                disabled={addingImage || !newImageUrl.trim()}
-                className="px-4 py-2 rounded-lg bg-[#0B1528] border border-[#7DD3FC]/30 text-xs text-[#7DD3FC] hover:bg-[#7DD3FC]/10 flex items-center justify-center gap-1.5 disabled:opacity-40 transition-colors cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>{addingImage ? 'Adding...' : 'Confirm & Add to Gallery'}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Gallery Grid */}
-          {images.length === 0 ? (
-            <div className="p-8 text-center border border-dashed border-white/10 rounded-lg text-xs text-gray-500 font-mono">
-              No gallery images added yet. Add an image above.
-            </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {images.map((img) => (
-                <div
-                  key={img.id}
-                  className="group relative rounded-lg border border-white/10 overflow-hidden bg-[#040810]"
-                >
-                  <div className="aspect-[4/3] bg-black/40 overflow-hidden">
-                    <img
-                      src={img.url}
-                      alt={img.alt || 'Gallery photo'}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                    />
-                  </div>
-                  <div className="p-2 flex items-center justify-between text-[11px] font-mono text-gray-400 bg-[#070E1C]">
-                    <span className="truncate max-w-[120px]">{img.alt || 'Asset'}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteImage(img.id)}
-                      className="text-gray-500 hover:text-rose-400 p-1"
-                      title="Remove image"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <p className="text-xs text-gray-500 italic py-2">
+              No gallery images added yet. Add images above with individual descriptions.
+            </p>
           )}
         </div>
+      </div>
 
-        {/* Bottom Save Button Bar */}
-        <div className="flex items-center justify-between pt-4 border-t border-white/10">
-          <Link
-            href="/admin/properties"
-            className="text-xs font-mono text-gray-400 hover:text-white"
-          >
-            ← Cancel and return
-          </Link>
-
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-6 py-2.5 rounded-lg bg-[#CBD5E1] hover:bg-white text-[#040810] text-xs font-medium tracking-wide flex items-center gap-2 shadow-[0_0_20px_rgba(203,213,225,0.2)] disabled:opacity-50 transition-all cursor-pointer"
-          >
-            <Save className="w-4 h-4" />
-            <span>{saving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Project'}</span>
-          </button>
+      {/* SECTION 4: CURATION FLAGS (NEW LAUNCH & SPACES IN THE ROUND) */}
+      <div className="bg-[#070E1C] border border-white/10 rounded-xl p-6 space-y-5">
+        <div className="flex items-center gap-2 pb-3 border-b border-white/10">
+          <Sparkles className="w-4 h-4 text-amber-400" />
+          <h2 className="text-sm font-semibold text-white tracking-wide">Showcase & Curations</h2>
         </div>
-      </form>
 
-      {/* Archive Confirmation Modal */}
-      {showArchiveConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-[#070E1C] border border-rose-500/30 rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4">
-            <div className="flex items-center gap-3 text-rose-400">
-              <Archive className="w-5 h-5" />
-              <h3 className="text-sm font-semibold text-white">Archive Project</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* New Launch: Yes/No */}
+          <div className="p-4 rounded-xl bg-[#040810] border border-white/10 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Flame className="w-4 h-4 text-amber-400" />
+                <span className="text-xs font-semibold text-white">New Launch Showcase</span>
+              </div>
+              <div className="flex items-center bg-[#070E1C] border border-white/10 rounded-lg p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setIsFeaturedLaunch(true)}
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-all ${
+                    isFeaturedLaunch
+                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsFeaturedLaunch(false)}
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-all ${
+                    !isFeaturedLaunch
+                      ? 'bg-white/10 text-white'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  No
+                </button>
+              </div>
             </div>
-            <p className="text-xs text-gray-300 leading-relaxed">
-              Moving <strong className="text-white font-mono">{name}</strong> to Deleted Projects preserves all historical records, media assets, and transactions while removing it from active listings and public visibility.
-            </p>
-            <div>
-              <label className="block text-[11px] font-mono text-gray-400 mb-1">
-                Reason for Archiving (Optional)
-              </label>
-              <input
-                type="text"
-                value={archiveReason}
-                onChange={(e) => setArchiveReason(e.target.value)}
-                placeholder="e.g. Delisted by owner request"
-                className="w-full bg-[#040810] border border-white/10 rounded px-3 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-rose-400"
-              />
+
+            {isFeaturedLaunch && (
+              <div className="pt-2 border-t border-white/5">
+                <label className="text-[11px] font-mono text-gray-300 block mb-1">Launch Display Order</label>
+                <input
+                  type="number"
+                  value={launchOrder}
+                  onChange={(e) => setLaunchOrder(e.target.value)}
+                  className="w-full bg-[#070E1C] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white font-mono"
+                  placeholder="1"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Spaces in the Round: Yes/No */}
+          <div className="p-4 rounded-xl bg-[#040810] border border-white/10 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Orbit className="w-4 h-4 text-purple-400" />
+                <span className="text-xs font-semibold text-white">Spaces in the Round</span>
+              </div>
+              <div className="flex items-center bg-[#070E1C] border border-white/10 rounded-lg p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setIsSpaceInRound(true)}
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-all ${
+                    isSpaceInRound
+                      ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsSpaceInRound(false)}
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-all ${
+                    !isSpaceInRound
+                      ? 'bg-white/10 text-white'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  No
+                </button>
+              </div>
             </div>
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/5">
-              <button
-                type="button"
-                onClick={() => setShowArchiveConfirm(false)}
-                className="px-4 py-2 rounded-lg bg-[#0B1528] text-xs text-gray-300 hover:text-white border border-white/10"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleArchive}
-                disabled={archiving}
-                className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-xs text-white font-medium disabled:opacity-50"
-              >
-                {archiving ? 'Archiving...' : 'Confirm Archive'}
-              </button>
-            </div>
+
+            {isSpaceInRound && (
+              <div className="pt-2 border-t border-white/5">
+                <MediaField
+                  label="Spaces in the Round Card Image"
+                  value={spaceRoundImage}
+                  onChange={(url) => setSpaceRoundImage(url)}
+                  accept="image/*"
+                  folder="properties"
+                  placeholder="/images/... or https://..."
+                />
+              </div>
+            )}
           </div>
         </div>
-      )}
+      </div>
+
+      {/* FOOTER ACTIONS */}
+      <div className="flex items-center justify-between pt-4 border-t border-white/10">
+        <Link
+          href="/admin/properties?tab=current"
+          className="text-xs text-gray-400 hover:text-white transition-colors"
+        >
+          Cancel
+        </Link>
+
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => handleSubmit(false)}
+            disabled={saving}
+            className="px-5 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-gray-300 hover:text-white transition-all cursor-pointer disabled:opacity-50"
+          >
+            {saving ? 'Saving...' : 'Save as Draft'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleSubmit(true)}
+            disabled={saving}
+            className="px-6 py-2.5 rounded-lg bg-[#7DD3FC] hover:bg-[#7DD3FC]/90 text-[#040810] text-xs font-bold transition-all shadow-[0_0_20px_rgba(125,211,252,0.3)] cursor-pointer disabled:opacity-50"
+          >
+            {saving ? 'Publishing...' : 'Publish Project'}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

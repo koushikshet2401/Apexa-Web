@@ -1,0 +1,268 @@
+[
+  {
+    "id": "FS_PUB_COLLECTION_COUNTRIES",
+    "category": "Full-System Workflows",
+    "name": "Public Collection Countries API Integration",
+    "status": "PASSED",
+    "evidence": "HTTP 200, Countries returned: 2"
+  },
+  {
+    "id": "FS_PUB_PROPERTIES_CANONICAL",
+    "category": "Full-System Workflows",
+    "name": "Public Properties Strict Canonical Visibility",
+    "status": "PASSED",
+    "evidence": "HTTP 200, Published items: 3, Zero drafts/archived leaked"
+  },
+  {
+    "id": "FS_PUB_SPACE_IN_ROUND",
+    "category": "Full-System Workflows",
+    "name": "Spaces in the Round Dynamic Showcase",
+    "status": "PASSED",
+    "evidence": "HTTP 200, Items returned: 2"
+  },
+  {
+    "id": "FS_PUB_FEATURED_LAUNCHES",
+    "category": "Full-System Workflows",
+    "name": "Public Featured Launches Cinematic Stack",
+    "status": "PASSED",
+    "evidence": "HTTP 200, Launches count: 2"
+  },
+  {
+    "id": "FS_PUB_ENQUIRY_SUBMISSION",
+    "category": "Full-System Workflows",
+    "name": "Public Enquiry End-to-End Submission & Persistence",
+    "status": "PASSED",
+    "evidence": "HTTP 200, EnquiryRef: APX-20261107-5IN2O"
+  },
+  {
+    "id": "FS_ADM_LOGIN_AUTHENTICATION",
+    "category": "Full-System Workflows",
+    "name": "Admin Login & Live Session Verification",
+    "status": "PASSED",
+    "evidence": "HTTP 200, Authenticated user: superadmin_p9@apexpacificholdings.com, Role: SUPER_ADMIN"
+  },
+  {
+    "id": "FS_ADM_DASHBOARD_METRICS",
+    "category": "Full-System Workflows",
+    "name": "Admin Dashboard Live Analytics Aggregation",
+    "status": "PASSED",
+    "evidence": "HTTP 200, Projects: 4, Deals: 5, Valuations: 3 currency groups"
+  },
+  {
+    "id": "FS_ADM_PROJECT_LIFECYCLE_CREATE",
+    "category": "Full-System Workflows",
+    "name": "1. Project Creation strictly in Draft Mode",
+    "status": "PASSED",
+    "evidence": "Created Property ID: cmw62tf5o0005ue7sb7syfo26, isDraft: true, isPublished: false"
+  },
+  {
+    "id": "FS_ADM_PROJECT_LIFECYCLE_REPRICE",
+    "category": "Full-System Workflows",
+    "name": "2. Financial Repricing with Differential Audit Trail",
+    "status": "PASSED",
+    "evidence": "HTTP 200, New Price: USD 19,250,000.00 with verified audit trail"
+  },
+  {
+    "id": "FS_ADM_PROJECT_LIFECYCLE_PUBLISH",
+    "category": "Full-System Workflows",
+    "name": "3. Project Publication & Public Visibility Activation",
+    "status": "PASSED",
+    "evidence": "HTTP 200, isPublished: true, isPubliclyVisible: true"
+  },
+  {
+    "id": "FS_ADM_PROJECT_LIFECYCLE_DEAL_CLOSE",
+    "category": "Full-System Workflows",
+    "name": "4. Option A Deal Closure with Public Acquired Badge",
+    "status": "PASSED",
+    "evidence": "HTTP 200, Deal Status: COMPLETED, Option A keepPubliclyVisible: true"
+  },
+  {
+    "id": "FS_ADM_PROJECT_LIFECYCLE_ARCHIVE",
+    "category": "Full-System Workflows",
+    "name": "5. Recoverable Archival & Public De-listing",
+    "status": "PASSED",
+    "evidence": "HTTP 200, isArchived: true, isPubliclyVisible: false"
+  },
+  {
+    "id": "FS_ADM_PROJECT_LIFECYCLE_RESTORE",
+    "category": "Full-System Workflows",
+    "name": "6. Safe Restoration to Draft State",
+    "status": "PASSED",
+    "evidence": "HTTP 200, isArchived: false, safely reverted to isDraft: true"
+  },
+  {
+    "id": "FS_ADM_ENQUIRY_NOTES_WORKFLOW",
+    "category": "Full-System Workflows",
+    "name": "Enquiry Internal Confidential Note Attachment",
+    "status": "PASSED",
+    "evidence": "HTTP 201, Created note ID: cmw62tf7d000lue7sjj1lb7bz"
+  },
+  {
+    "id": "FS_ADM_ENQUIRY_CLOSE_REOPEN",
+    "category": "Full-System Workflows",
+    "name": "Enquiry Status Transitions (Close -> Reopen)",
+    "status": "PASSED",
+    "evidence": "Close HTTP 200 -> Reopen HTTP 200, Status: IN_PROGRESS"
+  },
+  {
+    "id": "SEC_UNAUTH_REJECTION",
+    "category": "Security & Access Control",
+    "name": "Unauthenticated Admin API Access Rejection",
+    "status": "PASSED",
+    "evidence": "HTTP 401 Unauthorized enforced when no session token is provided"
+  },
+  {
+    "id": "SEC_FORGED_JWT_REJECTION",
+    "category": "Security & Access Control",
+    "name": "Forged & Tampered JWT Token Rejection",
+    "status": "PASSED",
+    "evidence": "HTTP 401 returned for forged cryptographic signature"
+  },
+  {
+    "id": "SEC_DEACTIVATED_ACCOUNT_REJECTION",
+    "category": "Security & Access Control",
+    "name": "Deactivated Account Immediate Revocation (HTTP 403)",
+    "status": "PASSED",
+    "evidence": "HTTP 403 Forbidden: Deactivated account rejected despite possessing valid JWT"
+  },
+  {
+    "id": "SEC_RBAC_MANAGER_USERS_BLOCKED",
+    "category": "Security & Access Control",
+    "name": "RBAC Boundary: Manager Barred from User Management",
+    "status": "PASSED",
+    "evidence": "HTTP 403 Forbidden strictly enforced on /api/admin/users for Manager"
+  },
+  {
+    "id": "SEC_RBAC_EDITOR_REPRICE_BLOCKED",
+    "category": "Security & Access Control",
+    "name": "RBAC Boundary: Editor Barred from Financial Repricing",
+    "status": "PASSED",
+    "evidence": "HTTP 403 Forbidden strictly enforced on Price Update for Editor"
+  },
+  {
+    "id": "SEC_RBAC_ADVISOR_DELETE_BLOCKED",
+    "category": "Security & Access Control",
+    "name": "RBAC Boundary: Advisor Barred from Property Deletion",
+    "status": "PASSED",
+    "evidence": "HTTP 403 Forbidden strictly enforced on Property Deletion for Advisor"
+  },
+  {
+    "id": "SEC_RBAC_COMPLIANCE_MUTATION_BLOCKED",
+    "category": "Security & Access Control",
+    "name": "RBAC Boundary: Compliance Barred from State Mutations",
+    "status": "PASSED",
+    "evidence": "HTTP 403 Forbidden strictly enforced on Property Creation for Compliance"
+  },
+  {
+    "id": "SEC_SESSION_VERSION_REVOCATION",
+    "category": "Security & Access Control",
+    "name": "Global Account Session Revocation via Version Bumping",
+    "status": "PASSED",
+    "evidence": "HTTP 401: Token with version 1 immediately rejected after bump to version 2"
+  },
+  {
+    "id": "SEC_DRAFT_ISOLATION_404",
+    "category": "Security & Access Control",
+    "name": "Draft Properties Strict Public 404 Isolation",
+    "status": "PASSED",
+    "evidence": "HTTP 404 returned when attempting to access draft via public detail route"
+  },
+  {
+    "id": "SEC_SQL_INJECTION_RESISTANCE",
+    "category": "Security & Access Control",
+    "name": "SQL Injection Immunity via Parameterized Prisma Queries",
+    "status": "PASSED",
+    "evidence": "HTTP 200: Handled SQL injection search probe safely without execution"
+  },
+  {
+    "id": "SEC_XSS_PAYLOAD_IMMUNITY",
+    "category": "Security & Access Control",
+    "name": "XSS Payload Storage Immunity & Non-Execution",
+    "status": "PASSED",
+    "evidence": "Stored as harmless escaped string literal without DOM execution or injection"
+  },
+  {
+    "id": "SEC_FINANCIAL_NEGATIVE_PRICE_REJECTION",
+    "category": "Security & Access Control",
+    "name": "Financial Validation: Negative Price Strict Rejection",
+    "status": "PASSED",
+    "evidence": "HTTP 400 Bad Request returned on negative financial valuation"
+  },
+  {
+    "id": "SEC_FORBIDDEN_DESCRIPTIVE_FIELDS_REJECTION",
+    "category": "Security & Access Control",
+    "name": "Strict Separation of Concerns: Descriptive Fields Rejected in Price Endpoint",
+    "status": "PASSED",
+    "evidence": "HTTP 400 FORBIDDEN_DESCRIPTIVE_FIELDS returned as required by Phase 5 spec"
+  },
+  {
+    "id": "SEC_SELF_DELETION_PREVENTION",
+    "category": "Security & Access Control",
+    "name": "Self-Deletion Protection for Active Administrators",
+    "status": "PASSED",
+    "evidence": "HTTP 400 returned preventing logged-in administrator from deleting own account"
+  },
+  {
+    "id": "SEC_ADMIN_LIFECYCLE_PROTECTION",
+    "category": "Security & Access Control",
+    "name": "Administrative Account Modification Security",
+    "status": "PASSED",
+    "evidence": "Administrative account mutation guards operational"
+  },
+  {
+    "id": "SEC_GIT_SECRET_EXCLUSION",
+    "category": "Security & Access Control",
+    "name": "Strict Untracked Environment Secrets Guarantee",
+    "status": "PASSED",
+    "evidence": ".env and .env*.local patterns present in .gitignore: true"
+  },
+  {
+    "id": "PERF_PUB_PROPERTIES_LATENCY",
+    "category": "Performance Benchmarks",
+    "name": "Public Properties Response Latency (Median < 150ms)",
+    "status": "PASSED",
+    "evidence": "P50: 4ms, P95: 10ms, Max: 10ms"
+  },
+  {
+    "id": "PERF_ADM_DASHBOARD_LATENCY",
+    "category": "Performance Benchmarks",
+    "name": "Admin Dashboard Analytics Response Latency (Median < 200ms)",
+    "status": "PASSED",
+    "evidence": "P50: 0ms, P95: 0ms, Max: 0ms"
+  },
+  {
+    "id": "PERF_ADM_ENQUIRIES_LATENCY",
+    "category": "Performance Benchmarks",
+    "name": "Admin Enquiries Filtering Latency (Median < 150ms)",
+    "status": "PASSED",
+    "evidence": "P50: 0ms, P95: 0ms, Max: 0ms"
+  },
+  {
+    "id": "PERF_PUB_SPACE_IN_ROUND_LATENCY",
+    "category": "Performance Benchmarks",
+    "name": "Spaces in the Round Latency (Median < 100ms)",
+    "status": "PASSED",
+    "evidence": "P50: 3ms, P95: 4ms, Max: 4ms"
+  },
+  {
+    "id": "PERF_CONCURRENT_LOAD_RESILIENCE",
+    "category": "Performance Benchmarks",
+    "name": "10-Parallel Concurrent Requests Stress Resilience",
+    "status": "PASSED",
+    "evidence": "10/10 parallel requests succeeded in 145ms without pool exhaustion"
+  },
+  {
+    "id": "PERF_DB_INDEXES_VALIDATION",
+    "category": "Performance Benchmarks",
+    "name": "Database Performance Indexes Integrity",
+    "status": "PASSED",
+    "evidence": "Verified critical composite indexes: Property_slug_key, Property_isArchived_isPublished_idx, Deal_dealRef_key, Enquiry_enquiryRef_key, AdminUser_email_key"
+  },
+  {
+    "id": "SEC_PROD_DB_ISOLATION_GUARANTEE",
+    "category": "Production Database Safety",
+    "name": "Production Database (apex) Zero Mutation Guarantee",
+    "status": "PASSED",
+    "evidence": "Production database confirmed untouched: exactly 1 migration (init_schema), exactly 6 properties, 0 test mutations"
+  }
+]

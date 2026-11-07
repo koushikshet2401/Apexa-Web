@@ -4,111 +4,52 @@ import React, { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import {
   Building2,
-  CheckCircle2,
-  FileEdit,
-  Flame,
   Orbit,
-  Mail,
-  ArrowUpRight,
-  Globe2,
-  Clock,
-  Sparkles,
   TrendingUp,
-  DollarSign,
+  Award,
   Users,
-  Eye,
   RefreshCw,
   Calendar,
   AlertCircle,
-  HelpCircle,
-  ShieldCheck,
-  Award,
+  PlusCircle,
+  ArrowUpRight,
 } from 'lucide-react'
+
+interface TrendPoint {
+  date: string
+  visits: number
+  pageViews?: number
+  projectAdditions: number
+  dealClosures: number
+}
 
 interface DashboardData {
   dateRange: {
     rangeKey: string
     startDate: string
     endDate: string
-    interval: string
   }
   websiteVisits: {
-    metricLabel: string
     totalQualifyingVisits: number
     monthlyVisits: number
     todayVisits: number
-    repeatVisitsCount: number
-    repeatVisitsRatio: number
-    dailyTrend: Array<{ date: string; visits: number; pageViews: number }>
+    dailyTrend: TrendPoint[]
   }
   totalProjects: number
   spacesInRoundCount: number
-  pendingDeals: {
-    inquiry: number
-    contacted: number
-    offerMade: number
-    underContract: number
-    lost: number
-    totalPending: number
-  }
   totalPortfolioValuation: {
     byCurrency: Array<{ currency: string; totalAmount: string; propertyCount: number }>
-    scopeDescription: string
-  }
-  activePublishedValuation: {
-    byCurrency: Array<{ currency: string; totalAmount: string; activeListingCount: number }>
-    scopeDescription: string
   }
   completedDealVolume: {
     byCurrency: Array<{
       currency: string
-      originalSalesVolume: string
       effectiveSalesVolume: string
       closedDealsCount: number
-      adjustedDealsCount: number
     }>
   }
   completedDealMetrics: {
     totalCompletedDeals: number
-    optionAVisibleCount: number
-    optionBUnlistedCount: number
-    totalLostDeals: number
-    totalActivePipelineDeals: number
-    totalDealsCount: number
-    winRate: {
-      ratioPercent: number | null
-      numerator: number
-      denominator: number
-      formula: string
-      eligibilityDescription: string
-    }
-    pipelineThroughputRate: {
-      ratioPercent: number | null
-      numerator: number
-      denominator: number
-      formula: string
-      eligibilityDescription: string
-    }
   }
-  assetInventoryCounts: {
-    totalPropertiesCount: number
-    activePublicListingsCount: number
-    totalPublishedCount: number
-    draftCount: number
-    archivedCount: number
-    poaCount: number
-    unpricedCount: number
-  }
-}
-
-interface CountryStat {
-  country: string
-  propertiesCount: number
-  activePublishedCount: number
-  valuationByCurrency: Array<{ currency: string; totalAmount: string }>
-  enquiriesCount: number
-  dealsClosedCount: number
-  viewsCount: number
 }
 
 const RANGES = [
@@ -121,7 +62,6 @@ const RANGES = [
 
 export default function DashboardClient() {
   const [data, setData] = useState<DashboardData | null>(null)
-  const [countries, setCountries] = useState<CountryStat[]>([])
   const [range, setRange] = useState<string>('30d')
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
@@ -132,24 +72,23 @@ export default function DashboardClient() {
       setRefreshing(true)
       setError(null)
 
-      const [dashRes, countriesRes] = await Promise.all([
-        fetch(`/api/admin/analytics/dashboard?range=${range}`),
-        fetch('/api/admin/analytics/countries'),
-      ])
+      const dashRes = await fetch(`/api/admin/analytics/dashboard?range=${range}`, {
+        credentials: 'include',
+      })
+
+      if (dashRes.status === 401) {
+        window.location.href = '/admin/login?reason=session_expired'
+        return
+      }
 
       if (!dashRes.ok) {
         throw new Error(`Failed to load dashboard: ${dashRes.statusText}`)
       }
       const dashJson = await dashRes.json()
       setData(dashJson)
-
-      if (countriesRes.ok) {
-        const countriesJson = await countriesRes.json()
-        setCountries(countriesJson.countries || [])
-      }
     } catch (err: any) {
       console.error('Error loading dashboard analytics:', err)
-      setError(err.message || 'Unable to connect to live analytics database.')
+      setError(err?.message || 'Failed to load executive dashboard data.')
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -160,60 +99,52 @@ export default function DashboardClient() {
     fetchDashboard()
   }, [fetchDashboard])
 
+  const visits = data?.websiteVisits
+  const portfolioVals = data?.totalPortfolioValuation?.byCurrency || []
+  const dealVolumes = data?.completedDealVolume?.byCurrency || []
+  const trend = visits?.dailyTrend || []
+
+  // Max value for graph scaling
+  const maxVisits = Math.max(1, ...trend.map((t) => t.visits || 0))
+  const maxAdditions = Math.max(1, ...trend.map((t) => t.projectAdditions || 0))
+  const maxClosures = Math.max(1, ...trend.map((t) => t.dealClosures || 0))
+  const graphMax = Math.max(maxVisits, maxAdditions, maxClosures, 5)
+
   if (loading && !data) {
     return (
-      <div className="space-y-8 animate-pulse">
-        <div className="h-16 bg-[#070E1C] dark:bg-[#070E1C] rounded-xl border border-white/10" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 bg-[#070E1C] dark:bg-[#070E1C] rounded-xl border border-white/10" />
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 h-72 bg-[#070E1C] dark:bg-[#070E1C] rounded-xl border border-white/10" />
-          <div className="h-72 bg-[#070E1C] dark:bg-[#070E1C] rounded-xl border border-white/10" />
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
+        <RefreshCw className="w-8 h-8 text-[#7DD3FC] animate-spin" />
+        <p className="text-xs font-mono uppercase tracking-widest text-gray-400">
+          Loading Dashboard...
+        </p>
       </div>
     )
   }
 
-  const visits = data?.websiteVisits
-  const inv = data?.assetInventoryCounts
-  const deals = data?.completedDealMetrics
-  const pipeline = data?.pendingDeals
-  const portfolioVals = data?.totalPortfolioValuation?.byCurrency || []
-  const activeVals = data?.activePublishedValuation?.byCurrency || []
-  const dealVolumes = data?.completedDealVolume?.byCurrency || []
-
   return (
-    <div className="space-y-8 text-slate-900 dark:text-slate-100 transition-colors">
+    <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-slate-200 dark:border-white/10">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-white/10">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#0284C7] dark:text-[#7DD3FC]">
-              Apex Executive System
-            </span>
-          </div>
-          <h1 className="text-2xl md:text-3xl font-display font-medium text-slate-900 dark:text-white tracking-wide">
-            Portfolio & Business Intelligence
+          <h1 className="text-xl md:text-2xl font-bold font-display tracking-tight text-white">
+            Dashboard
           </h1>
-          <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
-            Real-time multi-currency valuations, executive website visits telemetry, pipeline throughput, and deal revenue.
+          <p className="text-xs text-gray-400 mt-1">
+            Overview of website traffic, property portfolio, and deal closures.
           </p>
         </div>
 
-        {/* Date Filter & Refresh Actions */}
-        <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
-          <div className="flex items-center gap-1 p-1 rounded-lg bg-slate-100 dark:bg-[#070E1C] border border-slate-200 dark:border-white/10 text-xs">
+        {/* Date Filter & Actions */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center bg-[#070E1C] border border-white/10 rounded-lg p-1">
             {RANGES.map((r) => (
               <button
                 key={r.key}
                 onClick={() => setRange(r.key)}
-                className={`px-2.5 py-1 rounded text-[11px] font-mono transition-all ${
+                className={`px-2.5 py-1 text-[11px] font-mono rounded transition-colors ${
                   range === r.key
-                    ? 'bg-white dark:bg-[#0B1528] text-[#0284C7] dark:text-[#7DD3FC] shadow-sm font-semibold border border-slate-200 dark:border-[#7DD3FC]/30'
-                    : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-[#7DD3FC]/15 text-[#7DD3FC] font-semibold border border-[#7DD3FC]/30'
+                    : 'text-gray-400 hover:text-white'
                 }`}
               >
                 {r.label}
@@ -222,10 +153,10 @@ export default function DashboardClient() {
           </div>
 
           <button
-            onClick={() => fetchDashboard()}
+            onClick={fetchDashboard}
             disabled={refreshing}
-            className="p-2 rounded-lg bg-slate-100 dark:bg-[#070E1C] border border-slate-200 dark:border-white/10 text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white hover:border-[#7DD3FC]/40 transition-all cursor-pointer disabled:opacity-50"
-            title="Refresh Live Metrics"
+            className="p-2 bg-[#070E1C] border border-white/10 rounded-lg text-gray-400 hover:text-white transition-colors cursor-pointer"
+            title="Refresh"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-[#7DD3FC]' : ''}`} />
           </button>
@@ -233,324 +164,215 @@ export default function DashboardClient() {
       </div>
 
       {error && (
-        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-between text-rose-600 dark:text-rose-400 text-xs font-mono">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
-          </div>
-          <button
-            onClick={() => fetchDashboard()}
-            className="underline hover:text-rose-300 cursor-pointer"
-          >
-            Retry
-          </button>
+        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 shrink-0 text-rose-400" />
+          <span>{error}</span>
         </div>
       )}
 
-      {/* METRIC ROW 1: PRIMARY BUSINESS TILES */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Metric 1: Website Visits */}
-        <div className="bg-white dark:bg-[#070E1C] border border-slate-200 dark:border-white/10 rounded-xl p-5 relative overflow-hidden group hover:border-[#7DD3FC]/30 transition-all shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 dark:text-gray-400 mb-2">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-gray-400">
-              {visits?.metricLabel || 'Website Visits'}
-            </span>
-            <Eye className="w-4 h-4 text-[#0284C7] dark:text-[#7DD3FC]" />
+      {/* METRIC ROW: 5 SIMPLE CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* 1. Total Website Visitors */}
+        <div className="bg-[#070E1C] border border-white/10 rounded-xl p-5 hover:border-[#7DD3FC]/30 transition-all">
+          <div className="flex items-center justify-between text-gray-400 mb-2">
+            <span className="text-[10px] font-mono uppercase tracking-wider">Website Visitors</span>
+            <Users className="w-4 h-4 text-[#7DD3FC]" />
           </div>
-          <div className="text-3xl font-display font-medium text-slate-900 dark:text-white mb-2">
-            {visits?.totalQualifyingVisits ?? 0}
+          <div className="text-2xl font-bold font-mono text-white">
+            {(visits?.totalQualifyingVisits ?? 0).toLocaleString()}
           </div>
-          <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-gray-400 pt-2 border-t border-slate-100 dark:border-white/5">
-            <span className="text-emerald-600 dark:text-emerald-400">
-              {visits?.monthlyVisits ?? 0} (30d active)
-            </span>
-            <span>•</span>
-            <span className="text-indigo-600 dark:text-indigo-300">
-              {visits?.repeatVisitsRatio ?? 0}% repeat
-            </span>
-          </div>
+          <p className="text-[10px] text-gray-500 mt-1">Total recorded site visitors</p>
         </div>
 
-        {/* Metric 2: Total Projects (Published per Phase 1 rule) */}
-        <div className="bg-white dark:bg-[#070E1C] border border-slate-200 dark:border-white/10 rounded-xl p-5 relative overflow-hidden group hover:border-[#7DD3FC]/30 transition-all shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 dark:text-gray-400 mb-2">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-gray-400">
-              Total Published Projects
-            </span>
-            <Building2 className="w-4 h-4 text-emerald-500" />
+        {/* 2. Total Projects */}
+        <div className="bg-[#070E1C] border border-white/10 rounded-xl p-5 hover:border-[#7DD3FC]/30 transition-all">
+          <div className="flex items-center justify-between text-gray-400 mb-2">
+            <span className="text-[10px] font-mono uppercase tracking-wider">Total Projects</span>
+            <Building2 className="w-4 h-4 text-emerald-400" />
           </div>
-          <div className="text-3xl font-display font-medium text-slate-900 dark:text-white mb-2">
+          <div className="text-2xl font-bold font-mono text-white">
             {data?.totalProjects ?? 0}
           </div>
-          <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-gray-400 pt-2 border-t border-slate-100 dark:border-white/5">
-            <span className="text-amber-600 dark:text-amber-400">
-              {inv?.draftCount ?? 0} drafts
-            </span>
-            <span>•</span>
-            <span className="text-slate-500 dark:text-gray-400">
-              {inv?.archivedCount ?? 0} archived
-            </span>
-          </div>
+          <p className="text-[10px] text-gray-500 mt-1">Properties in portfolio</p>
         </div>
 
-        {/* Metric 3: Spaces in the Round */}
-        <div className="bg-white dark:bg-[#070E1C] border border-slate-200 dark:border-white/10 rounded-xl p-5 relative overflow-hidden group hover:border-[#7DD3FC]/30 transition-all shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 dark:text-gray-400 mb-2">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-gray-400">
-              Spaces in the Round
-            </span>
-            <Orbit className="w-4 h-4 text-indigo-500" />
+        {/* 3. Total Portfolio Value */}
+        <div className="bg-[#070E1C] border border-white/10 rounded-xl p-5 hover:border-[#7DD3FC]/30 transition-all">
+          <div className="flex items-center justify-between text-gray-400 mb-2">
+            <span className="text-[10px] font-mono uppercase tracking-wider">Portfolio Value</span>
+            <TrendingUp className="w-4 h-4 text-[#7DD3FC]" />
           </div>
-          <div className="text-3xl font-display font-medium text-slate-900 dark:text-white mb-2">
+          <div className="space-y-0.5">
+            {portfolioVals.length > 0 ? (
+              portfolioVals.slice(0, 2).map((v) => (
+                <div key={v.currency} className="flex items-baseline gap-1.5">
+                  <span className="text-xs font-mono font-semibold text-[#7DD3FC]">{v.currency}</span>
+                  <span className="text-base font-bold font-mono text-white truncate">
+                    {Number(v.totalAmount).toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <div className="text-xl font-bold font-mono text-gray-400">POA / Unpriced</div>
+            )}
+          </div>
+          <p className="text-[10px] text-gray-500 mt-1">Cumulative asking valuation</p>
+        </div>
+
+        {/* 4. Spaces in the Round Count */}
+        <div className="bg-[#070E1C] border border-white/10 rounded-xl p-5 hover:border-[#7DD3FC]/30 transition-all">
+          <div className="flex items-center justify-between text-gray-400 mb-2">
+            <span className="text-[10px] font-mono uppercase tracking-wider">Spaces In Round</span>
+            <Orbit className="w-4 h-4 text-purple-400" />
+          </div>
+          <div className="text-2xl font-bold font-mono text-white">
             {data?.spacesInRoundCount ?? 0}
           </div>
-          <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-gray-400 pt-2 border-t border-slate-100 dark:border-white/5">
-            <span>Curated Showcase</span>
-            <Link
-              href="/admin/space-in-round"
-              className="text-[#0284C7] dark:text-[#7DD3FC] hover:underline flex items-center gap-0.5 text-[10px]"
-            >
-              Curate <ArrowUpRight className="w-3 h-3" />
-            </Link>
-          </div>
+          <p className="text-[10px] text-gray-500 mt-1">Featured 360° showcase projects</p>
         </div>
 
-        {/* Metric 4: Completed Deals & Win Rate */}
-        <div className="bg-white dark:bg-[#070E1C] border border-slate-200 dark:border-white/10 rounded-xl p-5 relative overflow-hidden group hover:border-[#7DD3FC]/30 transition-all shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 dark:text-gray-400 mb-2">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-gray-400">
-              Completed Deals
-            </span>
-            <Award className="w-4 h-4 text-amber-500" />
+        {/* 5. Completed Deals */}
+        <div className="bg-[#070E1C] border border-white/10 rounded-xl p-5 hover:border-[#7DD3FC]/30 transition-all">
+          <div className="flex items-center justify-between text-gray-400 mb-2">
+            <span className="text-[10px] font-mono uppercase tracking-wider">Completed Deals</span>
+            <Award className="w-4 h-4 text-amber-400" />
           </div>
-          <div className="text-3xl font-display font-medium text-slate-900 dark:text-white mb-2 flex items-center gap-3">
-            <span>{deals?.totalCompletedDeals ?? 0}</span>
-            {deals?.winRate?.ratioPercent !== null && (
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 font-mono">
-                {deals?.winRate.ratioPercent}% Win Rate
-              </span>
-            )}
+          <div className="text-2xl font-bold font-mono text-white">
+            {data?.completedDealMetrics?.totalCompletedDeals ?? 0}
           </div>
-          <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-gray-400 pt-2 border-t border-slate-100 dark:border-white/5">
-            <span className="text-emerald-600 dark:text-emerald-400">
-              {deals?.optionAVisibleCount ?? 0} Option A (Visible)
-            </span>
-            <span>•</span>
-            <span className="text-slate-500 dark:text-gray-400">
-              {deals?.optionBUnlistedCount ?? 0} Option B (Sold)
-            </span>
-          </div>
+          <p className="text-[10px] text-gray-500 mt-1">Successfully closed transactions</p>
         </div>
       </div>
 
-      {/* METRIC ROW 2: MULTI-CURRENCY FINANCIAL PANELS */}
+      {/* LOWER SECTION: SALES REVENUE + SIMPLE ACTIVITY GRAPH */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Total Corporate Portfolio Valuation by Currency */}
-        <div className="bg-white dark:bg-[#070E1C] border border-slate-200 dark:border-white/10 rounded-xl p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-[#0284C7] dark:text-[#7DD3FC]" />
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white font-mono">
-                Corporate Portfolio Valuation
+        {/* Deal Closure Sales Revenue by Currency */}
+        <div className="bg-[#070E1C] border border-white/10 rounded-xl p-6">
+          <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+            <div>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-white font-mono">
+                Sales Revenue
               </h2>
+              <p className="text-[11px] text-gray-400 mt-0.5">Grouped by currency</p>
             </div>
-            <span className="text-[10px] font-mono text-slate-400 dark:text-gray-400" title="Includes Published, Draft, Sold, and Recoverably Archived">
-              All States
-            </span>
+            <Award className="w-4 h-4 text-amber-400" />
           </div>
-          <p className="text-[11px] text-slate-500 dark:text-gray-400 mb-4 leading-relaxed">
-            Corporate holding value grouped strictly by currency. Cross-currency summation is strictly prohibited.
-          </p>
 
           <div className="space-y-3">
-            {portfolioVals.length === 0 ? (
-              <p className="text-xs font-mono text-slate-400 dark:text-gray-400">No priced projects recorded.</p>
-            ) : (
-              portfolioVals.map((v) => (
+            {dealVolumes.length > 0 ? (
+              dealVolumes.map((vol) => (
                 <div
-                  key={v.currency}
-                  className="p-3 rounded-lg bg-slate-50 dark:bg-[#040810] border border-slate-200 dark:border-white/5 flex items-center justify-between"
+                  key={vol.currency}
+                  className="p-3 rounded-lg bg-[#040810] border border-white/5 flex items-center justify-between"
                 >
                   <div>
-                    <span className="text-xs font-mono font-bold text-[#0284C7] dark:text-[#7DD3FC]">
-                      {v.currency}
-                    </span>
-                    <span className="text-[11px] font-mono text-slate-500 dark:text-gray-400 ml-2">
-                      ({v.propertyCount} {v.propertyCount === 1 ? 'project' : 'projects'})
-                    </span>
-                  </div>
-                  <div className="font-display font-medium text-sm text-slate-900 dark:text-white">
-                    {Number(v.totalAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Active Published Listings Valuation (Live Customer Showcase) */}
-        <div className="bg-white dark:bg-[#070E1C] border border-slate-200 dark:border-white/10 rounded-xl p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white font-mono">
-                Active Listings Valuation
-              </h2>
-            </div>
-            <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400">
-              Live Showcase
-            </span>
-          </div>
-          <p className="text-[11px] text-slate-500 dark:text-gray-400 mb-4 leading-relaxed">
-            Publicly active listings currently discoverable on the web portal by potential buyers.
-          </p>
-
-          <div className="space-y-3">
-            {activeVals.length === 0 ? (
-              <p className="text-xs font-mono text-slate-400 dark:text-gray-400">No active published listings.</p>
-            ) : (
-              activeVals.map((v) => (
-                <div
-                  key={v.currency}
-                  className="p-3 rounded-lg bg-slate-50 dark:bg-[#040810] border border-slate-200 dark:border-white/5 flex items-center justify-between"
-                >
-                  <div>
-                    <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                      {v.currency}
-                    </span>
-                    <span className="text-[11px] font-mono text-slate-500 dark:text-gray-400 ml-2">
-                      ({v.activeListingCount} {v.activeListingCount === 1 ? 'listing' : 'listings'})
-                    </span>
-                  </div>
-                  <div className="font-display font-medium text-sm text-slate-900 dark:text-white">
-                    {Number(v.totalAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Completed Deal Sales Volume (Original & Effective Adjusted) */}
-        <div className="bg-white dark:bg-[#070E1C] border border-slate-200 dark:border-white/10 rounded-xl p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-amber-500" />
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white font-mono">
-                Deal Closure Sales Volume
-              </h2>
-            </div>
-            <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400">
-              Closed Revenue
-            </span>
-          </div>
-          <p className="text-[11px] text-slate-500 dark:text-gray-400 mb-4 leading-relaxed">
-            Closed transaction volume incorporating audit-approved adjustments and currency reclassification.
-          </p>
-
-          <div className="space-y-3">
-            {dealVolumes.length === 0 ? (
-              <p className="text-xs font-mono text-slate-400 dark:text-gray-400">No completed deals recorded.</p>
-            ) : (
-              dealVolumes.map((v) => (
-                <div
-                  key={v.currency}
-                  className="p-3 rounded-lg bg-slate-50 dark:bg-[#040810] border border-slate-200 dark:border-white/5 flex items-center justify-between"
-                >
-                  <div>
-                    <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400">
-                      {v.currency}
-                    </span>
-                    <span className="text-[11px] font-mono text-slate-500 dark:text-gray-400 ml-2">
-                      ({v.closedDealsCount} {v.closedDealsCount === 1 ? 'deal' : 'deals'})
-                    </span>
-                  </div>
-                  <div className="font-display font-medium text-sm text-slate-900 dark:text-white">
-                    {Number(v.effectiveSalesVolume).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* METRIC ROW 3: PIPELINE STAGES & DESTINATION SPREAD */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Deal Pipeline Breakdown */}
-        <div className="bg-white dark:bg-[#070E1C] border border-slate-200 dark:border-white/10 rounded-xl p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white font-mono">
-              Deal Pipeline Throughput
-            </h2>
-            <span className="text-[10px] font-mono text-slate-500 dark:text-gray-400">
-              {pipeline?.totalPending ?? 0} in flight
-            </span>
-          </div>
-
-          <div className="space-y-2.5">
-            {[
-              { label: 'Inquiry', count: pipeline?.inquiry ?? 0, color: 'bg-sky-400' },
-              { label: 'Contacted', count: pipeline?.contacted ?? 0, color: 'bg-blue-400' },
-              { label: 'Offer Made', count: pipeline?.offerMade ?? 0, color: 'bg-indigo-400' },
-              { label: 'Under Contract', count: pipeline?.underContract ?? 0, color: 'bg-amber-400' },
-              { label: 'Completed', count: deals?.totalCompletedDeals ?? 0, color: 'bg-emerald-400' },
-              { label: 'Lost', count: pipeline?.lost ?? 0, color: 'bg-rose-400' },
-            ].map((st) => (
-              <div key={st.label} className="flex items-center justify-between text-xs py-1 border-b border-slate-100 dark:border-white/5">
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${st.color}`} />
-                  <span className="text-slate-600 dark:text-gray-300 font-medium">{st.label}</span>
-                </div>
-                <span className="font-mono text-slate-900 dark:text-white font-bold">{st.count}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Geographic Destination Breakdown */}
-        <div className="lg:col-span-2 bg-white dark:bg-[#070E1C] border border-slate-200 dark:border-white/10 rounded-xl p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Globe2 className="w-4 h-4 text-[#0284C7] dark:text-[#7DD3FC]" />
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white font-mono">
-                Destinations & Regional Inventory
-              </h2>
-            </div>
-            <Link
-              href="/admin/countries"
-              className="text-xs text-[#0284C7] dark:text-[#7DD3FC] hover:underline flex items-center gap-1 font-mono"
-            >
-              All Countries <ArrowUpRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-          <div className="space-y-3.5">
-            {countries.length === 0 ? (
-              <p className="text-xs font-mono text-slate-400 dark:text-gray-400">No destination statistics found.</p>
-            ) : (
-              countries.slice(0, 5).map((c) => {
-                const total = inv?.totalPropertiesCount || 1
-                const pct = Math.round((c.propertiesCount / total) * 100)
-                return (
-                  <div key={c.country} className="space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-medium text-slate-800 dark:text-gray-200">{c.country}</span>
-                      <span className="font-mono text-slate-500 dark:text-gray-400 text-[11px]">
-                        {c.propertiesCount} projects ({c.activePublishedCount} active) • {c.enquiriesCount} inquiries
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-mono font-bold text-amber-400">{vol.currency}</span>
+                      <span className="text-[10px] font-mono text-gray-500">
+                        ({vol.closedDealsCount} {vol.closedDealsCount === 1 ? 'deal' : 'deals'})
                       </span>
                     </div>
-                    <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-[#040810] border border-slate-200 dark:border-white/5 overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-[#0284C7] to-[#7DD3FC] rounded-full transition-all duration-500"
-                        style={{ width: `${Math.max(pct, c.propertiesCount > 0 ? 8 : 0)}%` }}
-                      />
-                    </div>
                   </div>
-                )
-              })
+                  <div className="text-sm font-bold font-mono text-white">
+                    {Number(vol.effectiveSalesVolume).toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="py-8 text-center text-xs text-gray-500">
+                No closed deals recorded yet.
+              </div>
             )}
           </div>
+        </div>
+
+        {/* Activity Trends Graph (Website Visitors, Project Additions, Deal Closures) */}
+        <div className="lg:col-span-2 bg-[#070E1C] border border-white/10 rounded-xl p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-white/10 mb-4">
+            <div>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-white font-mono">
+                Activity Trends
+              </h2>
+              <p className="text-[11px] text-gray-400 mt-0.5">
+                Website visitors, project additions, and deal closures
+              </p>
+            </div>
+
+            {/* Legend */}
+            <div className="flex items-center gap-4 text-[10px] font-mono">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#7DD3FC]" />
+                <span className="text-gray-300">Visitors</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                <span className="text-gray-300">Projects Added</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                <span className="text-gray-300">Deals Closed</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Simple Clean Bar/Line Graph */}
+          {trend.length > 0 ? (
+            <div className="space-y-2 pt-2">
+              <div className="h-48 flex items-end gap-1.5 sm:gap-2 px-1">
+                {trend.map((pt, i) => {
+                  const visitHeight = Math.max(4, Math.round((pt.visits / graphMax) * 100))
+                  const addHeight = Math.max(0, Math.round((pt.projectAdditions / graphMax) * 100))
+                  const dealHeight = Math.max(0, Math.round((pt.dealClosures / graphMax) * 100))
+                  return (
+                    <div
+                      key={pt.date || i}
+                      className="flex-1 flex flex-col items-center justify-end h-full group relative"
+                    >
+                      {/* Tooltip on hover */}
+                      <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col bg-[#040810] border border-white/20 rounded-md p-2 text-[10px] font-mono text-white z-20 whitespace-nowrap shadow-xl">
+                        <span className="font-semibold text-gray-300">{pt.date}</span>
+                        <span className="text-[#7DD3FC]">Visitors: {pt.visits}</span>
+                        <span className="text-emerald-400">Projects Added: {pt.projectAdditions}</span>
+                        <span className="text-amber-400">Deals Closed: {pt.dealClosures}</span>
+                      </div>
+
+                      {/* Bars */}
+                      <div className="w-full flex items-end justify-center gap-0.5 h-full">
+                        <div
+                          style={{ height: `${visitHeight}%` }}
+                          className="w-1.5 sm:w-2 bg-[#7DD3FC]/80 rounded-t transition-all group-hover:bg-[#7DD3FC]"
+                        />
+                        {pt.projectAdditions > 0 && (
+                          <div
+                            style={{ height: `${Math.max(12, addHeight)}%` }}
+                            className="w-1.5 sm:w-2 bg-emerald-400 rounded-t transition-all"
+                          />
+                        )}
+                        {pt.dealClosures > 0 && (
+                          <div
+                            style={{ height: `${Math.max(12, dealHeight)}%` }}
+                            className="w-1.5 sm:w-2 bg-amber-400 rounded-t transition-all"
+                          />
+                        )}
+                      </div>
+
+                      {/* Date label at bottom */}
+                      <span className="text-[9px] font-mono text-gray-500 mt-1 truncate max-w-full">
+                        {pt.date.slice(5)}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="h-48 flex items-center justify-center text-xs text-gray-500 font-mono">
+              No trend activity recorded for this period.
+            </div>
+          )}
         </div>
       </div>
     </div>

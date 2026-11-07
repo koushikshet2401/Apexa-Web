@@ -42,6 +42,7 @@ export async function generateMetadata({
   const resolvedSlug = SLUG_ALIASES[slug] || slug
 
   let dbProperty: any = null
+  let shouldNotFound = false
 
   try {
     const record = await db.property.findUnique({
@@ -60,12 +61,17 @@ export async function generateMetadata({
     })
     if (record) {
       if (!record.isPublished || !record.isPubliclyVisible || record.isArchived) {
-        notFound()
+        shouldNotFound = true
+      } else {
+        dbProperty = record
       }
-      dbProperty = record
     }
   } catch {
     // Database connection offline or failed, seamlessly fall back to static data
+  }
+
+  if (shouldNotFound) {
+    notFound()
   }
 
   if (dbProperty) {
@@ -111,6 +117,7 @@ export default async function CollectionPropertyPage({
   const resolvedSlug = SLUG_ALIASES[slug] || slug
 
   let dbProperty: any = null
+  let shouldNotFound = false
 
   try {
     const record = await db.property.findUnique({
@@ -129,12 +136,17 @@ export default async function CollectionPropertyPage({
     if (record) {
       // Canonical public visibility rule: only active published projects or visible acquired
       if (!record.isPublished || !record.isPubliclyVisible || record.isArchived) {
-        notFound()
+        shouldNotFound = true
+      } else {
+        dbProperty = record
       }
-      dbProperty = record
     }
   } catch {
     // Database connection offline or failed, seamlessly fall back to static data
+  }
+
+  if (shouldNotFound) {
+    notFound()
   }
 
   let property: any = null

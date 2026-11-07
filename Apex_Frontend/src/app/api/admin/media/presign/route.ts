@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { requirePermission, PERMISSIONS } from '@/lib/rbac'
-import { r2, isR2Configured, R2_BUCKET_NAME, R2_PUBLIC_URL } from '@/lib/r2'
+import { r2, isR2Configured, getR2BucketName, getR2PublicUrl } from '@/lib/r2'
 
 const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.mp4']
 const ALLOWED_FOLDERS = ['properties', 'countries', 'services', 'homepage', 'general']
@@ -60,16 +60,18 @@ export async function POST(request: NextRequest) {
 
     // Check if Cloudflare R2 is configured
     if (isR2Configured()) {
+      const bucketName = getR2BucketName()
+      const publicBase = getR2PublicUrl()
       const command = new PutObjectCommand({
-        Bucket: R2_BUCKET_NAME,
+        Bucket: bucketName,
         Key: uniqueKey,
         ContentType: contentType,
       })
 
       const uploadUrl = await getSignedUrl(r2, command, { expiresIn: 300 })
-      const publicUrl = R2_PUBLIC_URL
-        ? `${R2_PUBLIC_URL}/${uniqueKey}`
-        : `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${R2_BUCKET_NAME}/${uniqueKey}`
+      const publicUrl = publicBase
+        ? `${publicBase}/${uniqueKey}`
+        : `https://${(process.env.R2_ACCOUNT_ID || '').trim()}.r2.cloudflarestorage.com/${bucketName}/${uniqueKey}`
 
       return NextResponse.json({
         uploadUrl,

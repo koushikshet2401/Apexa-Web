@@ -120,10 +120,12 @@ export async function POST(request: NextRequest) {
       isSpaceInRound,
       spaceOrder,
       serviceIds,
+      images,
       // Pricing fields
       isPOA,
       askingPriceNumeric,
       askingCurrency,
+      isPublished,
     } = body
 
     if (!name || typeof name !== 'string' || !name.trim()) {
@@ -200,10 +202,10 @@ export async function POST(request: NextRequest) {
         spaceRoundImage: spaceRoundImage || null,
         highlights: Array.isArray(highlights) ? highlights : [],
         layoutVariant: typeof layoutVariant === 'number' ? layoutVariant : parseInt(layoutVariant || '1', 10),
-        // Enforce canonical lifecycle initialization
-        isDraft: true,
-        isPublished: false,
-        isPubliclyVisible: false,
+        // Canonical lifecycle initialization (supports publishing directly on creation)
+        isDraft: !Boolean(isPublished),
+        isPublished: Boolean(isPublished),
+        isPubliclyVisible: Boolean(isPublished),
         isArchived: false,
         hasCompletedDeal: false,
         isFeaturedLaunch: Boolean(isFeaturedLaunch),
@@ -211,6 +213,16 @@ export async function POST(request: NextRequest) {
         launchDate: launchDate ? new Date(launchDate) : null,
         isSpaceInRound: Boolean(isSpaceInRound),
         spaceOrder: spaceOrder !== null && spaceOrder !== undefined && spaceOrder !== '' ? parseInt(spaceOrder, 10) : null,
+        images: Array.isArray(images) && images.length > 0
+          ? {
+              create: images.map((img: any, idx: number) => ({
+                url: typeof img === 'string' ? img : img.url,
+                alt: typeof img === 'string' ? null : (img.alt || img.description || null),
+                description: typeof img === 'string' ? null : (img.description || img.alt || null),
+                order: typeof img?.order === 'number' ? img.order : idx,
+              })),
+            }
+          : undefined,
         services: Array.isArray(serviceIds) && serviceIds.length > 0
           ? {
               create: serviceIds.map((sid: string) => ({
@@ -221,6 +233,7 @@ export async function POST(request: NextRequest) {
       },
       include: {
         country: true,
+        images: true,
         services: { include: { service: true } },
       },
     })

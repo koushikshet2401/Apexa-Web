@@ -1,0 +1,202 @@
+[
+  {
+    "test": "Admin Authentication",
+    "status": "PASSED",
+    "details": "Authenticated successfully"
+  },
+  {
+    "test": "Sidebar Item [Dashboard]",
+    "status": "PASSED",
+    "details": "Found in sidebar"
+  },
+  {
+    "test": "Sidebar Item [Add Project]",
+    "status": "PASSED",
+    "details": "Found in sidebar"
+  },
+  {
+    "test": "Sidebar Item [Current Project]",
+    "status": "PASSED",
+    "details": "Found in sidebar"
+  },
+  {
+    "test": "Sidebar Item [Soldout Project]",
+    "status": "PASSED",
+    "details": "Found in sidebar"
+  },
+  {
+    "test": "Sidebar Item [Deleted Project]",
+    "status": "PASSED",
+    "details": "Found in sidebar"
+  },
+  {
+    "test": "Sidebar Item [Messages]",
+    "status": "PASSED",
+    "details": "Found in sidebar"
+  },
+  {
+    "test": "Sidebar Item [Team Management]",
+    "status": "PASSED",
+    "details": "Found in sidebar"
+  },
+  {
+    "test": "Sidebar Item [Account Management]",
+    "status": "PASSED",
+    "details": "Found in sidebar"
+  },
+  {
+    "test": "Sidebar Item [Settings]",
+    "status": "PASSED",
+    "details": "Found in sidebar"
+  },
+  {
+    "test": "Removed Forbidden Item [CURATION & CONTENT]",
+    "status": "PASSED",
+    "details": "Correctly omitted"
+  },
+  {
+    "test": "Removed Forbidden Item [Latest Launches]",
+    "status": "PASSED",
+    "details": "Correctly omitted"
+  },
+  {
+    "test": "Removed Forbidden Item [Spaces in the Round]",
+    "status": "PASSED",
+    "details": "Correctly omitted"
+  },
+  {
+    "test": "Removed Forbidden Item [Homepage / CMS]",
+    "status": "PASSED",
+    "details": "Correctly omitted"
+  },
+  {
+    "test": "Removed Forbidden Item [Media Management]",
+    "status": "PASSED",
+    "details": "Correctly omitted"
+  },
+  {
+    "test": "Dashboard No Unauthorized Error",
+    "status": "PASSED",
+    "details": "Zero unauthorized errors"
+  },
+  {
+    "test": "Dashboard Metric [website visitors]",
+    "status": "PASSED",
+    "details": "Card rendered"
+  },
+  {
+    "test": "Dashboard Metric [total projects]",
+    "status": "PASSED",
+    "details": "Card rendered"
+  },
+  {
+    "test": "Dashboard Metric [portfolio value]",
+    "status": "PASSED",
+    "details": "Card rendered"
+  },
+  {
+    "test": "Dashboard Metric [spaces in round]",
+    "status": "PASSED",
+    "details": "Card rendered"
+  },
+  {
+    "test": "Dashboard Metric [completed deals]",
+    "status": "PASSED",
+    "details": "Card rendered"
+  },
+  {
+    "test": "Dashboard Metric [sales revenue]",
+    "status": "PASSED",
+    "details": "Card rendered"
+  },
+  {
+    "test": "Dashboard Metric [activity trends]",
+    "status": "PASSED",
+    "details": "Card rendered"
+  },
+  {
+    "test": "Add Project Field [project identity & destination]",
+    "status": "PASSED",
+    "details": "Present on screen"
+  },
+  {
+    "test": "Add Project Field [project name]",
+    "status": "PASSED",
+    "details": "Present on screen"
+  },
+  {
+    "test": "Add Project Field [country destination]",
+    "status": "PASSED",
+    "details": "Present on screen"
+  },
+  {
+    "test": "Add Project Field [service category]",
+    "status": "PASSED",
+    "details": "Present on screen"
+  },
+  {
+    "test": "Add Project Field [pricing & map location]",
+    "status": "PASSED",
+    "details": "Present on screen"
+  },
+  {
+    "test": "Add Project Field [project media assets]",
+    "status": "PASSED",
+    "details": "Present on screen"
+  },
+  {
+    "test": "Add Project Field [project thumbnail image]",
+    "status": "PASSED",
+    "details": "Present on screen"
+  },
+  {
+    "test": "Add Project Field [project video]",
+    "status": "PASSED",
+    "details": "Present on screen"
+  },
+  {
+    "test": "Add Project Field [multiple project images]",
+    "status": "PASSED",
+    "details": "Present on screen"
+  },
+  {
+    "test": "Add Project Field [new launch showcase]",
+    "status": "PASSED",
+    "details": "Present on screen"
+  },
+  {
+    "test": "Add Project Field [spaces in the round]",
+    "status": "PASSED",
+    "details": "Present on screen"
+  },
+  {
+    "test": "Add Project Field [publish project]",
+    "status": "PASSED",
+    "details": "Present on screen"
+  },
+  {
+    "test": "Current Project Feature [Current Projects]",
+    "status": "PASSED",
+    "details": "Action / Element available"
+  },
+  {
+    "test": "Current Project Feature [View Project]",
+    "status": "PASSED",
+    "details": "Action / Element available"
+  },
+  {
+    "test": "Current Project Feature [Edit Project]",
+    "status": "PASSED",
+    "details": "Action / Element available"
+  },
+  {
+    "test": "Current Project Feature [Close Deal]",
+    "status": "PASSED",
+    "details": "Action / Element available"
+  },
+  {
+    "test": "Current Project Feature [Delete Project]",
+    "status": "PASSED",
+    "details": "Action / Element available"
+  }
+]

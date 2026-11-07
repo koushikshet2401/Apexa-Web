@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import AdminShell from '@/components/admin/AdminShell'
 
 export const metadata: Metadata = {
@@ -15,5 +16,9 @@ export default function AdminRootLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <AdminShell>{children}</AdminShell>
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#040810]" />}>
+      <AdminShell>{children}</AdminShell>
+    </Suspense>
+  )
 }
