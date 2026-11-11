@@ -163,6 +163,7 @@ model Property {
   locationLine String?
   latitude     Float?
   longitude    Float?
+  mapUrl       String? // Exact Google Maps Location URL (Explore via Map)
 
   // Media references
   mainVideoUrl    String?

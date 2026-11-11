@@ -23,6 +23,8 @@ import {
   Globe2,
   X,
   User,
+  ChevronRight,
+  Sparkles,
 } from 'lucide-react'
 import { SUPPORTED_CURRENCY_CODES } from '@/config/currencies'
 
@@ -80,6 +82,7 @@ interface CountryOption {
   name: string
   displayName: string
   slug: string
+  region?: string
 }
 
 export default function PropertiesListClient({
@@ -114,6 +117,7 @@ export default function PropertiesListClient({
   // Filters
   const [search, setSearch] = useState<string>('')
   const [selectedCountryId, setSelectedCountryId] = useState<string>('all')
+  const [showAllCurrent, setShowAllCurrent] = useState<boolean>(false)
 
   // Action states
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null)
@@ -272,14 +276,14 @@ export default function PropertiesListClient({
               ? {
                   ...item,
                   isArchived: false,
-                  isDraft: true,
-                  isPublished: false,
-                  isPubliclyVisible: false,
+                  isDraft: false,
+                  isPublished: true,
+                  isPubliclyVisible: true,
                 }
               : item
           )
         )
-        showToast('success', `Project restored to Draft state.`)
+        showToast('success', `Project "${prop.name}" restored and published to active portfolio.`)
       } else {
         showToast('error', data.error || data.message || 'Restore failed')
       }
@@ -448,7 +452,10 @@ export default function PropertiesListClient({
         <div className="flex items-center gap-3">
           <select
             value={selectedCountryId}
-            onChange={(e) => setSelectedCountryId(e.target.value)}
+            onChange={(e) => {
+              setSelectedCountryId(e.target.value)
+              if (e.target.value === 'all') setShowAllCurrent(true)
+            }}
             className="bg-[#070E1C] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
           >
             <option value="all">All Countries</option>
@@ -472,6 +479,101 @@ export default function PropertiesListClient({
         </div>
       </div>
 
+      {/* 5 DESTINATION COUNTRY CARDS (Current Projects tab) */}
+      {activeTab === 'current' && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xs font-mono uppercase tracking-wider text-gray-400">
+                Portfolio Destinations ({countries.length})
+              </h2>
+            </div>
+            {selectedCountryId !== 'all' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCountryId('all')
+                  setShowAllCurrent(false)
+                }}
+                className="text-xs text-[#7DD3FC] hover:underline flex items-center gap-1 font-mono transition-colors cursor-pointer"
+              >
+                ← View All Destinations
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            {countries.map((c) => {
+              const countryCount = currentProjects.filter((p) => p.country?.id === c.id).length
+              const isSelected = selectedCountryId === c.id
+
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCountryId(isSelected ? 'all' : c.id)
+                    setShowAllCurrent(false)
+                  }}
+                  className={`text-left p-4 rounded-xl border transition-all duration-200 relative group flex flex-col justify-between cursor-pointer ${
+                    isSelected
+                      ? 'bg-[#7DD3FC]/10 border-[#7DD3FC] shadow-[0_0_20px_rgba(125,211,252,0.18)] ring-1 ring-[#7DD3FC]/50'
+                      : 'bg-[#070E1C] border-white/10 hover:border-white/25 hover:bg-[#040810]/80'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-3 w-full">
+                    <div
+                      className={`p-2 rounded-lg transition-colors ${
+                        isSelected
+                          ? 'bg-[#7DD3FC]/20 text-[#7DD3FC]'
+                          : 'bg-white/5 text-gray-400 group-hover:text-white group-hover:bg-white/10'
+                      }`}
+                    >
+                      <Globe2 className="w-4 h-4" />
+                    </div>
+                    <span
+                      className={`text-[10px] font-mono px-2 py-0.5 rounded-full transition-colors ${
+                        isSelected
+                          ? 'bg-[#7DD3FC]/20 text-[#7DD3FC] border border-[#7DD3FC]/30 font-semibold'
+                          : 'bg-white/5 text-gray-400 border border-white/5'
+                      }`}
+                    >
+                      {countryCount} {countryCount === 1 ? 'Project' : 'Projects'}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h3
+                      className={`font-semibold text-sm font-display tracking-wide ${
+                        isSelected ? 'text-[#7DD3FC]' : 'text-white'
+                      }`}
+                    >
+                      {c.displayName || c.name}
+                    </h3>
+                    <p className="text-[11px] text-gray-400 font-mono mt-0.5 truncate">
+                      {c.region || 'Portfolio'}
+                    </p>
+                  </div>
+
+                  <div className="mt-3 pt-2.5 border-t border-white/5 flex items-center justify-between text-[11px] font-mono">
+                    <span className={isSelected ? 'text-[#7DD3FC] font-semibold' : 'text-gray-500 group-hover:text-gray-300'}>
+                      {isSelected ? 'Active Filter' : 'Click to View'}
+                    </span>
+                    <ChevronRight
+                      className={`w-3.5 h-3.5 transition-transform ${
+                        isSelected
+                          ? 'text-[#7DD3FC] translate-x-0.5'
+                          : 'text-gray-500 group-hover:text-gray-300 group-hover:translate-x-0.5'
+                      }`}
+                    />
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* MAIN CONTENT AREA */}
       {displayedProperties.length === 0 ? (
         <div className="py-20 text-center bg-[#070E1C] border border-white/10 rounded-xl space-y-3">
@@ -483,6 +585,37 @@ export default function PropertiesListClient({
         </div>
       ) : activeTab === 'current' ? (
         /* CURRENT PROJECTS GROUPED BY COUNTRY */
+        selectedCountryId === 'all' && !search && !showAllCurrent ? (
+          <div className="py-14 px-6 text-center bg-[#070E1C] border border-white/10 rounded-xl space-y-3">
+            <Globe2 className="w-10 h-10 text-[#7DD3FC]/60 mx-auto" />
+            <h3 className="text-sm font-semibold text-white">Select a Destination Above</h3>
+            <p className="text-xs text-gray-400 max-w-md mx-auto">
+              Click on any of the 5 destination cards above (Dubai / UAE, Thailand, Malaysia, Australia, Georgia) to view and manage its active portfolio properties.
+            </p>
+            <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+              {countries.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCountryId(c.id)
+                    setShowAllCurrent(false)
+                  }}
+                  className="px-3.5 py-1.5 rounded-lg bg-[#7DD3FC]/10 hover:bg-[#7DD3FC]/20 text-[#7DD3FC] text-xs font-mono border border-[#7DD3FC]/30 transition-colors cursor-pointer"
+                >
+                  {c.displayName || c.name}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setShowAllCurrent(true)}
+                className="px-3.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-mono border border-white/10 transition-colors cursor-pointer"
+              >
+                View All ({currentProjects.length})
+              </button>
+            </div>
+          </div>
+        ) : (
         <div className="space-y-6">
           {countries.map((c) => {
             const countryProjects = displayedProperties.filter((p) => p.country?.id === c.id)
@@ -642,6 +775,7 @@ export default function PropertiesListClient({
             )
           })}
         </div>
+        )
       ) : activeTab === 'sold' ? (
         /* SOLDOUT PROJECTS TABLE */
         <div className="bg-[#070E1C] border border-white/10 rounded-xl overflow-hidden shadow-sm">

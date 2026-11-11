@@ -58,40 +58,21 @@ export async function POST(request: NextRequest) {
       .replace(/(^-|-$)+/g, '')
     const uniqueKey = `${targetFolder}/${Date.now()}-${sanitizedBase || 'asset'}${ext}`
 
-    // Check if Cloudflare R2 is configured
-    if (isR2Configured()) {
-      const bucketName = getR2BucketName()
-      const publicBase = getR2PublicUrl()
-      const command = new PutObjectCommand({
-        Bucket: bucketName,
-        Key: uniqueKey,
-        ContentType: contentType,
-      })
+    // Always route through the same-origin server upload endpoint to avoid
+    // browser CORS preflight restrictions on Cloudflare R2 direct endpoints.
+    // The server handler (/api/admin/media/upload-local) writes to disk and
+    // immediately uploads server-to-server to Cloudflare R2 without CORS limits.
+    const publicBase = getR2PublicUrl()
+    const expectedPublicUrl = isR2Configured() && publicBase
+      ? `${publicBase}/${uniqueKey}`
+      : `/uploads/${uniqueKey}`
 
-      const uploadUrl = await getSignedUrl(r2, command, { expiresIn: 300 })
-      const publicUrl = publicBase
-        ? `${publicBase}/${uniqueKey}`
-        : `https://${(process.env.R2_ACCOUNT_ID || '').trim()}.r2.cloudflarestorage.com/${bucketName}/${uniqueKey}`
-
-      return NextResponse.json({
-        uploadUrl,
-        publicUrl,
-        key: uniqueKey,
-        maxSizeBytes,
-        mode: 'r2',
-      })
-    }
-
-    // Fallback when Cloudflare R2 credentials are not yet configured
-    // Directs client to local server upload endpoint
-    const fallbackPublicUrl = `/uploads/${uniqueKey}`
     return NextResponse.json({
       uploadUrl: `/api/admin/media/upload-local?key=${encodeURIComponent(uniqueKey)}`,
-      publicUrl: fallbackPublicUrl,
+      publicUrl: expectedPublicUrl,
       key: uniqueKey,
       maxSizeBytes,
-      mode: 'local',
-      note: 'R2 credentials not provided; using local storage fallback.',
+      mode: isR2Configured() ? 'server-r2' : 'local',
     })
   } catch (error) {
     console.error('Error generating presigned upload:', error)

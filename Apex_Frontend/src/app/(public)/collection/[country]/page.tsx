@@ -113,8 +113,8 @@ export default async function CollectionCountryPage({
           title: p.name,
           type: p.type || 'Residence',
           city: p.cityName || country.name,
-          beds: p.beds || 'Bespoke',
-          baths: p.baths || undefined,
+          beds: p.beds ? (p.beds.toLowerCase().includes('bed') ? p.beds : `${p.beds} Bedrooms`) : 'Bespoke',
+          baths: p.baths ? (p.baths.toLowerCase().includes('bath') ? p.baths : `${p.baths} Baths`) : undefined,
           area: p.area || undefined,
           price: p.price || undefined,
           description:
@@ -124,7 +124,7 @@ export default async function CollectionCountryPage({
             'Ultra-prime architectural residence curated by Apex Pacific Holdings.',
           shortDescription: p.shortDescription || p.tagline || undefined,
           highlights: p.highlights || [],
-          image: p.images[0]?.url || p.mainImage || country.cardImage || '/images/DuabiCoolection.png',
+          image: p.mainImage || p.images[0]?.url || country.cardImage || '/images/DuabiCoolection.png',
           slug: p.slug,
         }))
       : (legacyDest?.projects || []).map((lp) => {

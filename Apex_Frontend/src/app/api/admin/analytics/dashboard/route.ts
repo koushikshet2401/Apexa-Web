@@ -502,6 +502,49 @@ export async function GET(request: NextRequest) {
       dailyTrend,
     }
 
+    // -------------------------------------------------------------------------
+    // SECTION: Recent Enquiries — latest 5 enquiries
+    // -------------------------------------------------------------------------
+    const recentEnquiries = await db.enquiry.findMany({
+      take: 5,
+      orderBy: { submittedAt: 'desc' },
+      select: {
+        id: true,
+        enquiryRef: true,
+        name: true,
+        email: true,
+        phone: true,
+        subject: true,
+        status: true,
+        isRead: true,
+        submittedAt: true,
+        propertyId: true,
+        property: {
+          select: { id: true, name: true },
+        },
+      },
+    })
+
+    // -------------------------------------------------------------------------
+    // SECTION: Recent Activity — latest 10 admin activity log entries
+    // -------------------------------------------------------------------------
+    const recentActivity = await db.adminActivityLog.findMany({
+      take: 10,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        action: true,
+        entityType: true,
+        entityId: true,
+        summary: true,
+        adminEmail: true,
+        createdAt: true,
+        admin: {
+          select: { id: true, name: true },
+        },
+      },
+    })
+
     return NextResponse.json({
       dateRange: {
         rangeKey: parsedRange.rangeKey,
@@ -518,6 +561,8 @@ export async function GET(request: NextRequest) {
       completedDealVolume,
       completedDealMetrics,
       assetInventoryCounts,
+      recentEnquiries,
+      recentActivity,
     })
   } catch (error) {
     console.error('Error computing dashboard analytics:', error)

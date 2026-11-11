@@ -27,8 +27,8 @@ export async function POST(
 
     if (enquiry.isClosed) {
       return NextResponse.json(
-        { error: 'Enquiry is already closed.' },
-        { status: 400 }
+        { ok: true, message: 'Enquiry is already closed.', enquiry },
+        { status: 200 }
       )
     }
 

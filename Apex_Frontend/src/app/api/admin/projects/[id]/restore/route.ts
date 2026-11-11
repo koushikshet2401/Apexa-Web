@@ -29,9 +29,9 @@ export async function POST(
       where: { id },
       data: {
         isArchived: false,
-        isDraft: true,
-        isPublished: false,
-        isPubliclyVisible: false,
+        isDraft: false,
+        isPublished: true,
+        isPubliclyVisible: true,
         restoredAt: new Date(),
         restoredById: auth.id,
       },
@@ -43,19 +43,19 @@ export async function POST(
       action: 'PROJECT_RESTORED',
       entityType: 'Property',
       entityId: restored.id,
-      summary: `Project "${restored.name}" restored from Deleted Projects to active draft list`,
+      summary: `Project "${restored.name}" restored from Deleted Projects to active published portfolio`,
       metadata: {
         projectId: restored.id,
         restoredAt: restored.restoredAt?.toISOString(),
-        isDraft: true,
-        isPublished: false,
+        isDraft: false,
+        isPublished: true,
         isArchived: false,
       },
     })
 
     return NextResponse.json({
       ok: true,
-      message: 'Project restored successfully and returned to Draft state.',
+      message: 'Project restored and published successfully.',
       project: restored,
     })
   } catch (error) {

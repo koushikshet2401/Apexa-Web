@@ -71,7 +71,7 @@ export default function MediaField({
       {showUploadInline && (
         <div className="p-3.5 rounded-lg bg-[#040810] border border-[#7DD3FC]/30 space-y-2 animate-in fade-in">
           <div className="flex items-center justify-between text-[11px] font-mono text-gray-400">
-            <span>Direct Upload to Cloud Storage</span>
+            <span>Upload from Explorer / Device</span>
             <button
               type="button"
               onClick={() => setShowUploadInline(false)}
@@ -83,6 +83,7 @@ export default function MediaField({
           <MediaUploader
             accept={accept}
             folder={folder}
+            label={isVideo ? 'Upload Video File (MP4)' : 'Choose Image from Explorer'}
             onUploadComplete={(url) => {
               onChange(url)
               setShowUploadInline(false)

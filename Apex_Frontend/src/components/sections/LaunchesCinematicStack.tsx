@@ -212,8 +212,24 @@ export function LaunchesCinematicStack({
 }: LaunchesCinematicStackProps = {}) {
   const LAUNCHES = launches && launches.length >= 3 ? launches : DEFAULT_LAUNCHES
   const COLLECTION_COUNTRIES = countries && countries.length > 0 ? countries : DEFAULT_COLLECTION_COUNTRIES
-  const PERSPECTIVE_GALLERY_PROPERTIES =
-    spaceProperties && spaceProperties.length > 0 ? spaceProperties : DEFAULT_SPACE_PROPERTIES
+  const PERSPECTIVE_GALLERY_PROPERTIES = useMemo(() => {
+    const list: PropertyItem[] = spaceProperties && spaceProperties.length > 0 ? [...spaceProperties] : []
+    if (list.length >= 6) return list
+
+    // Pad with DEFAULT_SPACE_PROPERTIES so 3D cylinder always has complete circular geometry (minimum 6 faces)
+    const existingSlugs = new Set(list.map((p) => p.slug || p.id))
+    const existingNames = new Set(list.map((p) => p.name?.trim().toLowerCase()))
+    for (const def of DEFAULT_SPACE_PROPERTIES) {
+      const nameLower = def.name?.trim().toLowerCase()
+      if (!existingSlugs.has(def.slug) && !existingSlugs.has(def.id) && !existingNames.has(nameLower)) {
+        list.push(def)
+        existingSlugs.add(def.slug || def.id)
+        if (nameLower) existingNames.add(nameLower)
+      }
+      if (list.length >= 6) break
+    }
+    return list.length > 0 ? list : DEFAULT_SPACE_PROPERTIES
+  }, [spaceProperties])
   const router = useRouter()
   const { isLight } = useTheme()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -257,7 +273,7 @@ export function LaunchesCinematicStack({
       subtitle: `${prop.city}, ${prop.country}`,
       href: prop.href,
     }))
-  }, [])
+  }, [PERSPECTIVE_GALLERY_PROPERTIES])
 
   // One team media refs
   const oneTeamVideoRef = useRef<HTMLVideoElement>(null)

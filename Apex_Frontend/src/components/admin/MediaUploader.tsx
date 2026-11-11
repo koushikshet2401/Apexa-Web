@@ -116,9 +116,7 @@ export default function MediaUploader({
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest()
         xhr.open('PUT', uploadUrl)
-        if (!uploadUrl.includes('/api/admin/media/upload-local')) {
-          xhr.setRequestHeader('Content-Type', file.type || (isVideo ? 'video/mp4' : 'image/jpeg'))
-        }
+        xhr.setRequestHeader('Content-Type', file.type || (isVideo ? 'video/mp4' : 'image/jpeg'))
 
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
@@ -129,19 +127,30 @@ export default function MediaUploader({
 
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) {
+            let finalUrl = publicUrl
+            try {
+              const res = JSON.parse(xhr.responseText)
+              if (res && res.publicUrl) {
+                finalUrl = res.publicUrl
+              }
+            } catch {}
+            setProgress(100)
+            setSuccessUrl(finalUrl)
+            onUploadComplete(finalUrl, key)
             resolve()
           } else {
-            reject(new Error(`Upload failed with HTTP status ${xhr.status}`))
+            let errMsg = `Upload failed with HTTP status ${xhr.status}`
+            try {
+              const res = JSON.parse(xhr.responseText)
+              if (res && res.error) errMsg = res.error
+            } catch {}
+            reject(new Error(errMsg))
           }
         }
 
-        xhr.onerror = () => reject(new Error('Network error occurred during file upload.'))
+        xhr.onerror = () => reject(new Error('Network error occurred during file upload. Please check your connection and retry.'))
         xhr.send(file)
       })
-
-      setProgress(100)
-      setSuccessUrl(publicUrl)
-      onUploadComplete(publicUrl, key)
     } catch (err: any) {
       console.error('Upload error:', err)
       setError(err.message || 'An unexpected error occurred during upload.')

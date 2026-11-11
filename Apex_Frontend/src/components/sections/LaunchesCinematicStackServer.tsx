@@ -4,7 +4,7 @@ import {
   VideoLaunch,
   CollectionCountry,
 } from './LaunchesCinematicStack'
-import { PropertyItem } from '@/data/properties'
+import { PropertyItem, PERSPECTIVE_GALLERY_PROPERTIES } from '@/data/properties'
 
 export async function LaunchesCinematicStackServer() {
   let dbLaunches: any[] = []
@@ -150,11 +150,29 @@ export async function LaunchesCinematicStackServer() {
     } as PropertyItem
   })
 
+  // Ensure Spaces in the Round maintains full 3D cylinder geometry (minimum 6 properties).
+  // Curated database properties take first priority, and remaining slots are seamlessly padded
+  // with default portfolio items (deduplicated by slug or name).
+  const combinedSpaceProperties: PropertyItem[] = [...spaceProperties]
+  if (combinedSpaceProperties.length < 6) {
+    const existingSlugs = new Set(combinedSpaceProperties.map((p) => p.slug || p.id))
+    const existingNames = new Set(combinedSpaceProperties.map((p) => p.name?.trim().toLowerCase()))
+    for (const def of PERSPECTIVE_GALLERY_PROPERTIES) {
+      const nameLower = def.name?.trim().toLowerCase()
+      if (!existingSlugs.has(def.slug) && !existingSlugs.has(def.id) && !existingNames.has(nameLower)) {
+        combinedSpaceProperties.push(def)
+        existingSlugs.add(def.slug || def.id)
+        if (nameLower) existingNames.add(nameLower)
+      }
+      if (combinedSpaceProperties.length >= 6) break
+    }
+  }
+
   return (
     <LaunchesCinematicStack
       launches={launches.length > 0 ? launches : undefined}
       countries={countries.length > 0 ? countries : undefined}
-      spaceProperties={spaceProperties.length > 0 ? spaceProperties : undefined}
+      spaceProperties={combinedSpaceProperties.length > 0 ? combinedSpaceProperties : undefined}
       homepageContent={dbHomepageContent}
     />
   )

@@ -334,7 +334,20 @@ function ThreeDPhotoCarousel({
   const rotateRef = useRef<((delta: number) => void) | null>(null)
 
   const cards = useMemo(() => {
-    if (customCards && customCards.length > 0) return customCards
+    if (customCards && customCards.length > 0) {
+      if (customCards.length < 6) {
+        // Pad or cycle items to ensure at least 6 faces so 3D cylinder geometry never collapses
+        const expanded = [...customCards]
+        while (expanded.length < 6) {
+          for (const c of customCards) {
+            expanded.push(c)
+            if (expanded.length >= 6) break
+          }
+        }
+        return expanded
+      }
+      return customCards
+    }
     return defaultStockImages
   }, [customCards])
 

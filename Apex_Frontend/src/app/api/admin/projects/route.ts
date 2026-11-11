@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requirePermission, PERMISSIONS } from '@/lib/rbac'
 import { logAdminActivity } from '@/lib/activityLog'
+import { reconcileFeaturedLaunches } from '@/lib/launchesQueue'
 import { validateAndNormalizePricing } from '@/lib/projectValidation'
 import { Prisma } from '@prisma/client'
 
@@ -114,6 +115,7 @@ export async function POST(request: NextRequest) {
       areaUnit,
       latitude,
       longitude,
+      mapUrl,
       isFeaturedLaunch,
       launchOrder,
       launchDate,
@@ -126,6 +128,7 @@ export async function POST(request: NextRequest) {
       askingPriceNumeric,
       askingCurrency,
       isPublished,
+      price: customPrice,
     } = body
 
     if (!name || typeof name !== 'string' || !name.trim()) {
@@ -184,7 +187,7 @@ export async function POST(request: NextRequest) {
         beds: beds || null,
         baths: baths || null,
         area: area || null,
-        price: pricing.formattedPrice,
+        price: (customPrice && typeof customPrice === 'string' && customPrice.trim()) ? customPrice.trim() : pricing.formattedPrice,
         askingPriceNumeric: pricing.askingPriceNumeric !== null ? new Prisma.Decimal(pricing.askingPriceNumeric) : null,
         askingCurrency: pricing.askingCurrency,
         isPOA: pricing.isPOA,
@@ -194,6 +197,7 @@ export async function POST(request: NextRequest) {
         areaUnit: areaUnit || 'sqft',
         latitude: latitude !== undefined && latitude !== null && latitude !== '' ? parseFloat(latitude.toString()) : null,
         longitude: longitude !== undefined && longitude !== null && longitude !== '' ? parseFloat(longitude.toString()) : null,
+        mapUrl: mapUrl ? mapUrl.trim() : null,
         cityName: cityName || null,
         locationLine: locationLine || null,
         mainVideoUrl: mainVideoUrl || null,
@@ -215,12 +219,14 @@ export async function POST(request: NextRequest) {
         spaceOrder: spaceOrder !== null && spaceOrder !== undefined && spaceOrder !== '' ? parseInt(spaceOrder, 10) : null,
         images: Array.isArray(images) && images.length > 0
           ? {
-              create: images.map((img: any, idx: number) => ({
-                url: typeof img === 'string' ? img : img.url,
-                alt: typeof img === 'string' ? null : (img.alt || img.description || null),
-                description: typeof img === 'string' ? null : (img.description || img.alt || null),
-                order: typeof img?.order === 'number' ? img.order : idx,
-              })),
+              create: images
+                .filter((img: any) => (typeof img === 'string' ? img.trim() : Boolean(img?.url && img.url.trim())))
+                .map((img: any, idx: number) => ({
+                  url: typeof img === 'string' ? img.trim() : img.url.trim(),
+                  alt: typeof img === 'string' ? null : (img.alt || img.description || null),
+                  description: typeof img === 'string' ? null : (img.description || img.alt || null),
+                  order: typeof img?.order === 'number' ? img.order : idx,
+                })),
             }
           : undefined,
         services: Array.isArray(serviceIds) && serviceIds.length > 0
@@ -237,6 +243,11 @@ export async function POST(request: NextRequest) {
         services: { include: { service: true } },
       },
     })
+
+    // Reconcile featured launches queue if marked as featured launch
+    if (Boolean(isFeaturedLaunch)) {
+      await reconcileFeaturedLaunches(project.id)
+    }
 
     // Audit Log entry
     await logAdminActivity({

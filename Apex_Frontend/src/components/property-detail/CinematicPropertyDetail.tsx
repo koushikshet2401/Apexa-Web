@@ -42,6 +42,9 @@ interface PropertyDetailData {
   city?: string
   cityName?: string
   locationLine?: string
+  mapUrl?: string | null
+  latitude?: number | null
+  longitude?: number | null
   type?: string
   beds?: string | number
   baths?: string | number
@@ -53,6 +56,7 @@ interface PropertyDetailData {
   highlights?: string[]
   image?: string
   gallery?: string[]
+  galleryItems?: Array<{ url: string; alt?: string; description?: string }>
   mainVideoUrl?: string
   mainVideoThumb?: string
   services?: any[]
@@ -172,21 +176,42 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
     'Executive Observatory & Library',
   ]
 
-  const testimonialsData: Testimonial[] = galleryPool.map((imgUrl, idx) => {
-    const label = featureLabels[idx % featureLabels.length]
-    const highlightDesc = highlights[idx % highlights.length] || property.description || ''
-    return {
-      src: encodeURI(imgUrl),
-      name: label,
-      designation: `${property.name} · Space 0${idx + 1}`,
-      quote:
-        idx === 0 && property.shortDescription
-          ? property.shortDescription
-          : highlightDesc.length > 30
-          ? highlightDesc
-          : `Crafted with custom bookmatched marble, floor-to-ceiling acoustic double glazing, and seamless indoor-outdoor architectural transitions overlooking ${property.city || 'the skyline'}.`,
-    }
-  })
+  const customItems = property.galleryItems && property.galleryItems.length > 0 ? property.galleryItems : []
+
+  const testimonialsData: Testimonial[] =
+    customItems.length >= 3
+      ? customItems.map((item, idx) => {
+          const label = item.alt?.trim() || featureLabels[idx % featureLabels.length]
+          const quote = item.description?.trim() || highlights[idx % highlights.length] || property.description || ''
+          return {
+            src: encodeURI(item.url),
+            name: label,
+            designation: `${property.name} · Space 0${idx + 1}`,
+            quote:
+              quote.length > 20
+                ? quote
+                : `Crafted with custom bookmatched marble, floor-to-ceiling acoustic double glazing, and seamless indoor-outdoor architectural transitions overlooking ${property.city || 'the skyline'}.`,
+          }
+        })
+      : galleryPool.map((imgUrl, idx) => {
+          const matchedItem = customItems[idx]
+          const label = matchedItem?.alt?.trim() || featureLabels[idx % featureLabels.length]
+          const customDesc = matchedItem?.description?.trim()
+          const highlightDesc = highlights[idx % highlights.length] || property.description || ''
+          return {
+            src: encodeURI(imgUrl),
+            name: label,
+            designation: `${property.name} · Space 0${idx + 1}`,
+            quote:
+              customDesc && customDesc.length > 10
+                ? customDesc
+                : idx === 0 && property.shortDescription
+                ? property.shortDescription
+                : highlightDesc.length > 30
+                ? highlightDesc
+                : `Crafted with custom bookmatched marble, floor-to-ceiling acoustic double glazing, and seamless indoor-outdoor architectural transitions overlooking ${property.city || 'the skyline'}.`,
+          }
+        })
 
   // 4. Form state for Section 4
   const [formName, setFormName] = useState('')
@@ -344,9 +369,9 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
 
   // Format specifications line
   const bedsStr = property.beds != null ? String(property.beds) : '3–4'
-  const bedsText = bedsStr.toLowerCase().includes('bed') ? bedsStr : `${bedsStr} Bedrooms BR`
+  const bedsText = bedsStr.toLowerCase().includes('bed') ? bedsStr : `${bedsStr} Bedrooms`
   const bathsStr = property.baths != null ? String(property.baths) : '4'
-  const bathsText = bathsStr.toLowerCase().includes('bath') ? bathsStr : `${bathsStr} Baths BA`
+  const bathsText = bathsStr.toLowerCase().includes('bath') ? bathsStr : `${bathsStr} Baths`
   const areaText = property.area || '3,800 sq ft'
   const specsLine = `${bedsText} · ${bathsText} · ${areaText}`
   const priceDisplay = property.price || 'AED 8.2M'
@@ -478,7 +503,12 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
 
                   {/* Button 2: Explore via Map */}
                   <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${property.name} ${property.locationLine || property.cityName || property.city || ''} ${property.country || ''}`)}`}
+                    href={
+                      property.mapUrl ||
+                      (property.latitude && property.longitude
+                        ? `https://www.google.com/maps/search/?api=1&query=${property.latitude},${property.longitude}`
+                        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${property.name} ${property.locationLine || property.cityName || property.city || ''} ${property.country || ''}`)}`)
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                     className={cn(

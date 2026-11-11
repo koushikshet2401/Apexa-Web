@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requirePermission, PERMISSIONS } from '@/lib/rbac'
 import { logAdminActivity } from '@/lib/activityLog'
+import { reconcileFeaturedLaunches } from '@/lib/launchesQueue'
 import { hasForbiddenFinancialFields } from '@/lib/projectValidation'
 import { Prisma } from '@prisma/client'
 
@@ -112,12 +113,14 @@ export async function PATCH(
       areaUnit,
       latitude,
       longitude,
+      mapUrl,
       isFeaturedLaunch,
       launchOrder,
       launchDate,
       isSpaceInRound,
       spaceOrder,
       serviceIds,
+      images,
     } = body
 
     let newSlug = existing.slug
@@ -189,6 +192,7 @@ export async function PATCH(
       ...(longitude !== undefined && {
         longitude: longitude !== null && longitude !== '' ? parseFloat(longitude.toString()) : null,
       }),
+      ...(mapUrl !== undefined && { mapUrl: mapUrl ? mapUrl.trim() : null }),
       ...(isFeaturedLaunch !== undefined && { isFeaturedLaunch: Boolean(isFeaturedLaunch) }),
       ...(launchOrder !== undefined && {
         launchOrder: launchOrder !== null && launchOrder !== '' ? parseInt(launchOrder, 10) : null,
@@ -217,6 +221,27 @@ export async function PATCH(
       }
     }
 
+    // Reconcile gallery images if images provided
+    if (Array.isArray(images)) {
+      await db.propertyImage.deleteMany({
+        where: { propertyId: id },
+      })
+      const validImages = images
+        .filter((img: any) => Boolean(img?.url && String(img.url).trim()))
+        .map((img: any, idx: number) => ({
+          propertyId: id,
+          url: String(img.url).trim(),
+          alt: img.alt ? String(img.alt).trim() : (img.description ? String(img.description).trim() : null),
+          description: img.description ? String(img.description).trim() : (img.alt ? String(img.alt).trim() : null),
+          order: typeof img.order === 'number' ? img.order : idx,
+        }))
+      if (validImages.length > 0) {
+        await db.propertyImage.createMany({
+          data: validImages,
+        })
+      }
+    }
+
     const updated = await db.property.update({
       where: { id },
       data: updateData,
@@ -226,6 +251,15 @@ export async function PATCH(
         services: { include: { service: true } },
       },
     })
+
+    // Reconcile featured launches queue if isFeaturedLaunch was modified
+    if (isFeaturedLaunch !== undefined) {
+      if (Boolean(isFeaturedLaunch)) {
+        await reconcileFeaturedLaunches(id)
+      } else {
+        await reconcileFeaturedLaunches(id, true)
+      }
+    }
 
     // Audit Log entry
     await logAdminActivity({
@@ -291,6 +325,11 @@ export async function DELETE(
         archivedReason: reason,
       },
     })
+
+    // Reconcile featured launches queue: remove archived project from launches
+    if (archived.isFeaturedLaunch) {
+      await reconcileFeaturedLaunches(id, true)
+    }
 
     // Audit Log entry
     await logAdminActivity({

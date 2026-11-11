@@ -28,7 +28,7 @@ export default async function AdminPropertiesPage() {
       orderBy: { createdAt: 'desc' },
     }),
     db.country.findMany({
-      select: { id: true, name: true, displayName: true, slug: true },
+      select: { id: true, name: true, displayName: true, slug: true, region: true },
       orderBy: { displayOrder: 'asc' },
     }),
   ])

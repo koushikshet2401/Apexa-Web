@@ -1,11 +1,10 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft,
-  Save,
   CheckCircle2,
   AlertCircle,
   Plus,
@@ -13,13 +12,17 @@ import {
   Film,
   Image as ImageIcon,
   Globe,
-  MapPin,
-  Sparkles,
-  Orbit,
-  Flame,
   DollarSign,
   Briefcase,
-  Layers,
+  Flame,
+  Orbit,
+  UploadCloud,
+  Loader2,
+  Sparkles,
+  Home,
+  Check,
+  MapPin,
+  ExternalLink,
 } from 'lucide-react'
 import MediaField from './MediaField'
 import { SUPPORTED_CURRENCY_CODES } from '@/config/currencies'
@@ -40,8 +43,8 @@ interface ServiceOption {
 interface GalleryImageItem {
   id?: string
   url: string
-  alt?: string
-  description?: string
+  alt: string
+  description: string
   order?: number
 }
 
@@ -50,6 +53,23 @@ interface PropertyFormProps {
   countries: CountryOption[]
   services: ServiceOption[]
 }
+
+const DEFAULT_FEATURE_PLACEHOLDERS = [
+  'Private internal biophilic courtyard garden',
+  'Double-height timber and bronze living gallery',
+  '6 ensuite master bedrooms with private green verandas',
+  'Subterranean climate-controlled wine vault',
+  'Multi-vehicle secured gallery with EV fast charging',
+  'Private wellness pavilion & lap pool',
+]
+
+const DEFAULT_GALLERY_SLOTS: GalleryImageItem[] = [
+  { url: '', alt: 'Master Living Salon', description: 'Double-height living space with panoramic vistas', order: 0 },
+  { url: '', alt: 'Bespoke Primary Sanctuary', description: 'Master suite with private veranda and marble bath', order: 1 },
+  { url: '', alt: 'Culinary Atelier & Dining', description: 'Chef kitchen with bookmatched travertine and oak', order: 2 },
+  { url: '', alt: 'Private Courtyard & Pool', description: 'Sun-drenched outdoor lap pool and landscaped terrace', order: 3 },
+  { url: '', alt: 'Architectural Wellness Suite', description: 'Private spa, sauna, and wellness pavilion', order: 4 },
+]
 
 export default function PropertyForm({
   initialProperty,
@@ -62,16 +82,27 @@ export default function PropertyForm({
   // 1. Basic Information
   const [name, setName] = useState(initialProperty?.name || '')
   const [slug, setSlug] = useState(initialProperty?.slug || '')
-  const [description, setDescription] = useState(initialProperty?.description || '')
+  const [type, setType] = useState(initialProperty?.type || 'Luxury Villa')
   const [tagline, setTagline] = useState(initialProperty?.tagline || '')
+  const [description, setDescription] = useState(initialProperty?.description || '')
   const [countryId, setCountryId] = useState(initialProperty?.countryId || (countries[0]?.id || ''))
-  
+
+  // 6 Key Features / Highlights
+  const [highlights, setHighlights] = useState<string[]>(() => {
+    const existing: string[] = initialProperty?.highlights || []
+    const padded = [...existing]
+    while (padded.length < 6) {
+      padded.push('')
+    }
+    return padded.slice(0, 6)
+  })
+
   // Selected Service Categories
   const initialServiceIds =
     initialProperty?.services?.map((s: any) => s.serviceId || s.service?.id) || []
   const [selectedServices, setSelectedServices] = useState<string[]>(initialServiceIds)
 
-  // 2. Pricing & Address
+  // 2. Pricing & Specifications
   const [isPOA, setIsPOA] = useState<boolean>(Boolean(initialProperty?.isPOA))
   const [askingPriceNumeric, setAskingPriceNumeric] = useState<string>(
     initialProperty?.askingPriceNumeric ? String(initialProperty.askingPriceNumeric) : ''
@@ -79,6 +110,12 @@ export default function PropertyForm({
   const [askingCurrency, setAskingCurrency] = useState<string>(
     initialProperty?.askingCurrency || 'AED'
   )
+  const [customPrice, setCustomPrice] = useState<string>(initialProperty?.price || '')
+  const [beds, setBeds] = useState(initialProperty?.beds || '')
+  const [baths, setBaths] = useState(initialProperty?.baths || '')
+  const [area, setArea] = useState(initialProperty?.area || '')
+
+  // Location & Map
   const [locationLine, setLocationLine] = useState(initialProperty?.locationLine || '')
   const [cityName, setCityName] = useState(initialProperty?.cityName || '')
   const [latitude, setLatitude] = useState<string>(
@@ -91,22 +128,88 @@ export default function PropertyForm({
       ? String(initialProperty.longitude)
       : ''
   )
+  const [mapUrl, setMapUrl] = useState<string>(initialProperty?.mapUrl || '')
+  const [verifyingMap, setVerifyingMap] = useState<boolean>(false)
+  const [mapVerified, setMapVerified] = useState<boolean | null>(initialProperty?.mapUrl ? true : null)
+  const [mapDetails, setMapDetails] = useState<{ placeName?: string | null; lat?: number | null; lng?: number | null } | null>(null)
+  const [mapError, setMapError] = useState<string | null>(null)
+
+  const handleVerifyMap = async (urlToVerify: string) => {
+    const trimmed = urlToVerify.trim()
+    if (!trimmed) {
+      setMapVerified(null)
+      setMapDetails(null)
+      setMapError(null)
+      return
+    }
+
+    try {
+      setVerifyingMap(true)
+      setMapError(null)
+      const res = await fetch('/api/admin/maps/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ url: trimmed }),
+      })
+      const data = await res.json()
+      if (res.ok && data.valid) {
+        setMapVerified(true)
+        setMapDetails({
+          placeName: data.placeName,
+          lat: data.latitude,
+          lng: data.longitude,
+        })
+        if (data.latitude !== null && data.latitude !== undefined) {
+          setLatitude(data.latitude.toString())
+        }
+        if (data.longitude !== null && data.longitude !== undefined) {
+          setLongitude(data.longitude.toString())
+        }
+        if (data.url && data.url !== trimmed) {
+          setMapUrl(data.url)
+        }
+      } else {
+        setMapVerified(false)
+        setMapDetails(null)
+        setMapError(data.error || 'Invalid Google Maps location link. Please paste a valid link.')
+      }
+    } catch (err: any) {
+      setMapVerified(false)
+      setMapDetails(null)
+      setMapError(err?.message || 'Could not verify map URL.')
+    } finally {
+      setVerifyingMap(false)
+    }
+  }
 
   // 3. Media Assets
-  const [mainVideoUrl, setMainVideoUrl] = useState(initialProperty?.mainVideoUrl || '')
   const [mainImage, setMainImage] = useState(initialProperty?.mainImage || '')
-  
-  // Multiple Gallery Images with Individual Descriptions
-  const initialGalleryImages: GalleryImageItem[] = (initialProperty?.images || []).map((img: any) => ({
-    id: img.id,
-    url: img.url,
-    alt: img.alt || '',
-    description: img.description || img.alt || '',
-    order: img.order || 0,
-  }))
-  const [images, setImages] = useState<GalleryImageItem[]>(initialGalleryImages)
-  const [newImageUrl, setNewImageUrl] = useState('')
-  const [newImageDescription, setNewImageDescription] = useState('')
+  const [mainVideoUrl, setMainVideoUrl] = useState(initialProperty?.mainVideoUrl || '')
+
+  // Multiple Gallery Images with Individual Descriptions (At least 5 slots)
+  const [galleryImages, setGalleryImages] = useState<GalleryImageItem[]>(() => {
+    if (initialProperty?.images && initialProperty.images.length > 0) {
+      const existing = initialProperty.images.map((img: any, idx: number) => ({
+        id: img.id,
+        url: img.url || '',
+        alt: img.alt || img.description || `Space 0${idx + 1}`,
+        description: img.description || '',
+        order: img.order ?? idx,
+      }))
+      const padded = [...existing]
+      while (padded.length < 5) {
+        padded.push({
+          url: '',
+          alt: `Architectural Feature 0${padded.length + 1}`,
+          description: '',
+          order: padded.length,
+        })
+      }
+      return padded
+    }
+    return DEFAULT_GALLERY_SLOTS
+  })
 
   // 4. Curation Flags
   const [isFeaturedLaunch, setIsFeaturedLaunch] = useState<boolean>(
@@ -123,11 +226,9 @@ export default function PropertyForm({
   )
 
   // Status & Submission
-  const [isPublished, setIsPublished] = useState<boolean>(
-    Boolean(initialProperty?.isPublished)
-  )
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [uploadingSlot, setUploadingSlot] = useState<number | null>(null)
 
   // Auto-generate slug from name if creating
   const handleNameChange = (val: string) => {
@@ -150,32 +251,106 @@ export default function PropertyForm({
     }
   }
 
-  const handleAddGalleryImage = () => {
-    if (!newImageUrl.trim()) return
-    const newImg: GalleryImageItem = {
-      url: newImageUrl.trim(),
-      alt: newImageDescription.trim() || name,
-      description: newImageDescription.trim(),
-      order: images.length,
-    }
-    setImages([...images, newImg])
-    setNewImageUrl('')
-    setNewImageDescription('')
+  // Gallery slot handlers
+  const handleSlotChange = (index: number, field: keyof GalleryImageItem, val: string) => {
+    const updated = [...galleryImages]
+    updated[index] = { ...updated[index], [field]: val }
+    setGalleryImages(updated)
   }
 
-  const handleRemoveGalleryImage = async (index: number) => {
-    const imgToRemove = images[index]
-    if (isEditing && imgToRemove?.id && initialProperty?.id) {
+  const handleAddMoreSlots = () => {
+    setGalleryImages([
+      ...galleryImages,
+      {
+        url: '',
+        alt: `Architectural Space 0${galleryImages.length + 1}`,
+        description: '',
+        order: galleryImages.length,
+      },
+    ])
+  }
+
+  const handleRemoveSlot = async (index: number) => {
+    const item = galleryImages[index]
+    if (isEditing && item?.id && initialProperty?.id) {
       try {
-        await fetch(
-          `/api/admin/properties/${initialProperty.id}/images?imageId=${imgToRemove.id}`,
-          { method: 'DELETE' }
-        )
+        await fetch(`/api/admin/properties/${initialProperty.id}/images?imageId=${item.id}`, {
+          method: 'DELETE',
+        })
       } catch (err) {
         console.error('Error deleting image from server:', err)
       }
     }
-    setImages(images.filter((_, idx) => idx !== index))
+    const updated = galleryImages.filter((_, idx) => idx !== index)
+    // If fewer than 5 left, pad with blank slot so at least 5 slots stay visible
+    while (updated.length < 5) {
+      updated.push({
+        url: '',
+        alt: `Architectural Space 0${updated.length + 1}`,
+        description: '',
+        order: updated.length,
+      })
+    }
+    setGalleryImages(updated)
+  }
+
+  // Direct Explorer Upload for Gallery Slot (Immune to CORS)
+  const handleGalleryFileUpload = async (index: number, file: File) => {
+    try {
+      setUploadingSlot(index)
+      setToast(null)
+
+      const presignRes = await fetch('/api/admin/media/presign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: file.name,
+          contentType: file.type || 'image/jpeg',
+          folder: 'properties',
+        }),
+      })
+
+      const presignData = await presignRes.json()
+      if (!presignRes.ok || !presignData.uploadUrl) {
+        throw new Error(presignData.error || 'Failed to authorize media upload.')
+      }
+
+      const { uploadUrl, publicUrl } = presignData
+
+      const xhr = new XMLHttpRequest()
+      await new Promise<void>((resolve, reject) => {
+        xhr.open('PUT', uploadUrl)
+        xhr.setRequestHeader('Content-Type', file.type || 'image/jpeg')
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve()
+          } else {
+            reject(new Error(`Upload failed with status ${xhr.status}`))
+          }
+        }
+        xhr.onerror = () => reject(new Error('Network error during file upload.'))
+        xhr.send(file)
+      })
+
+      let finalUrl = publicUrl
+      try {
+        const res = JSON.parse(xhr.responseText)
+        if (res && res.publicUrl) finalUrl = res.publicUrl
+      } catch {}
+
+      const updated = [...galleryImages]
+      updated[index] = {
+        ...updated[index],
+        url: finalUrl,
+        alt: updated[index].alt || file.name.replace(/\.[a-z0-9]+$/i, '').replace(/[-_]/g, ' '),
+      }
+      setGalleryImages(updated)
+    } catch (err: any) {
+      console.error('Gallery image upload failed:', err)
+      setToast({ type: 'error', message: err.message || 'Image upload failed. Please try again.' })
+    } finally {
+      setUploadingSlot(null)
+    }
   }
 
   const handleSubmit = async (publishImmediately: boolean) => {
@@ -185,12 +360,15 @@ export default function PropertyForm({
     }
 
     if (!countryId) {
-      setToast({ type: 'error', message: 'Please select a Country.' })
+      setToast({ type: 'error', message: 'Please select a Country Destination.' })
       return
     }
 
     if (!isPOA && (!askingPriceNumeric || parseFloat(askingPriceNumeric) <= 0)) {
-      setToast({ type: 'error', message: 'Please provide an Asking Price or enable Price on Application (POA).' })
+      setToast({
+        type: 'error',
+        message: 'Please provide an Asking Price or enable Price on Application (POA).',
+      })
       return
     }
 
@@ -198,24 +376,38 @@ export default function PropertyForm({
       setSaving(true)
       setToast(null)
 
+      // Filter gallery images that have actual URLs
+      const validGalleryImages = galleryImages
+        .filter((img) => img.url && img.url.trim())
+        .map((img, idx) => ({
+          url: img.url.trim(),
+          alt: img.alt?.trim() || img.description?.trim() || `Space 0${idx + 1}`,
+          description: img.description?.trim() || '',
+          order: idx,
+        }))
+
+      // Cleaned 6 highlights
+      const cleanedHighlights = highlights.map((h) => h.trim()).filter(Boolean)
+
       const payload = {
         name: name.trim(),
         slug: slug.trim() || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
         countryId,
+        type: type.trim() || 'Luxury Villa',
         tagline: tagline.trim() || null,
         description: description.trim() || null,
+        highlights: cleanedHighlights,
+        beds: beds.trim() || null,
+        baths: baths.trim() || null,
+        area: area.trim() || null,
         locationLine: locationLine.trim() || null,
         cityName: cityName.trim() || null,
         latitude: latitude !== '' ? parseFloat(latitude) : null,
         longitude: longitude !== '' ? parseFloat(longitude) : null,
-        mainVideoUrl: mainVideoUrl.trim() || null,
+        mapUrl: mapUrl.trim() || null,
         mainImage: mainImage.trim() || null,
-        images: images.map((img, idx) => ({
-          url: img.url,
-          alt: img.description || img.alt || name,
-          description: img.description || img.alt || '',
-          order: idx,
-        })),
+        mainVideoUrl: mainVideoUrl.trim() || null,
+        images: validGalleryImages,
         serviceIds: selectedServices,
         isFeaturedLaunch,
         launchOrder: isFeaturedLaunch && launchOrder !== '' ? parseInt(launchOrder, 10) : null,
@@ -224,6 +416,7 @@ export default function PropertyForm({
         isPOA,
         askingPriceNumeric: !isPOA && askingPriceNumeric ? parseFloat(askingPriceNumeric) : null,
         askingCurrency: !isPOA ? askingCurrency : null,
+        price: customPrice.trim() || null,
         isPublished: publishImmediately,
       }
 
@@ -253,21 +446,28 @@ export default function PropertyForm({
         }, 800)
       } else {
         // EDIT EXISTING PROJECT
-        // 1. Update descriptive fields
+        // 1. Update descriptive and structural fields
         const descPayload = {
           name: payload.name,
           slug: payload.slug,
           countryId: payload.countryId,
+          type: payload.type,
           tagline: payload.tagline,
           description: payload.description,
+          highlights: payload.highlights,
+          beds: payload.beds,
+          baths: payload.baths,
+          area: payload.area,
           locationLine: payload.locationLine,
           cityName: payload.cityName,
           latitude: payload.latitude,
           longitude: payload.longitude,
-          mainVideoUrl: payload.mainVideoUrl,
+          mapUrl: payload.mapUrl,
           mainImage: payload.mainImage,
+          mainVideoUrl: payload.mainVideoUrl,
           spaceRoundImage: payload.spaceRoundImage,
           serviceIds: payload.serviceIds,
+          images: payload.images,
           isFeaturedLaunch: payload.isFeaturedLaunch,
           launchOrder: payload.launchOrder,
           isSpaceInRound: payload.isSpaceInRound,
@@ -310,23 +510,7 @@ export default function PropertyForm({
           })
         }
 
-        // 3. Save new gallery images if any were added
-        const existingImageUrls = new Set((initialProperty.images || []).map((img: any) => img.url))
-        for (const img of images) {
-          if (!existingImageUrls.has(img.url)) {
-            await fetch(`/api/admin/properties/${initialProperty.id}/images`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                url: img.url,
-                alt: img.description || img.alt || name,
-                description: img.description || '',
-              }),
-            })
-          }
-        }
-
-        // 4. Update publish status if toggled
+        // 3. Update publish status if toggled
         if (publishImmediately && !initialProperty.isPublished) {
           await fetch(`/api/admin/properties/${initialProperty.id}/publish`, { method: 'POST' })
         } else if (!publishImmediately && initialProperty.isPublished) {
@@ -347,7 +531,7 @@ export default function PropertyForm({
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-12">
+    <div className="max-w-5xl mx-auto space-y-6 pb-16 font-sans">
       {/* Top Header & Breadcrumb */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-white/10">
         <div>
@@ -362,7 +546,7 @@ export default function PropertyForm({
             {isEditing ? `Edit Project: ${initialProperty.name}` : 'Add Project'}
           </h1>
           <p className="text-xs text-gray-400 mt-1">
-            Complete and straightforward project creation and publication form.
+            Complete project showcase management. Everything entered here updates public country collections, property detail pages, and service portfolios immediately.
           </p>
         </div>
 
@@ -411,8 +595,8 @@ export default function PropertyForm({
           <h2 className="text-sm font-semibold text-white tracking-wide">Project Identity & Destination</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-2">
             <label className="text-xs text-gray-300 block mb-1.5 font-medium">
               Project Name <span className="text-[#7DD3FC]">*</span>
             </label>
@@ -421,7 +605,7 @@ export default function PropertyForm({
               value={name}
               onChange={(e) => handleNameChange(e.target.value)}
               className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
-              placeholder="e.g. The Royal Atlantis Penthouse"
+              placeholder="e.g. Verdant House"
               required
             />
           </div>
@@ -443,17 +627,130 @@ export default function PropertyForm({
               ))}
             </select>
           </div>
+
+          {/* Select Exact Location via Map (Google Maps Link) */}
+          <div className="md:col-span-2 p-4 rounded-xl bg-[#040810]/70 border border-white/10 space-y-2.5">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+              <label className="text-xs font-semibold text-white flex items-center gap-1.5 tracking-wide">
+                <MapPin className="w-3.5 h-3.5 text-[#7DD3FC]" />
+                <span>Select Exact Location via Map (Google Maps Link)</span>
+              </label>
+              <span className="text-[10px] font-mono text-[#7DD3FC] bg-[#7DD3FC]/10 border border-[#7DD3FC]/20 px-2 py-0.5 rounded self-start sm:self-auto">
+                Powers "Explore via Map" on Client Side
+              </span>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="url"
+                  value={mapUrl}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    setMapUrl(val)
+                    if (mapVerified !== null) {
+                      setMapVerified(null)
+                      setMapError(null)
+                    }
+                  }}
+                  onBlur={() => {
+                    if (mapUrl.trim()) handleVerifyMap(mapUrl)
+                  }}
+                  placeholder="Paste Google Maps URL (e.g. https://www.google.com/maps/place/... or https://maps.app.goo.gl/...)"
+                  className="w-full bg-[#070E1C] border border-white/10 rounded-lg pl-9 pr-3 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#7DD3FC]"
+                />
+                <Globe className="w-4 h-4 text-gray-500 absolute left-3 top-3 pointer-events-none" />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleVerifyMap(mapUrl)}
+                disabled={verifyingMap || !mapUrl.trim()}
+                className="px-4 py-2.5 rounded-lg bg-[#7DD3FC]/15 hover:bg-[#7DD3FC]/25 text-[#7DD3FC] border border-[#7DD3FC]/30 text-xs font-mono font-medium flex items-center justify-center gap-1.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0 shadow-[0_0_12px_rgba(125,211,252,0.12)]"
+              >
+                {verifyingMap ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Verifying...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Verify Location</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Verification Status Feedback */}
+            {mapVerified === true && (
+              <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-in fade-in duration-200">
+                <div className="flex items-start sm:items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5 sm:mt-0" />
+                  <div className="text-xs">
+                    <span className="font-semibold text-emerald-300 font-mono">
+                      ✓ Location Verified
+                    </span>
+                    {mapDetails?.placeName && (
+                      <span className="text-gray-300 ml-2">
+                        · {mapDetails.placeName}
+                      </span>
+                    )}
+                    {mapDetails?.lat && mapDetails?.lng && (
+                      <span className="text-gray-400 font-mono text-[11px] block sm:inline sm:ml-2">
+                        ({mapDetails.lat.toFixed(5)}°, {mapDetails.lng.toFixed(5)}°)
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <a
+                  href={mapUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-300 hover:text-white underline self-start sm:self-auto shrink-0"
+                >
+                  <span>Preview on Google Maps</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            )}
+
+            {mapVerified === false && mapError && (
+              <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/25 text-rose-300 text-xs flex items-center gap-2 animate-in fade-in duration-200">
+                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                <span>{mapError}</span>
+              </div>
+            )}
+
+            <p className="text-[11px] text-gray-400 leading-relaxed">
+              Paste the Google Maps place link to anchor this property on the client "Explore via Map" button. Coordinates are automatically verified and extracted.
+            </p>
+          </div>
         </div>
 
-        <div>
-          <label className="text-xs text-gray-300 block mb-1.5 font-medium">Tagline / Short Summary</label>
-          <input
-            type="text"
-            value={tagline}
-            onChange={(e) => setTagline(e.target.value)}
-            className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
-            placeholder="e.g. Ultra-luxury waterfront masterpiece on Palm Jumeirah"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs text-gray-300 block mb-1.5 font-medium">Property Type</label>
+            <input
+              type="text"
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
+              placeholder="e.g. Biophilic Villa, Luxury Villa, Sky Residence, Waterfront Estate"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-gray-300 block mb-1.5 font-medium">Tagline / Short Summary</label>
+            <input
+              type="text"
+              value={tagline}
+              onChange={(e) => setTagline(e.target.value)}
+              className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
+              placeholder="e.g. An architectural oasis combining biophilic architecture with uncompromising luxury"
+            />
+          </div>
         </div>
 
         <div>
@@ -462,16 +759,57 @@ export default function PropertyForm({
             rows={4}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full bg-[#040810] border border-white/10 rounded-lg p-3 text-xs text-white focus:outline-none focus:border-[#7DD3FC] resize-y"
-            placeholder="Detailed architectural narrative, materials, lifestyle attributes..."
+            className="w-full bg-[#040810] border border-white/10 rounded-lg p-3 text-xs text-white focus:outline-none focus:border-[#7DD3FC] resize-y leading-relaxed"
+            placeholder="Detailed architectural narrative, spatial flow, and craftsmanship story..."
           />
         </div>
 
+        {/* 6 Key Architectural Features & Highlights */}
+        <div className="pt-3 border-t border-white/10">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3">
+            <div>
+              <label className="text-xs font-semibold text-white uppercase tracking-wider font-mono block">
+                Key Architectural Features & Highlights (6 Points)
+              </label>
+              <p className="text-[11px] text-gray-400 mt-0.5">
+                Top 3 appear as verification badges on Country Card; all 6 appear on the Property Detail page under the description.
+              </p>
+            </div>
+            <span className="text-[10px] font-mono text-[#7DD3FC] bg-[#7DD3FC]/10 border border-[#7DD3FC]/20 px-2 py-0.5 rounded">
+              6 Points System
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {highlights.map((h, idx) => (
+              <div key={idx} className="flex items-center gap-2.5">
+                <span className="w-6 h-6 rounded-md bg-[#040810] border border-white/10 text-[10px] font-mono text-[#7DD3FC] font-semibold flex items-center justify-center shrink-0">
+                  0{idx + 1}
+                </span>
+                <input
+                  type="text"
+                  value={h}
+                  onChange={(e) => {
+                    const updated = [...highlights]
+                    updated[idx] = e.target.value
+                    setHighlights(updated)
+                  }}
+                  placeholder={DEFAULT_FEATURE_PLACEHOLDERS[idx] || `Architectural feature 0${idx + 1}`}
+                  className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Service Category Selection */}
-        <div>
-          <label className="text-xs text-gray-300 block mb-2 font-medium">
-            Service Category <span className="text-gray-500">(Luxury Villa, Commercial, Waterfront Residence, Sky Residence)</span>
+        <div className="pt-3 border-t border-white/10">
+          <label className="text-xs font-semibold text-white uppercase tracking-wider font-mono block mb-1">
+            Service Category
           </label>
+          <p className="text-[11px] text-gray-400 mb-3">
+            Select one or more services (Luxury Villas, Sky Residences, Commercial Properties, Waterfront Residences). The property will automatically show under &quot;Signature Properties&quot; on that service page.
+          </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             {services.map((s) => {
               const selected = selectedServices.includes(s.id)
@@ -487,7 +825,7 @@ export default function PropertyForm({
                   }`}
                 >
                   <Briefcase className={`w-3.5 h-3.5 mb-1.5 ${selected ? 'text-[#7DD3FC]' : 'text-gray-500'}`} />
-                  <span className="block truncate">{s.name}</span>
+                  <span className="block truncate font-medium">{s.name}</span>
                 </button>
               )
             })}
@@ -495,28 +833,26 @@ export default function PropertyForm({
         </div>
       </div>
 
-      {/* SECTION 2: PRICING & LOCATION */}
+      {/* SECTION 2: PRICING, SPECIFICATIONS & LOCATION */}
       <div className="bg-[#070E1C] border border-white/10 rounded-xl p-6 space-y-5">
         <div className="flex items-center gap-2 pb-3 border-b border-white/10">
           <DollarSign className="w-4 h-4 text-emerald-400" />
-          <h2 className="text-sm font-semibold text-white tracking-wide">Pricing & Map Location</h2>
+          <h2 className="text-sm font-semibold text-white tracking-wide">Pricing, Specifications & Map Location</h2>
         </div>
 
         {/* Pricing */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
           <div className="sm:col-span-2">
             <label className="text-xs text-gray-300 block mb-1.5 font-medium">Asking Price Amount</label>
-            <div className="relative">
-              <input
-                type="number"
-                step="any"
-                disabled={isPOA}
-                value={askingPriceNumeric}
-                onChange={(e) => setAskingPriceNumeric(e.target.value)}
-                placeholder={isPOA ? 'Price on Application' : 'e.g. 15000000'}
-                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC] disabled:opacity-50"
-              />
-            </div>
+            <input
+              type="number"
+              step="any"
+              disabled={isPOA}
+              value={askingPriceNumeric}
+              onChange={(e) => setAskingPriceNumeric(e.target.value)}
+              placeholder={isPOA ? 'Price on Application' : 'e.g. 280000000'}
+              className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC] disabled:opacity-50"
+            />
           </div>
 
           <div>
@@ -536,18 +872,77 @@ export default function PropertyForm({
           </div>
         </div>
 
-        <label className="inline-flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={isPOA}
-            onChange={(e) => setIsPOA(e.target.checked)}
-            className="rounded border-white/20 text-[#7DD3FC] focus:ring-0 bg-transparent w-4 h-4"
-          />
-          <span className="text-xs text-gray-300 font-medium">Price on Application (POA)</span>
-        </label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+          <div>
+            <label className="text-xs text-gray-300 block mb-1.5 font-medium">
+              Formatted Display Copy <span className="text-gray-500">(Optional override)</span>
+            </label>
+            <input
+              type="text"
+              disabled={isPOA}
+              value={customPrice}
+              onChange={(e) => setCustomPrice(e.target.value)}
+              placeholder="e.g. ₹ 28.0 Cr or AED 15M"
+              className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC] disabled:opacity-50"
+            />
+          </div>
+
+          <div className="pt-4 sm:pt-6">
+            <label className="inline-flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isPOA}
+                onChange={(e) => setIsPOA(e.target.checked)}
+                className="rounded border-white/20 text-[#7DD3FC] focus:ring-0 bg-transparent w-4 h-4 cursor-pointer"
+              />
+              <span className="text-xs text-gray-300 font-medium">Price on Application (POA)</span>
+            </label>
+          </div>
+        </div>
+
+        {/* Specifications: Bedrooms, Bathrooms, Area */}
+        <div className="pt-3 border-t border-white/10">
+          <label className="text-xs font-semibold text-white uppercase tracking-wider font-mono block mb-3">
+            Specifications (Displayed on Cards &amp; Detail Page)
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="text-xs text-gray-300 block mb-1.5 font-medium">Bedrooms</label>
+              <input
+                type="text"
+                value={beds}
+                onChange={(e) => setBeds(e.target.value)}
+                placeholder="e.g. 6 Bedrooms"
+                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs text-gray-300 block mb-1.5 font-medium">Bathrooms</label>
+              <input
+                type="text"
+                value={baths}
+                onChange={(e) => setBaths(e.target.value)}
+                placeholder="e.g. 7 Baths"
+                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs text-gray-300 block mb-1.5 font-medium">Total Area</label>
+              <input
+                type="text"
+                value={area}
+                onChange={(e) => setArea(e.target.value)}
+                placeholder="e.g. 10,500 sq ft"
+                className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
+              />
+            </div>
+          </div>
+        </div>
 
         {/* Address and Map Location */}
-        <div className="pt-2 border-t border-white/5 space-y-4">
+        <div className="pt-3 border-t border-white/10 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-xs text-gray-300 block mb-1.5 font-medium">Project Address / Location Line</label>
@@ -556,7 +951,7 @@ export default function PropertyForm({
                 value={locationLine}
                 onChange={(e) => setLocationLine(e.target.value)}
                 className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
-                placeholder="e.g. Crescent Road, Palm Jumeirah"
+                placeholder="e.g. South Mumbai / Crescent Road, Palm Jumeirah"
               />
             </div>
 
@@ -567,7 +962,7 @@ export default function PropertyForm({
                 value={cityName}
                 onChange={(e) => setCityName(e.target.value)}
                 className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
-                placeholder="e.g. Dubai"
+                placeholder="e.g. Mumbai, Dubai"
               />
             </div>
           </div>
@@ -581,7 +976,7 @@ export default function PropertyForm({
                 value={latitude}
                 onChange={(e) => setLatitude(e.target.value)}
                 className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-[#7DD3FC]"
-                placeholder="e.g. 25.1325"
+                placeholder="e.g. 18.9220"
               />
             </div>
             <div>
@@ -592,22 +987,27 @@ export default function PropertyForm({
                 value={longitude}
                 onChange={(e) => setLongitude(e.target.value)}
                 className="w-full bg-[#040810] border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-[#7DD3FC]"
-                placeholder="e.g. 55.1189"
+                placeholder="e.g. 72.8347"
               />
             </div>
           </div>
         </div>
       </div>
 
-      {/* SECTION 3: PROJECT MEDIA & GALLERY */}
-      <div className="bg-[#070E1C] border border-white/10 rounded-xl p-6 space-y-5">
+      {/* SECTION 3: PROJECT MEDIA ASSETS */}
+      <div className="bg-[#070E1C] border border-white/10 rounded-xl p-6 space-y-6">
         <div className="flex items-center gap-2 pb-3 border-b border-white/10">
           <ImageIcon className="w-4 h-4 text-[#7DD3FC]" />
-          <h2 className="text-sm font-semibold text-white tracking-wide">Project Media Assets</h2>
+          <div>
+            <h2 className="text-sm font-semibold text-white tracking-wide">Project Media Assets</h2>
+            <p className="text-[11px] text-gray-400">
+              Upload files directly from your computer without CORS errors, or select from library / URL.
+            </p>
+          </div>
         </div>
 
-        {/* Project Thumbnail Image */}
-        <div>
+        {/* 1. Project Thumbnail Image */}
+        <div className="p-4 rounded-xl bg-[#040810] border border-white/10">
           <MediaField
             label="Project Thumbnail Image (Main Showcase Image)"
             value={mainImage}
@@ -616,10 +1016,13 @@ export default function PropertyForm({
             folder="properties"
             placeholder="/images/... or https://..."
           />
+          <p className="text-[11px] text-gray-400 mt-2">
+            This image is featured on the Country Collection page (&quot;Signature Projects in [Country]&quot;) and in Service Portfolios.
+          </p>
         </div>
 
-        {/* Project Video */}
-        <div>
+        {/* 2. Project Video */}
+        <div className="p-4 rounded-xl bg-[#040810] border border-white/10">
           <MediaField
             label="Project Video (MP4 / WebM)"
             value={mainVideoUrl}
@@ -628,102 +1031,167 @@ export default function PropertyForm({
             folder="properties"
             placeholder="/videos/... or https://..."
           />
+          <p className="text-[11px] text-gray-400 mt-2">
+            This video is featured in the full-screen cinematic hero of the property detail page, and also used for the New Launch showcase if enabled.
+          </p>
         </div>
 
-        {/* Multiple Project Images with Individual Image Descriptions */}
-        <div className="pt-3 border-t border-white/10 space-y-4">
-          <div>
-            <h3 className="text-xs font-semibold text-white uppercase tracking-wider font-mono">
-              Multiple Project Images & Descriptions
-            </h3>
-            <p className="text-[11px] text-gray-400 mt-0.5">
-              Add individual gallery images with bespoke descriptions for each image.
-            </p>
+        {/* 3. Multiple Project Images & Descriptions (Gallery) */}
+        <div className="pt-2 border-t border-white/10 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 className="text-xs font-semibold text-white uppercase tracking-wider font-mono">
+                Multiple Project Images &amp; Descriptions
+              </h3>
+              <p className="text-[11px] text-gray-400 mt-0.5">
+                Add individual gallery images with bespoke names &amp; descriptions. These are displayed in Section 3 &quot;Architectural Spaces &amp; Finishes&quot; on the public property page.
+              </p>
+            </div>
+            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-md shrink-0">
+              {galleryImages.filter((g) => g.url.trim()).length} of {galleryImages.length} configured
+            </span>
           </div>
 
-          {/* Add Image Inputs */}
-          <div className="p-4 rounded-xl bg-[#040810] border border-white/10 space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <label className="text-[11px] font-mono text-gray-300 block mb-1">Image URL</label>
-                <input
-                  type="text"
-                  value={newImageUrl}
-                  onChange={(e) => setNewImageUrl(e.target.value)}
-                  placeholder="/images/... or https://..."
-                  className="w-full bg-[#070E1C] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-mono text-gray-300 block mb-1">Individual Image Description</label>
-                <input
-                  type="text"
-                  value={newImageDescription}
-                  onChange={(e) => setNewImageDescription(e.target.value)}
-                  placeholder="e.g. Master suite with panoramic Gulf views and private terrace"
-                  className="w-full bg-[#070E1C] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={handleAddGalleryImage}
-                disabled={!newImageUrl.trim()}
-                className="px-4 py-1.5 rounded-lg bg-[#7DD3FC]/15 hover:bg-[#7DD3FC]/25 text-[#7DD3FC] border border-[#7DD3FC]/30 text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-40 cursor-pointer"
+          {/* Gallery Slots List (Default 5 Slots) */}
+          <div className="space-y-4">
+            {galleryImages.map((slot, idx) => (
+              <div
+                key={idx}
+                className="p-4 rounded-xl bg-[#040810] border border-white/10 flex flex-col md:flex-row gap-4 relative group"
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Add Image</span>
-              </button>
-            </div>
-          </div>
+                {/* Left Column: Image Upload & Preview Box */}
+                <div className="w-full md:w-56 shrink-0 flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] font-mono text-[#7DD3FC] uppercase tracking-wider font-semibold">
+                      Space 0{idx + 1}
+                    </span>
+                    {uploadingSlot === idx && (
+                      <span className="text-[10px] font-mono text-amber-400 flex items-center gap-1">
+                        <Loader2 className="w-3 h-3 animate-spin" /> Uploading...
+                      </span>
+                    )}
+                  </div>
 
-          {/* Gallery Images List */}
-          {images.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-              {images.map((img, idx) => (
-                <div
-                  key={idx}
-                  className="p-3 rounded-xl bg-[#040810] border border-white/10 flex items-start gap-3 relative group"
-                >
-                  <div className="w-20 h-16 rounded-lg bg-black/40 border border-white/10 overflow-hidden shrink-0">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={img.url}
-                      alt={img.description || 'Project image'}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        ;(e.currentTarget as any).src = '/images/placeholder.jpg'
-                      }}
+                  {/* Thumbnail / Upload Box */}
+                  <div className="relative aspect-video rounded-lg border border-white/10 overflow-hidden bg-[#070E1C] flex items-center justify-center group/box">
+                    {slot.url ? (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={slot.url}
+                          alt={slot.alt || 'Gallery image'}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            ;(e.currentTarget as any).src = '/images/placeholder.jpg'
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/box:opacity-100 flex items-center justify-center gap-2 transition-opacity">
+                          <label className="px-2.5 py-1 rounded bg-[#7DD3FC] text-[#040810] text-[10px] font-semibold cursor-pointer">
+                            Replace
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  handleGalleryFileUpload(idx, e.target.files[0])
+                                }
+                              }}
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => handleSlotChange(idx, 'url', '')}
+                            className="px-2.5 py-1 rounded bg-rose-500/80 text-white text-[10px] font-semibold cursor-pointer"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center p-3 text-center cursor-pointer hover:bg-white/[0.02] w-full h-full transition-colors">
+                        <UploadCloud className="w-5 h-5 text-gray-400 mb-1 group-hover/box:text-[#7DD3FC] transition-colors" />
+                        <span className="text-[11px] font-medium text-white">Upload from Explorer</span>
+                        <span className="text-[9px] text-gray-500 font-mono mt-0.5">Click to choose image</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              handleGalleryFileUpload(idx, e.target.files[0])
+                            }
+                          }}
+                        />
+                      </label>
+                    )}
+                  </div>
+
+                  {/* Manual URL Input fallback */}
+                  <div className="mt-2">
+                    <input
+                      type="text"
+                      value={slot.url}
+                      onChange={(e) => handleSlotChange(idx, 'url', e.target.value)}
+                      placeholder="/images/... or https://..."
+                      className="w-full bg-[#070E1C] border border-white/10 rounded px-2.5 py-1 text-[10px] text-white font-mono focus:outline-none focus:border-[#7DD3FC]"
+                    />
+                  </div>
+                </div>
+
+                {/* Right Column: Name & Description */}
+                <div className="flex-1 space-y-2.5 min-w-0 pr-8">
+                  <div>
+                    <label className="text-[11px] font-mono text-gray-300 block mb-1">
+                      Image Name / Architectural Title
+                    </label>
+                    <input
+                      type="text"
+                      value={slot.alt}
+                      onChange={(e) => handleSlotChange(idx, 'alt', e.target.value)}
+                      placeholder="e.g. Master Living Salon, Private Primary Sanctuary"
+                      className="w-full bg-[#070E1C] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
                     />
                   </div>
 
-                  <div className="flex-1 min-w-0 pr-6">
-                    <span className="text-[10px] font-mono text-gray-500 uppercase">Image #{idx + 1}</span>
-                    <p className="text-xs text-white font-medium line-clamp-2 mt-0.5">
-                      {img.description || 'No description provided'}
-                    </p>
-                    <p className="text-[10px] text-gray-500 font-mono truncate mt-1">{img.url}</p>
+                  <div>
+                    <label className="text-[11px] font-mono text-gray-300 block mb-1">
+                      Individual Image Description (Architectural Spaces &amp; Finishes)
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={slot.description}
+                      onChange={(e) => handleSlotChange(idx, 'description', e.target.value)}
+                      placeholder="e.g. Master suite with panoramic Gulf views, private terrace, and bookmatched travertine bathroom."
+                      className="w-full bg-[#070E1C] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC] resize-none"
+                    />
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveGalleryImage(idx)}
-                    className="absolute top-2.5 right-2.5 text-gray-500 hover:text-rose-400 p-1 transition-colors cursor-pointer"
-                    title="Remove Image"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-xs text-gray-500 italic py-2">
-              No gallery images added yet. Add images above with individual descriptions.
-            </p>
-          )}
+
+                {/* Remove Slot Button */}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveSlot(idx)}
+                  className="absolute top-3 right-3 p-1.5 rounded-lg text-gray-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                  title="Remove this image slot"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Add More Images Button */}
+          <div className="pt-2 flex justify-center">
+            <button
+              type="button"
+              onClick={handleAddMoreSlots}
+              className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-xs font-semibold text-white flex items-center gap-2 transition-all cursor-pointer hover:border-[#7DD3FC]/50"
+            >
+              <Plus className="w-4 h-4 text-[#7DD3FC]" />
+              <span>Add More Images (+ Slot {galleryImages.length + 1})</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -731,7 +1199,7 @@ export default function PropertyForm({
       <div className="bg-[#070E1C] border border-white/10 rounded-xl p-6 space-y-5">
         <div className="flex items-center gap-2 pb-3 border-b border-white/10">
           <Sparkles className="w-4 h-4 text-amber-400" />
-          <h2 className="text-sm font-semibold text-white tracking-wide">Showcase & Curations</h2>
+          <h2 className="text-sm font-semibold text-white tracking-wide">Showcase &amp; Curations</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -740,13 +1208,16 @@ export default function PropertyForm({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Flame className="w-4 h-4 text-amber-400" />
-                <span className="text-xs font-semibold text-white">New Launch Showcase</span>
+                <div>
+                  <span className="text-xs font-semibold text-white block">New Launch Showcase</span>
+                  <span className="text-[10px] text-gray-500">Showcase in full-screen cinematic stack</span>
+                </div>
               </div>
               <div className="flex items-center bg-[#070E1C] border border-white/10 rounded-lg p-0.5">
                 <button
                   type="button"
                   onClick={() => setIsFeaturedLaunch(true)}
-                  className={`px-3 py-1 rounded text-xs font-semibold transition-all ${
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-all cursor-pointer ${
                     isFeaturedLaunch
                       ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                       : 'text-gray-400 hover:text-white'
@@ -757,7 +1228,7 @@ export default function PropertyForm({
                 <button
                   type="button"
                   onClick={() => setIsFeaturedLaunch(false)}
-                  className={`px-3 py-1 rounded text-xs font-semibold transition-all ${
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-all cursor-pointer ${
                     !isFeaturedLaunch
                       ? 'bg-white/10 text-white'
                       : 'text-gray-400 hover:text-white'
@@ -770,12 +1241,14 @@ export default function PropertyForm({
 
             {isFeaturedLaunch && (
               <div className="pt-2 border-t border-white/5">
-                <label className="text-[11px] font-mono text-gray-300 block mb-1">Launch Display Order</label>
+                <label className="text-[11px] font-mono text-gray-300 block mb-1">
+                  Launch Display Order <span className="text-gray-500">(1, 2, 3...)</span>
+                </label>
                 <input
                   type="number"
                   value={launchOrder}
                   onChange={(e) => setLaunchOrder(e.target.value)}
-                  className="w-full bg-[#070E1C] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white font-mono"
+                  className="w-full bg-[#070E1C] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-[#7DD3FC]"
                   placeholder="1"
                 />
               </div>
@@ -787,13 +1260,16 @@ export default function PropertyForm({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Orbit className="w-4 h-4 text-purple-400" />
-                <span className="text-xs font-semibold text-white">Spaces in the Round</span>
+                <div>
+                  <span className="text-xs font-semibold text-white block">Spaces in the Round</span>
+                  <span className="text-[10px] text-gray-500">Showcase in 360° circular showcase section</span>
+                </div>
               </div>
               <div className="flex items-center bg-[#070E1C] border border-white/10 rounded-lg p-0.5">
                 <button
                   type="button"
                   onClick={() => setIsSpaceInRound(true)}
-                  className={`px-3 py-1 rounded text-xs font-semibold transition-all ${
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-all cursor-pointer ${
                     isSpaceInRound
                       ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                       : 'text-gray-400 hover:text-white'
@@ -804,7 +1280,7 @@ export default function PropertyForm({
                 <button
                   type="button"
                   onClick={() => setIsSpaceInRound(false)}
-                  className={`px-3 py-1 rounded text-xs font-semibold transition-all ${
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-all cursor-pointer ${
                     !isSpaceInRound
                       ? 'bg-white/10 text-white'
                       : 'text-gray-400 hover:text-white'

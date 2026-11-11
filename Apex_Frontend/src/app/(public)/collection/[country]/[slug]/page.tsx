@@ -173,9 +173,19 @@ export default async function CollectionPropertyPage({
       highlights: dbProperty.highlights || [],
       image: dbProperty.mainImage || dbProperty.images[0]?.url || '',
       gallery: dbProperty.images.map((img: any) => img.url),
+      galleryItems: dbProperty.images.map((img: any) => ({
+        url: img.url,
+        alt: img.alt || '',
+        description: img.description || '',
+      })),
       mainVideoUrl: dbProperty.mainVideoUrl,
       mainVideoThumb: dbProperty.mainVideoThumb,
       layoutVariant: dbProperty.layoutVariant || 1,
+      mapUrl: dbProperty.mapUrl || null,
+      locationLine: dbProperty.locationLine || null,
+      cityName: dbProperty.cityName || null,
+      latitude: dbProperty.latitude || null,
+      longitude: dbProperty.longitude || null,
       services: dbProperty.services.map((ps: any) => ps.service),
     }
   } else {

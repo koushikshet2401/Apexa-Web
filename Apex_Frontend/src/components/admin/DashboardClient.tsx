@@ -14,6 +14,7 @@ import {
   PlusCircle,
   ArrowUpRight,
 } from 'lucide-react'
+import { RecentEnquiriesWidget, RecentActivityWidget, QuickActionsWidget } from './DashboardWidgets'
 
 interface TrendPoint {
   date: string
@@ -50,6 +51,28 @@ interface DashboardData {
   completedDealMetrics: {
     totalCompletedDeals: number
   }
+  recentEnquiries?: Array<{
+    id: string
+    enquiryRef: string
+    name: string
+    email: string
+    phone: string
+    subject: string | null
+    status: string
+    isRead: boolean
+    submittedAt: string
+    property: { id: string; name: string } | null
+  }>
+  recentActivity?: Array<{
+    id: string
+    action: string
+    entityType: string
+    entityId: string
+    summary: string
+    adminEmail: string
+    createdAt: string
+    admin: { id: string; name: string | null } | null
+  }>
 }
 
 const RANGES = [
@@ -170,44 +193,88 @@ export default function DashboardClient() {
         </div>
       )}
 
-      {/* METRIC ROW: 5 SIMPLE CARDS */}
+      {/* METRIC ROW: 5 CLICKABLE DATA CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* 1. Total Website Visitors */}
-        <div className="bg-[#070E1C] border border-white/10 rounded-xl p-5 hover:border-[#7DD3FC]/30 transition-all">
+        {/* 1. Total Website Visitors -> Smooth scroll to Activity Trends Chart */}
+        <a
+          href="#activity-trends"
+          onClick={(e) => {
+            const el = document.getElementById('activity-trends')
+            if (el) {
+              e.preventDefault()
+              el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }
+          }}
+          className="bg-[#070E1C] border border-white/10 rounded-xl p-5 hover:border-[#7DD3FC]/50 hover:bg-[#0B1528]/80 hover:shadow-[0_0_20px_rgba(125,211,252,0.12)] group transition-all duration-200 block cursor-pointer"
+          title="Click to view visitor trends and daily traffic graph"
+        >
           <div className="flex items-center justify-between text-gray-400 mb-2">
-            <span className="text-[10px] font-mono uppercase tracking-wider">Website Visitors</span>
-            <Users className="w-4 h-4 text-[#7DD3FC]" />
+            <span className="text-[10px] font-mono uppercase tracking-wider group-hover:text-gray-200 transition-colors">
+              Website Visitors
+            </span>
+            <div className="flex items-center gap-1">
+              <Users className="w-4 h-4 text-[#7DD3FC]" />
+              <ArrowUpRight className="w-3.5 h-3.5 text-gray-500 opacity-0 group-hover:opacity-100 group-hover:text-[#7DD3FC] transition-all" />
+            </div>
           </div>
-          <div className="text-2xl font-bold font-mono text-white">
+          <div className="text-2xl font-bold font-mono text-white group-hover:text-[#7DD3FC] transition-colors">
             {(visits?.totalQualifyingVisits ?? 0).toLocaleString()}
           </div>
-          <p className="text-[10px] text-gray-500 mt-1">Total recorded site visitors</p>
-        </div>
-
-        {/* 2. Total Projects */}
-        <div className="bg-[#070E1C] border border-white/10 rounded-xl p-5 hover:border-[#7DD3FC]/30 transition-all">
-          <div className="flex items-center justify-between text-gray-400 mb-2">
-            <span className="text-[10px] font-mono uppercase tracking-wider">Total Projects</span>
-            <Building2 className="w-4 h-4 text-emerald-400" />
+          <div className="text-[10px] text-gray-500 mt-1 flex items-center justify-between">
+            <span>Total recorded visitors</span>
+            <span className="text-[#7DD3FC] opacity-0 group-hover:opacity-100 transition-opacity font-mono text-[9px]">
+              View Graph ↓
+            </span>
           </div>
-          <div className="text-2xl font-bold font-mono text-white">
+        </a>
+
+        {/* 2. Total Projects -> Link to Current Projects */}
+        <Link
+          href="/admin/properties?tab=current"
+          className="bg-[#070E1C] border border-white/10 rounded-xl p-5 hover:border-emerald-500/50 hover:bg-[#0B1528]/80 hover:shadow-[0_0_20px_rgba(16,185,129,0.12)] group transition-all duration-200 block cursor-pointer"
+          title="Click to view and manage active properties"
+        >
+          <div className="flex items-center justify-between text-gray-400 mb-2">
+            <span className="text-[10px] font-mono uppercase tracking-wider group-hover:text-gray-200 transition-colors">
+              Total Projects
+            </span>
+            <div className="flex items-center gap-1">
+              <Building2 className="w-4 h-4 text-emerald-400" />
+              <ArrowUpRight className="w-3.5 h-3.5 text-gray-500 opacity-0 group-hover:opacity-100 group-hover:text-emerald-400 transition-all" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold font-mono text-white group-hover:text-emerald-400 transition-colors">
             {data?.totalProjects ?? 0}
           </div>
-          <p className="text-[10px] text-gray-500 mt-1">Properties in portfolio</p>
-        </div>
+          <div className="text-[10px] text-gray-500 mt-1 flex items-center justify-between">
+            <span>Properties in portfolio</span>
+            <span className="text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity font-mono text-[9px]">
+              Manage →
+            </span>
+          </div>
+        </Link>
 
-        {/* 3. Total Portfolio Value */}
-        <div className="bg-[#070E1C] border border-white/10 rounded-xl p-5 hover:border-[#7DD3FC]/30 transition-all">
+        {/* 3. Total Portfolio Value -> Link to Portfolio Inventory */}
+        <Link
+          href="/admin/properties?tab=current"
+          className="bg-[#070E1C] border border-white/10 rounded-xl p-5 hover:border-[#7DD3FC]/50 hover:bg-[#0B1528]/80 hover:shadow-[0_0_20px_rgba(125,211,252,0.12)] group transition-all duration-200 block cursor-pointer"
+          title="Click to view current portfolio properties and valuations"
+        >
           <div className="flex items-center justify-between text-gray-400 mb-2">
-            <span className="text-[10px] font-mono uppercase tracking-wider">Portfolio Value</span>
-            <TrendingUp className="w-4 h-4 text-[#7DD3FC]" />
+            <span className="text-[10px] font-mono uppercase tracking-wider group-hover:text-gray-200 transition-colors">
+              Portfolio Value
+            </span>
+            <div className="flex items-center gap-1">
+              <TrendingUp className="w-4 h-4 text-[#7DD3FC]" />
+              <ArrowUpRight className="w-3.5 h-3.5 text-gray-500 opacity-0 group-hover:opacity-100 group-hover:text-[#7DD3FC] transition-all" />
+            </div>
           </div>
           <div className="space-y-0.5">
             {portfolioVals.length > 0 ? (
               portfolioVals.slice(0, 2).map((v) => (
                 <div key={v.currency} className="flex items-baseline gap-1.5">
                   <span className="text-xs font-mono font-semibold text-[#7DD3FC]">{v.currency}</span>
-                  <span className="text-base font-bold font-mono text-white truncate">
+                  <span className="text-base font-bold font-mono text-white truncate group-hover:text-[#7DD3FC] transition-colors">
                     {Number(v.totalAmount).toLocaleString('en-US', { maximumFractionDigits: 0 })}
                   </span>
                 </div>
@@ -216,32 +283,65 @@ export default function DashboardClient() {
               <div className="text-xl font-bold font-mono text-gray-400">POA / Unpriced</div>
             )}
           </div>
-          <p className="text-[10px] text-gray-500 mt-1">Cumulative asking valuation</p>
-        </div>
-
-        {/* 4. Spaces in the Round Count */}
-        <div className="bg-[#070E1C] border border-white/10 rounded-xl p-5 hover:border-[#7DD3FC]/30 transition-all">
-          <div className="flex items-center justify-between text-gray-400 mb-2">
-            <span className="text-[10px] font-mono uppercase tracking-wider">Spaces In Round</span>
-            <Orbit className="w-4 h-4 text-purple-400" />
+          <div className="text-[10px] text-gray-500 mt-1 flex items-center justify-between">
+            <span>Cumulative asking valuation</span>
+            <span className="text-[#7DD3FC] opacity-0 group-hover:opacity-100 transition-opacity font-mono text-[9px]">
+              View Current →
+            </span>
           </div>
-          <div className="text-2xl font-bold font-mono text-white">
+        </Link>
+
+        {/* 4. Spaces in the Round Count -> Link to Space in Round Curation */}
+        <Link
+          href="/admin/space-in-round"
+          className="bg-[#070E1C] border border-white/10 rounded-xl p-5 hover:border-purple-500/50 hover:bg-[#0B1528]/80 hover:shadow-[0_0_20px_rgba(168,85,247,0.12)] group transition-all duration-200 block cursor-pointer"
+          title="Click to curate and reorder Space in Round properties"
+        >
+          <div className="flex items-center justify-between text-gray-400 mb-2">
+            <span className="text-[10px] font-mono uppercase tracking-wider group-hover:text-gray-200 transition-colors">
+              Spaces In Round
+            </span>
+            <div className="flex items-center gap-1">
+              <Orbit className="w-4 h-4 text-purple-400" />
+              <ArrowUpRight className="w-3.5 h-3.5 text-gray-500 opacity-0 group-hover:opacity-100 group-hover:text-purple-400 transition-all" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold font-mono text-white group-hover:text-purple-400 transition-colors">
             {data?.spacesInRoundCount ?? 0}
           </div>
-          <p className="text-[10px] text-gray-500 mt-1">Featured 360° showcase projects</p>
-        </div>
-
-        {/* 5. Completed Deals */}
-        <div className="bg-[#070E1C] border border-white/10 rounded-xl p-5 hover:border-[#7DD3FC]/30 transition-all">
-          <div className="flex items-center justify-between text-gray-400 mb-2">
-            <span className="text-[10px] font-mono uppercase tracking-wider">Completed Deals</span>
-            <Award className="w-4 h-4 text-amber-400" />
+          <div className="text-[10px] text-gray-500 mt-1 flex items-center justify-between">
+            <span>Featured 360° showcase</span>
+            <span className="text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity font-mono text-[9px]">
+              Curate →
+            </span>
           </div>
-          <div className="text-2xl font-bold font-mono text-white">
+        </Link>
+
+        {/* 5. Completed Deals -> Link to Soldout Projects */}
+        <Link
+          href="/admin/properties?tab=sold"
+          className="bg-[#070E1C] border border-white/10 rounded-xl p-5 hover:border-amber-500/50 hover:bg-[#0B1528]/80 hover:shadow-[0_0_20px_rgba(245,158,11,0.12)] group transition-all duration-200 block cursor-pointer"
+          title="Click to view sold out projects and completed deals"
+        >
+          <div className="flex items-center justify-between text-gray-400 mb-2">
+            <span className="text-[10px] font-mono uppercase tracking-wider group-hover:text-gray-200 transition-colors">
+              Completed Deals
+            </span>
+            <div className="flex items-center gap-1">
+              <Award className="w-4 h-4 text-amber-400" />
+              <ArrowUpRight className="w-3.5 h-3.5 text-gray-500 opacity-0 group-hover:opacity-100 group-hover:text-amber-400 transition-all" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold font-mono text-white group-hover:text-amber-400 transition-colors">
             {data?.completedDealMetrics?.totalCompletedDeals ?? 0}
           </div>
-          <p className="text-[10px] text-gray-500 mt-1">Successfully closed transactions</p>
-        </div>
+          <div className="text-[10px] text-gray-500 mt-1 flex items-center justify-between">
+            <span>Closed transactions</span>
+            <span className="text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity font-mono text-[9px]">
+              View Deals →
+            </span>
+          </div>
+        </Link>
       </div>
 
       {/* LOWER SECTION: SALES REVENUE + SIMPLE ACTIVITY GRAPH */}
@@ -255,7 +355,14 @@ export default function DashboardClient() {
               </h2>
               <p className="text-[11px] text-gray-400 mt-0.5">Grouped by currency</p>
             </div>
-            <Award className="w-4 h-4 text-amber-400" />
+            <Link
+              href="/admin/properties?tab=sold"
+              className="flex items-center gap-1 text-[11px] font-mono text-amber-400 hover:text-amber-300 transition-colors"
+              title="View Soldout Projects and Deals"
+            >
+              <span>View Deals</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
 
           <div className="space-y-3">
@@ -290,7 +397,7 @@ export default function DashboardClient() {
         </div>
 
         {/* Activity Trends Graph (Website Visitors, Project Additions, Deal Closures) */}
-        <div className="lg:col-span-2 bg-[#070E1C] border border-white/10 rounded-xl p-6">
+        <div id="activity-trends" className="lg:col-span-2 bg-[#070E1C] border border-white/10 rounded-xl p-6 scroll-mt-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-white/10 mb-4">
             <div>
               <h2 className="text-xs font-semibold uppercase tracking-wider text-white font-mono">
@@ -375,6 +482,21 @@ export default function DashboardClient() {
           )}
         </div>
       </div>
+
+      {/* Recent Enquiries + Recent Activity — side by side on desktop */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <RecentEnquiriesWidget
+          enquiries={data?.recentEnquiries || []}
+          loading={loading && !data}
+        />
+        <RecentActivityWidget
+          activities={data?.recentActivity || []}
+          loading={loading && !data}
+        />
+      </div>
+
+      {/* Quick Actions */}
+      <QuickActionsWidget />
     </div>
   )
 }

@@ -152,14 +152,14 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         </button>
       </header>
 
-      {/* Sidebar for Desktop & Mobile Overlay */}
+      {/* Sidebar for Desktop & Mobile Overlay - Sticky and Constant on Desktop */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#070E1C] border-r border-white/10 flex flex-col justify-between transition-transform duration-300 ease-in-out md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#070E1C] border-r border-white/10 flex flex-col justify-between transition-transform duration-300 ease-in-out md:sticky md:top-0 md:h-screen md:max-h-screen shrink-0 md:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Brand Header */}
-        <div className="p-5 border-b border-white/10 bg-[#070E1C]">
+        <div className="p-5 border-b border-white/10 bg-[#070E1C] shrink-0">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-md border border-[#7DD3FC]/40 flex items-center justify-center bg-[#0B1528] shadow-[0_0_15px_rgba(125,211,252,0.18)]">
@@ -210,7 +210,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         </div>
 
         {/* Navigation Section: EXACTLY NINE CLEAN LINKS */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1.5 scrollbar-thin scrollbar-thumb-white/10">
+        <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1.5 scrollbar-thin scrollbar-thumb-white/10">
           {NAV_ITEMS.map((item, index) => {
             const Icon = item.icon
             const active = isNavItemActive(item)
@@ -240,7 +240,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         </nav>
 
         {/* Footer Actions */}
-        <div className="p-3.5 border-t border-white/10 space-y-2 bg-[#040810]/70">
+        <div className="p-3.5 border-t border-white/10 space-y-2 bg-[#040810]/70 shrink-0">
           <Link
             href="/"
             target="_blank"

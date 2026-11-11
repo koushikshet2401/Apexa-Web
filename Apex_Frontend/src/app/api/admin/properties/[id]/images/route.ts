@@ -38,7 +38,7 @@ export async function POST(
     }
 
     const body = await request.json()
-    const { url, alt, order } = body
+    const { url, alt, description, order } = body
 
     if (!url || typeof url !== 'string' || !url.trim()) {
       return NextResponse.json({ error: 'Image URL is required' }, { status: 400 })
@@ -57,6 +57,7 @@ export async function POST(
         propertyId: id,
         url: url.trim(),
         alt: alt ? alt.trim() : property.name,
+        description: description ? description.trim() : (alt ? alt.trim() : null),
         order: newOrder,
       },
     })

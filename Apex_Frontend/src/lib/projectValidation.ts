@@ -180,6 +180,7 @@ export const FORBIDDEN_DESCRIPTIVE_FIELDS = [
   'area',
   'cityName',
   'locationLine',
+  'mapUrl',
   'mainVideoUrl',
   'mainVideoThumb',
   'mainImage',
