@@ -418,3 +418,118 @@ nextjs-portal,
   opacity: 0 !important;
   pointer-events: none !important;
 }
+
+/* ==========================================================================
+   EXCLUSIVE ADMIN PANEL THEME — Slate Teal (#1F2F33) & Frost Blue (#A3B4C4)
+   Strictly scoped to .admin-portal (Zero impact on public client website)
+   ========================================================================== */
+
+.admin-portal {
+  --admin-bg-base: #1F2F33;       /* Slate Teal Base */
+  --admin-bg-surface: #24363B;    /* Elevated Slate Teal (Cards/Sidebar) */
+  --admin-bg-inset: #182528;      /* Deep Inset Slate Teal (Inputs/Wells) */
+  --admin-bg-card: #273A3F;       /* High-contrast Card Surface */
+  --admin-frost-blue: #A3B4C4;    /* Frost Blue Accent & Typography */
+  --admin-frost-glow: rgba(163, 180, 196, 0.25);
+  --admin-border: rgba(163, 180, 196, 0.15);
+
+  background-color: #1F2F33 !important;
+  color: #F8FAFC !important;
+}
+
+/* Background overrides strictly within .admin-portal */
+.admin-portal .bg-\[\#040810\],
+.admin-portal .bg-\[\#040810\]\/50,
+.admin-portal .bg-\[\#040810\]\/70,
+.admin-portal .bg-\[\#040810\]\/80,
+.admin-portal .bg-\[\#040810\]\/90 {
+  background-color: #182528 !important;
+}
+
+.admin-portal .bg-\[\#070E1C\],
+.admin-portal .bg-\[\#070E1C\]\/80 {
+  background-color: #24363B !important;
+}
+
+.admin-portal .bg-\[\#0B1528\],
+.admin-portal .bg-\[\#0B1528\]\/80 {
+  background-color: #2A3E43 !important;
+}
+
+/* Accent & Text Color overrides strictly within .admin-portal */
+.admin-portal .text-\[\#7DD3FC\] {
+  color: #A3B4C4 !important;
+}
+
+.admin-portal .hover\:text-\[\#7DD3FC\]:hover {
+  color: #FFFFFF !important;
+}
+
+.admin-portal .text-sky-400,
+.admin-portal .text-sky-300 {
+  color: #A3B4C4 !important;
+}
+
+/* Border overrides strictly within .admin-portal */
+.admin-portal .border-\[\#7DD3FC\],
+.admin-portal .border-sky-400 {
+  border-color: #A3B4C4 !important;
+}
+
+.admin-portal .border-\[\#7DD3FC\]\/20,
+.admin-portal .border-\[\#7DD3FC\]\/25,
+.admin-portal .border-\[\#7DD3FC\]\/30,
+.admin-portal .border-\[\#7DD3FC\]\/40,
+.admin-portal .border-\[\#7DD3FC\]\/50,
+.admin-portal .border-\[\#7DD3FC\]\/60 {
+  border-color: rgba(163, 180, 196, 0.35) !important;
+}
+
+.admin-portal .focus\:border-\[\#7DD3FC\]:focus,
+.admin-portal .focus\:border-\[\#7DD3FC\]\/60:focus {
+  border-color: #A3B4C4 !important;
+  box-shadow: 0 0 0 1px rgba(163, 180, 196, 0.4) !important;
+}
+
+.admin-portal .hover\:border-\[\#7DD3FC\]\/40:hover,
+.admin-portal .hover\:border-\[\#7DD3FC\]\/50:hover {
+  border-color: rgba(163, 180, 196, 0.5) !important;
+}
+
+/* Button & Badge background overrides strictly within .admin-portal */
+.admin-portal .bg-\[\#7DD3FC\] {
+  background-color: #A3B4C4 !important;
+  color: #1F2F33 !important;
+}
+
+.admin-portal .hover\:bg-\[\#7DD3FC\]\/90:hover {
+  background-color: #FFFFFF !important;
+  color: #1F2F33 !important;
+}
+
+.admin-portal .bg-\[\#7DD3FC\]\/10,
+.admin-portal .bg-\[\#7DD3FC\]\/15,
+.admin-portal .bg-\[\#7DD3FC\]\/20 {
+  background-color: rgba(163, 180, 196, 0.16) !important;
+  color: #A3B4C4 !important;
+}
+
+.admin-portal .hover\:bg-\[\#7DD3FC\]\/20:hover {
+  background-color: rgba(163, 180, 196, 0.25) !important;
+}
+
+/* Secondary Button / Action overrides */
+.admin-portal .bg-\[\#CBD5E1\] {
+  background-color: #A3B4C4 !important;
+  color: #1F2F33 !important;
+}
+
+.admin-portal .hover\:bg-white:hover {
+  background-color: #FFFFFF !important;
+  color: #1F2F33 !important;
+}
+
+.admin-portal ::selection {
+  background: rgba(163, 180, 196, 0.35) !important;
+  color: #FFFFFF !important;
+}

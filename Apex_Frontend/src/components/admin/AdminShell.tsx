@@ -62,7 +62,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   // If on login page, render clean layout without sidebar
   if (pathname === '/admin/login') {
     return (
-      <div className="min-h-screen bg-[#040810] text-[#F8FAFC]">
+      <div className="admin-portal min-h-screen bg-[#1F2F33] text-[#F8FAFC]">
         {children}
       </div>
     )
@@ -131,21 +131,21 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <div className="min-h-screen bg-[#040810] text-[#F8FAFC] flex flex-col md:flex-row font-sans selection:bg-[#7DD3FC]/20">
+    <div className="admin-portal min-h-screen bg-[#1F2F33] text-[#F8FAFC] flex flex-col md:flex-row font-sans selection:bg-[#A3B4C4]/20">
       {/* Mobile Top Header */}
-      <header className="md:hidden flex items-center justify-between px-5 py-4 border-b border-white/10 bg-[#070E1C] sticky top-0 z-40 shadow-lg">
+      <header className="md:hidden flex items-center justify-between px-5 py-4 border-b border-white/10 bg-[#24363B] sticky top-0 z-40 shadow-lg">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded border border-[#7DD3FC]/40 flex items-center justify-center bg-[#0B1528] shadow-[0_0_12px_rgba(125,211,252,0.18)]">
-            <span className="font-display font-bold text-sm text-[#7DD3FC]">A</span>
+          <div className="w-8 h-8 rounded border border-[#A3B4C4]/40 flex items-center justify-center bg-[#182528] shadow-[0_0_12px_rgba(163,180,196,0.18)]">
+            <span className="font-display font-bold text-sm text-[#A3B4C4]">A</span>
           </div>
           <div>
             <h1 className="text-xs uppercase tracking-[0.2em] font-medium text-white">Apex Pacific</h1>
-            <p className="text-[10px] tracking-widest text-[#7DD3FC] uppercase font-mono">Admin Portal</p>
+            <p className="text-[10px] tracking-widest text-[#A3B4C4] uppercase font-mono">Admin Portal</p>
           </div>
         </div>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="p-2 rounded border border-white/10 bg-[#0B1528] text-gray-300 hover:text-white transition-colors"
+          className="p-2 rounded border border-white/10 bg-[#182528] text-gray-300 hover:text-white transition-colors"
           aria-label="Toggle Navigation"
         >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -154,22 +154,22 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
       {/* Sidebar for Desktop & Mobile Overlay - Sticky and Constant on Desktop */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#070E1C] border-r border-white/10 flex flex-col justify-between transition-transform duration-300 ease-in-out md:sticky md:top-0 md:h-screen md:max-h-screen shrink-0 md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#24363B] border-r border-white/10 flex flex-col justify-between transition-transform duration-300 ease-in-out md:sticky md:top-0 md:h-screen md:max-h-screen shrink-0 md:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Brand Header */}
-        <div className="p-5 border-b border-white/10 bg-[#070E1C] shrink-0">
+        <div className="p-5 border-b border-white/10 bg-[#24363B] shrink-0">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-md border border-[#7DD3FC]/40 flex items-center justify-center bg-[#0B1528] shadow-[0_0_15px_rgba(125,211,252,0.18)]">
-                <span className="font-display font-bold text-base text-[#7DD3FC]">A</span>
+              <div className="w-9 h-9 rounded-md border border-[#A3B4C4]/40 flex items-center justify-center bg-[#182528] shadow-[0_0_15px_rgba(163,180,196,0.18)]">
+                <span className="font-display font-bold text-base text-[#A3B4C4]">A</span>
               </div>
               <div>
                 <span className="text-xs font-semibold uppercase tracking-[0.22em] text-white block">
                   Apex Pacific
                 </span>
-                <span className="text-[10px] uppercase tracking-[0.28em] text-[#7DD3FC] font-mono block">
+                <span className="text-[10px] uppercase tracking-[0.28em] text-[#A3B4C4] font-mono block">
                   Admin Panel
                 </span>
               </div>
@@ -187,17 +187,17 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           <Link
             href="/admin/account"
             onClick={() => setMobileOpen(false)}
-            className="w-full block p-2.5 rounded-lg bg-[#040810] border border-white/10 hover:border-[#7DD3FC]/40 transition-all group"
+            className="w-full block p-2.5 rounded-lg bg-[#182528] border border-white/10 hover:border-[#A3B4C4]/40 transition-all group"
             title="View Administrator Account & Profile"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 min-w-0">
-                <Shield className="w-3.5 h-3.5 text-[#7DD3FC] shrink-0" />
-                <span className="text-[11px] font-medium text-white truncate group-hover:text-[#7DD3FC] transition-colors">
+                <Shield className="w-3.5 h-3.5 text-[#A3B4C4] shrink-0" />
+                <span className="text-[11px] font-medium text-white truncate group-hover:text-[#A3B4C4] transition-colors">
                   {profile?.name || profile?.email?.split('@')[0] || 'Administrator'}
                 </span>
               </div>
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#7DD3FC]/15 text-[#7DD3FC] font-mono tracking-wider font-semibold uppercase border border-[#7DD3FC]/20">
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#A3B4C4]/15 text-[#A3B4C4] font-mono tracking-wider font-semibold uppercase border border-[#A3B4C4]/20">
                 {profile?.role || 'SUPER_ADMIN'}
               </span>
             </div>
@@ -221,12 +221,12 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                 onClick={() => setMobileOpen(false)}
                 className={`flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-medium transition-all duration-150 ${
                   active
-                    ? 'bg-[#7DD3FC]/10 text-[#7DD3FC] border border-[#7DD3FC]/30 shadow-[0_0_12px_rgba(125,211,252,0.12)] font-semibold'
+                    ? 'bg-[#A3B4C4]/15 text-[#A3B4C4] border border-[#A3B4C4]/35 shadow-[0_0_12px_rgba(163,180,196,0.15)] font-semibold'
                     : 'text-gray-300 hover:text-white hover:bg-white/[0.04] border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Icon className={`w-4 h-4 ${active ? 'text-[#7DD3FC]' : 'text-gray-400'}`} />
+                  <Icon className={`w-4 h-4 ${active ? 'text-[#A3B4C4]' : 'text-gray-400'}`} />
                   <span>{item.label}</span>
                 </div>
                 {item.badge && (
@@ -240,7 +240,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         </nav>
 
         {/* Footer Actions */}
-        <div className="p-3.5 border-t border-white/10 space-y-2 bg-[#040810]/70 shrink-0">
+        <div className="p-3.5 border-t border-white/10 space-y-2 bg-[#182528]/80 shrink-0">
           <Link
             href="/"
             target="_blank"
@@ -283,10 +283,10 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       {/* Quick Profile Modal */}
       {profileModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[#070E1C] border border-white/10 rounded-xl shadow-2xl max-w-md w-full p-6 text-slate-100 space-y-5">
+          <div className="bg-[#24363B] border border-white/10 rounded-xl shadow-2xl max-w-md w-full p-6 text-slate-100 space-y-5">
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-[#0B1528] border border-[#7DD3FC]/30 flex items-center justify-center text-[#7DD3FC] shadow-[0_0_15px_rgba(125,211,252,0.15)]">
+                <div className="w-10 h-10 rounded-lg bg-[#182528] border border-[#A3B4C4]/30 flex items-center justify-center text-[#A3B4C4] shadow-[0_0_15px_rgba(163,180,196,0.15)]">
                   <Shield className="w-5 h-5" />
                 </div>
                 <div>
@@ -304,25 +304,25 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="p-3 rounded-lg bg-[#040810] border border-white/5 space-y-1">
+              <div className="p-3 rounded-lg bg-[#182528] border border-white/5 space-y-1">
                 <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400 block">Name</span>
                 <p className="text-sm font-medium text-white">{profile?.name || 'Apex Administrator'}</p>
               </div>
 
-              <div className="p-3 rounded-lg bg-[#040810] border border-white/5 space-y-1">
+              <div className="p-3 rounded-lg bg-[#182528] border border-white/5 space-y-1">
                 <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400 block">Email Address</span>
-                <p className="text-xs font-mono text-[#7DD3FC]">{profile?.email || 'admin@apexpacificholdings.com'}</p>
+                <p className="text-xs font-mono text-[#A3B4C4]">{profile?.email || 'admin@apexpacificholdings.com'}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 rounded-lg bg-[#040810] border border-white/5 space-y-1">
+                <div className="p-3 rounded-lg bg-[#182528] border border-white/5 space-y-1">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400 block">System Role</span>
-                  <span className="inline-block px-2 py-0.5 rounded bg-[#7DD3FC]/15 text-[#7DD3FC] font-mono text-[10px] font-semibold border border-[#7DD3FC]/25">
+                  <span className="inline-block px-2 py-0.5 rounded bg-[#A3B4C4]/15 text-[#A3B4C4] font-mono text-[10px] font-semibold border border-[#A3B4C4]/25">
                     {profile?.role || 'SUPER_ADMIN'}
                   </span>
                 </div>
 
-                <div className="p-3 rounded-lg bg-[#040810] border border-white/5 space-y-1">
+                <div className="p-3 rounded-lg bg-[#182528] border border-white/5 space-y-1">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400 block">Status</span>
                   <div className="flex items-center gap-1.5 text-emerald-400 text-[11px] font-medium">
                     <CheckCircle2 className="w-3.5 h-3.5" />
@@ -336,7 +336,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               <Link
                 href="/admin/account"
                 onClick={() => setProfileModalOpen(false)}
-                className="text-xs text-[#7DD3FC] hover:underline flex items-center gap-1 font-medium"
+                className="text-xs text-[#A3B4C4] hover:underline flex items-center gap-1 font-medium"
               >
                 <span>Full Account Management</span>
                 <span>→</span>
