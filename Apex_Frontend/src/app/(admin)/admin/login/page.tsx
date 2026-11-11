@@ -42,10 +42,10 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="admin-portal min-h-screen bg-[#1F2F33] flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="admin-portal min-h-screen bg-[#A3B4C4] flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background radial atmosphere */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#1F2F33]/80 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-[#A3B4C4]/10 rounded-full blur-[90px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#8FA0B2]/60 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-white/20 rounded-full blur-[90px] pointer-events-none" />
 
       <div className="w-full max-w-md relative z-10">
         {/* Card Container */}

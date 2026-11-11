@@ -17,7 +17,7 @@ export default function AdminRootLayout({
   children: React.ReactNode
 }) {
   return (
-    <Suspense fallback={<div className="admin-portal min-h-screen bg-[#1F2F33]" />}>
+    <Suspense fallback={<div className="admin-portal min-h-screen bg-[#A3B4C4]" />}>
       <AdminShell>{children}</AdminShell>
     </Suspense>
   )
