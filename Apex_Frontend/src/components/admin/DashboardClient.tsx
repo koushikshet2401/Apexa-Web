@@ -127,11 +127,12 @@ export default function DashboardClient() {
   const dealVolumes = data?.completedDealVolume?.byCurrency || []
   const trend = visits?.dailyTrend || []
 
-  // Max value for graph scaling
-  const maxVisits = Math.max(1, ...trend.map((t) => t.visits || 0))
-  const maxAdditions = Math.max(1, ...trend.map((t) => t.projectAdditions || 0))
-  const maxClosures = Math.max(1, ...trend.map((t) => t.dealClosures || 0))
-  const graphMax = Math.max(maxVisits, maxAdditions, maxClosures, 5)
+  // Max value for graph scaling with 25% headroom so bars never breach the top boundary
+  const maxVisits = Math.max(0, ...trend.map((t) => t.visits || 0))
+  const maxAdditions = Math.max(0, ...trend.map((t) => t.projectAdditions || 0))
+  const maxClosures = Math.max(0, ...trend.map((t) => t.dealClosures || 0))
+  const highestMetric = Math.max(maxVisits, maxAdditions, maxClosures, 4)
+  const graphMax = Math.ceil(highestMetric * 1.25)
 
   if (loading && !data) {
     return (
@@ -428,48 +429,55 @@ export default function DashboardClient() {
           {/* Simple Clean Bar/Line Graph */}
           {trend.length > 0 ? (
             <div className="space-y-2 pt-2">
-              <div className="h-48 flex items-end gap-1.5 sm:gap-2 px-1">
+              <div className="h-48 flex items-end gap-1 sm:gap-1.5 px-1">
                 {trend.map((pt, i) => {
-                  const visitHeight = Math.max(4, Math.round((pt.visits / graphMax) * 100))
-                  const addHeight = Math.max(0, Math.round((pt.projectAdditions / graphMax) * 100))
-                  const dealHeight = Math.max(0, Math.round((pt.dealClosures / graphMax) * 100))
+                  const visitHeight = pt.visits > 0 ? Math.round((pt.visits / graphMax) * 100) : 0
+                  const addHeight = pt.projectAdditions > 0 ? Math.round((pt.projectAdditions / graphMax) * 100) : 0
+                  const dealHeight = pt.dealClosures > 0 ? Math.round((pt.dealClosures / graphMax) * 100) : 0
+
                   return (
                     <div
                       key={pt.date || i}
-                      className="flex-1 flex flex-col items-center justify-end h-full group relative"
+                      className="flex-1 flex flex-col items-center h-full group relative min-w-0"
                     >
                       {/* Tooltip on hover */}
-                      <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col bg-[#040810] border border-white/20 rounded-md p-2 text-[10px] font-mono text-white z-20 whitespace-nowrap shadow-xl">
+                      <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col bg-[#040810] border border-white/20 rounded-md p-2 text-[10px] font-mono text-white z-30 whitespace-nowrap shadow-xl pointer-events-none">
                         <span className="font-semibold text-gray-300">{pt.date}</span>
                         <span className="text-[#7DD3FC]">Visitors: {pt.visits}</span>
                         <span className="text-emerald-400">Projects Added: {pt.projectAdditions}</span>
                         <span className="text-amber-400">Deals Closed: {pt.dealClosures}</span>
                       </div>
 
-                      {/* Bars */}
-                      <div className="w-full flex items-end justify-center gap-0.5 h-full">
-                        <div
-                          style={{ height: `${visitHeight}%` }}
-                          className="w-1.5 sm:w-2 bg-[#7DD3FC]/80 rounded-t transition-all group-hover:bg-[#7DD3FC]"
-                        />
+                      {/* Bar Plot Area (bounded flex-1 box strictly above the date labels) */}
+                      <div className="w-full flex-1 flex items-end justify-center gap-0.5 pb-1 min-h-0">
+                        {pt.visits > 0 ? (
+                          <div
+                            style={{ height: `${Math.min(90, Math.max(6, visitHeight))}%` }}
+                            className="w-1 sm:w-1.5 bg-[#7DD3FC]/80 rounded-t transition-all group-hover:bg-[#7DD3FC]"
+                          />
+                        ) : (
+                          <div className="w-1 h-1 rounded-full bg-white/5" />
+                        )}
                         {pt.projectAdditions > 0 && (
                           <div
-                            style={{ height: `${Math.max(12, addHeight)}%` }}
-                            className="w-1.5 sm:w-2 bg-emerald-400 rounded-t transition-all"
+                            style={{ height: `${Math.min(90, Math.max(8, addHeight))}%` }}
+                            className="w-1.5 sm:w-2 bg-emerald-400 rounded-t transition-all shadow-[0_0_8px_rgba(52,211,153,0.3)]"
                           />
                         )}
                         {pt.dealClosures > 0 && (
                           <div
-                            style={{ height: `${Math.max(12, dealHeight)}%` }}
-                            className="w-1.5 sm:w-2 bg-amber-400 rounded-t transition-all"
+                            style={{ height: `${Math.min(90, Math.max(8, dealHeight))}%` }}
+                            className="w-1.5 sm:w-2 bg-amber-400 rounded-t transition-all shadow-[0_0_8px_rgba(251,191,36,0.3)]"
                           />
                         )}
                       </div>
 
                       {/* Date label at bottom */}
-                      <span className="text-[9px] font-mono text-gray-500 mt-1 truncate max-w-full">
-                        {pt.date.slice(5)}
-                      </span>
+                      <div className="w-full border-t border-white/10 pt-1 text-center shrink-0">
+                        <span className="text-[9px] font-mono text-gray-500 block truncate max-w-full">
+                          {pt.date.slice(5)}
+                        </span>
+                      </div>
                     </div>
                   )
                 })}
