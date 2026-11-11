@@ -571,3 +571,43 @@ nextjs-portal,
   background: rgba(11, 19, 37, 0.20) !important;
   color: #0B1320 !important;
 }
+
+/* High contrast alerts and required validation indicators */
+.admin-portal .text-rose-300,
+.admin-portal .text-rose-400 {
+  color: #7F1D1D !important; /* Deep dark crimson */
+  font-weight: 600 !important;
+}
+
+.admin-portal .bg-rose-500\/10,
+.admin-portal .bg-rose-500\/15 {
+  background-color: #FEE2E2 !important; /* Rich light red surface */
+  border-color: #DC2626 !important;
+  color: #7F1D1D !important;
+}
+
+.admin-portal .border-rose-500\/20,
+.admin-portal .border-rose-500\/25,
+.admin-portal .border-rose-500\/30,
+.admin-portal .border-rose-500\/40 {
+  border-color: #DC2626 !important;
+}
+
+.admin-portal .text-emerald-300,
+.admin-portal .text-emerald-400 {
+  color: #064E3B !important; /* Deep dark emerald */
+  font-weight: 600 !important;
+}
+
+.admin-portal .bg-emerald-500\/10,
+.admin-portal .bg-emerald-500\/15 {
+  background-color: #ECFDF5 !important;
+  border-color: #10B981 !important;
+  color: #064E3B !important;
+}
+
+.admin-portal .border-emerald-500\/20,
+.admin-portal .border-emerald-500\/30 {
+  border-color: #10B981 !important;
+}
+

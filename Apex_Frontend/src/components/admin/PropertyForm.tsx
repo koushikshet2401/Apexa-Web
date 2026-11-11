@@ -573,18 +573,18 @@ export default function PropertyForm({
 
       {toast && (
         <div
-          className={`p-4 rounded-xl text-xs flex items-center gap-2.5 ${
+          className={`p-4 rounded-xl text-xs flex items-center gap-2.5 shadow-sm transition-all border ${
             toast.type === 'success'
-              ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
-              : 'bg-rose-500/10 border border-rose-500/20 text-rose-400'
+              ? 'bg-emerald-50 border-emerald-500/40 text-emerald-950 font-semibold'
+              : 'bg-[#FEE2E2] border-2 border-[#DC2626] text-[#7F1D1D] font-bold'
           }`}
         >
           {toast.type === 'success' ? (
-            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-700" />
           ) : (
-            <AlertCircle className="w-4 h-4 shrink-0" />
+            <AlertCircle className="w-4 h-4 shrink-0 text-[#B91C1C]" />
           )}
-          <span>{toast.message}</span>
+          <span className="text-xs leading-normal">{toast.message}</span>
         </div>
       )}
 
@@ -598,7 +598,7 @@ export default function PropertyForm({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2">
             <label className="text-xs text-gray-300 block mb-1.5 font-medium">
-              Project Name <span className="text-[#7DD3FC]">*</span>
+              Project Name <span className="text-[#DC2626] font-bold ml-0.5">*</span>
             </label>
             <input
               type="text"
@@ -612,7 +612,7 @@ export default function PropertyForm({
 
           <div>
             <label className="text-xs text-gray-300 block mb-1.5 font-medium">
-              Country Destination <span className="text-[#7DD3FC]">*</span>
+              Country Destination <span className="text-[#DC2626] font-bold ml-0.5">*</span>
             </label>
             <select
               value={countryId}
@@ -717,8 +717,8 @@ export default function PropertyForm({
             )}
 
             {mapVerified === false && mapError && (
-              <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/25 text-rose-300 text-xs flex items-center gap-2 animate-in fade-in duration-200">
-                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+              <div className="p-3 rounded-lg bg-[#FEE2E2] border-2 border-[#DC2626] text-[#7F1D1D] text-xs font-bold flex items-center gap-2 animate-in fade-in duration-200">
+                <AlertCircle className="w-4 h-4 text-[#B91C1C] shrink-0" />
                 <span>{mapError}</span>
               </div>
             )}
