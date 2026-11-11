@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requirePermission, PERMISSIONS } from '@/lib/rbac'
 import { logAdminActivity } from '@/lib/activityLog'
+import { reconcileFeaturedLaunches } from '@/lib/launchesQueue'
 
 /**
  * POST /api/admin/projects/[id]/unpublish
@@ -37,6 +38,12 @@ export async function POST(
       },
     })
 
+    // If unpublished project was a featured launch, demote and backfill
+    let updatedLaunches = null
+    if (project.isFeaturedLaunch) {
+      updatedLaunches = await reconcileFeaturedLaunches(id, true)
+    }
+
     await logAdminActivity({
       adminId: auth.id,
       adminEmail: auth.email,
@@ -56,6 +63,7 @@ export async function POST(
       ok: true,
       message: 'Project unpublished and returned to draft.',
       project: updated,
+      updatedLaunches,
     })
   } catch (error) {
     console.error('Error unpublishing project:', error)

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requirePermission, PERMISSIONS } from '@/lib/rbac'
 import { logAdminActivity } from '@/lib/activityLog'
+import { reconcileFeaturedLaunches } from '@/lib/launchesQueue'
 
 /**
  * POST /api/admin/projects/[id]/archive
@@ -47,6 +48,9 @@ export async function POST(
       },
     })
 
+    // Reconcile featured launches queue: if this archived project was featured, promote last-in project to fill slot
+    const updatedLaunches = await reconcileFeaturedLaunches(id, true)
+
     await logAdminActivity({
       adminId: auth.id,
       adminEmail: auth.email,
@@ -65,6 +69,7 @@ export async function POST(
       ok: true,
       message: 'Project safely archived to Deleted Projects section.',
       project: archived,
+      updatedLaunches,
     })
   } catch (error) {
     console.error('Error archiving project:', error)

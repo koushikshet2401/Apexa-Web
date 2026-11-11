@@ -189,17 +189,36 @@ export default function PropertiesListClient({
 
       if (res.ok) {
         setProperties((prev) =>
-          prev.map((item) =>
-            item.id === prop.id
-              ? {
+          prev.map((item) => {
+            if (item.id === prop.id) {
+              return {
+                ...item,
+                isPublished: !isCurrentlyPublished,
+                isDraft: isCurrentlyPublished,
+                isPubliclyVisible: !isCurrentlyPublished,
+                ...(isCurrentlyPublished ? { isFeaturedLaunch: false, launchOrder: null } : {}),
+              }
+            }
+            if (Array.isArray(data.updatedLaunches)) {
+              const matched = data.updatedLaunches.find((ul: any) => ul.id === item.id)
+              if (matched) {
+                return {
                   ...item,
-                  isPublished: !isCurrentlyPublished,
-                  isDraft: isCurrentlyPublished,
-                  isPubliclyVisible: !isCurrentlyPublished,
+                  isFeaturedLaunch: true,
+                  launchOrder: matched.launchOrder,
                 }
-              : item
-          )
+              } else if (item.isFeaturedLaunch) {
+                return {
+                  ...item,
+                  isFeaturedLaunch: false,
+                  launchOrder: null,
+                }
+              }
+            }
+            return item
+          })
         )
+        router.refresh()
         showToast(
           'success',
           `Project "${prop.name}" is now ${isCurrentlyPublished ? 'Draft' : 'Published'}.`
@@ -234,19 +253,39 @@ export default function PropertiesListClient({
 
       if (res.ok) {
         setProperties((prev) =>
-          prev.map((item) =>
-            item.id === archiveModalItem.id
-              ? {
+          prev.map((item) => {
+            if (item.id === archiveModalItem.id) {
+              return {
+                ...item,
+                isArchived: true,
+                isPublished: false,
+                isPubliclyVisible: false,
+                isFeaturedLaunch: false,
+                launchOrder: null,
+                archivedAt: new Date().toISOString(),
+                archivedReason: archiveReason.trim(),
+              }
+            }
+            if (Array.isArray(data.updatedLaunches)) {
+              const matched = data.updatedLaunches.find((ul: any) => ul.id === item.id)
+              if (matched) {
+                return {
                   ...item,
-                  isArchived: true,
-                  isPublished: false,
-                  isPubliclyVisible: false,
-                  archivedAt: new Date().toISOString(),
-                  archivedReason: archiveReason.trim(),
+                  isFeaturedLaunch: true,
+                  launchOrder: matched.launchOrder,
                 }
-              : item
-          )
+              } else if (item.isFeaturedLaunch) {
+                return {
+                  ...item,
+                  isFeaturedLaunch: false,
+                  launchOrder: null,
+                }
+              }
+            }
+            return item
+          })
         )
+        router.refresh()
         showToast('success', `Project "${archiveModalItem.name}" moved to Deleted Projects.`)
         setArchiveModalItem(null)
         setArchiveReason('')

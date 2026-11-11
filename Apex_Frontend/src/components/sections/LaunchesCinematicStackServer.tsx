@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { reconcileFeaturedLaunches } from '@/lib/launchesQueue'
 import {
   LaunchesCinematicStack,
   VideoLaunch,
@@ -66,11 +67,40 @@ export async function LaunchesCinematicStackServer() {
     ])
 
     const elapsed = Math.round(performance.now() - startTime)
-    console.log(`[Database Timing] Homepage data fetched in ${elapsed}ms (Launches: ${results[0]?.length || 0}, Countries: ${results[1]?.length || 0}, Spaces: ${results[2]?.length || 0})`)
     dbLaunches = results[0]
     dbCountries = results[1]
     dbSpaceProps = results[2]
     dbHomepageContent = results[3]
+
+    // Self-healing: if featured launches are less than 3, reconcile queue to fulfill slots with last-in projects
+    if (dbLaunches.length < 3) {
+      await reconcileFeaturedLaunches()
+      dbLaunches = await db.property.findMany({
+        where: {
+          isPublished: true,
+          isPubliclyVisible: true,
+          isArchived: false,
+          isFeaturedLaunch: true,
+        },
+        orderBy: [
+          { launchOrder: 'asc' },
+          { launchDate: 'desc' },
+          { createdAt: 'desc' },
+        ],
+        take: 3,
+        include: {
+          country: {
+            select: {
+              slug: true,
+              displayName: true,
+              name: true,
+            },
+          },
+        },
+      })
+    }
+
+    console.log(`[Database Timing] Homepage data fetched in ${elapsed}ms (Launches: ${dbLaunches?.length || 0}, Countries: ${dbCountries?.length || 0}, Spaces: ${dbSpaceProps?.length || 0})`)
   } catch (error) {
     // Database connection offline or credentials not set; seamlessly fall back to static data
     const elapsed = Math.round(performance.now() - startTime)

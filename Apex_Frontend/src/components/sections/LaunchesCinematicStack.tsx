@@ -210,7 +210,25 @@ export function LaunchesCinematicStack({
   spaceProperties,
   homepageContent,
 }: LaunchesCinematicStackProps = {}) {
-  const LAUNCHES = launches && launches.length >= 3 ? launches : DEFAULT_LAUNCHES
+  const LAUNCHES = useMemo(() => {
+    if (!launches || launches.length === 0) return DEFAULT_LAUNCHES
+    if (launches.length >= 3) return launches.slice(0, 3)
+
+    const list = [...launches]
+    const existingTitles = new Set(list.map((l) => l.title.trim().toLowerCase()))
+    for (const def of DEFAULT_LAUNCHES) {
+      if (!existingTitles.has(def.title.trim().toLowerCase())) {
+        list.push({
+          ...def,
+          number: `0${list.length + 1}`,
+          tag: `FEATURED LAUNCH · 0${list.length + 1} OF 03`,
+        })
+        existingTitles.add(def.title.trim().toLowerCase())
+      }
+      if (list.length >= 3) break
+    }
+    return list
+  }, [launches])
   const COLLECTION_COUNTRIES = countries && countries.length > 0 ? countries : DEFAULT_COLLECTION_COUNTRIES
   const PERSPECTIVE_GALLERY_PROPERTIES = useMemo(() => {
     const list: PropertyItem[] = spaceProperties && spaceProperties.length > 0 ? [...spaceProperties] : []
