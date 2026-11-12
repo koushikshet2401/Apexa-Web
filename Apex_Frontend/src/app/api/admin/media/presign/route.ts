@@ -1,81 +1,83 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PutObjectCommand } from '@aws-sdk/client-s3'
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { requirePermission, PERMISSIONS } from '@/lib/rbac'
-import { r2, isR2Configured, getR2BucketName, getR2PublicUrl } from '@/lib/r2'
+import { PERMISSIONS, requirePermission } from '@/lib/rbac'
+import {
+  ALLOWED_MEDIA_FOLDERS,
+  assertR2Ready,
+  buildPublicUrlForKey,
+  buildR2ObjectKey,
+  MediaStorageError,
+  normalizeMediaRole,
+  validateUploadMetadata,
+} from '@/lib/mediaStorage'
 
-const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.mp4']
-const ALLOWED_FOLDERS = ['properties', 'countries', 'services', 'homepage', 'general']
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   const auth = await requirePermission(request, PERMISSIONS.MEDIA_UPLOAD)
   if (auth instanceof Response) return auth
 
   try {
+    assertR2Ready()
+
     const body = await request.json()
-    const { filename, contentType, folder } = body
+    const {
+      filename,
+      contentType,
+      fileSize,
+      folder = 'properties',
+      countrySlug = null,
+      projectSlug = null,
+      mediaRole = 'OTHER',
+    } = body || {}
 
-    if (!filename || typeof filename !== 'string') {
-      return NextResponse.json({ error: 'Filename is required' }, { status: 400 })
-    }
+    const validated = validateUploadMetadata({
+      filename: String(filename || ''),
+      contentType: contentType ? String(contentType) : null,
+      byteSize: typeof fileSize === 'number' ? fileSize : undefined,
+    })
 
-    if (!contentType || typeof contentType !== 'string') {
-      return NextResponse.json({ error: 'Content-Type is required' }, { status: 400 })
-    }
+    const targetFolder = (ALLOWED_MEDIA_FOLDERS as readonly string[]).includes(String(folder))
+      ? String(folder)
+      : 'properties'
+    const normalizedRole = normalizeMediaRole(mediaRole)
 
-    // Validate Content-Type
-    const isImage = contentType.startsWith('image/')
-    const isVideo = contentType === 'video/mp4' || contentType === 'video/quicktime'
+    const r2Key = buildR2ObjectKey({
+      folder: targetFolder,
+      countrySlug,
+      projectSlug,
+      mediaRole: normalizedRole,
+      originalFilename: validated.originalFilename,
+      ext: validated.ext,
+    })
 
-    if (!isImage && !isVideo) {
-      return NextResponse.json(
-        { error: 'Only images (JPEG, PNG, WebP, GIF) and MP4 videos are allowed.' },
-        { status: 400 }
-      )
-    }
-
-    // Validate extension
-    const extMatch = filename.toLowerCase().match(/\.[a-z0-9]+$/)
-    const ext = extMatch ? extMatch[0] : ''
-    if (!ALLOWED_EXTENSIONS.includes(ext)) {
-      return NextResponse.json(
-        { error: `File extension "${ext}" is not allowed. Allowed: ${ALLOWED_EXTENSIONS.join(', ')}` },
-        { status: 400 }
-      )
-    }
-
-    // Validate folder
-    const targetFolder = ALLOWED_FOLDERS.includes(folder) ? folder : 'general'
-
-    // Max size hint (20MB for images, 500MB for video)
-    const maxSizeBytes = isVideo ? 500 * 1024 * 1024 : 20 * 1024 * 1024
-
-    // Generate unique key
-    const sanitizedBase = filename
-      .replace(ext, '')
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)+/g, '')
-    const uniqueKey = `${targetFolder}/${Date.now()}-${sanitizedBase || 'asset'}${ext}`
-
-    // Always route through the same-origin server upload endpoint to avoid
-    // browser CORS preflight restrictions on Cloudflare R2 direct endpoints.
-    // The server handler (/api/admin/media/upload-local) writes to disk and
-    // immediately uploads server-to-server to Cloudflare R2 without CORS limits.
-    const publicBase = getR2PublicUrl()
-    const expectedPublicUrl = isR2Configured() && publicBase
-      ? `${publicBase}/${uniqueKey}`
-      : `/uploads/${uniqueKey}`
+    const publicUrl = buildPublicUrlForKey(r2Key)
+    const uploadParams = new URLSearchParams({
+      key: r2Key,
+      filename: validated.originalFilename,
+      mediaRole: normalizedRole,
+    })
 
     return NextResponse.json({
-      uploadUrl: `/api/admin/media/upload-local?key=${encodeURIComponent(uniqueKey)}`,
-      publicUrl: expectedPublicUrl,
-      key: uniqueKey,
-      maxSizeBytes,
-      mode: isR2Configured() ? 'server-r2' : 'local',
+      uploadUrl: `/api/admin/media/upload?${uploadParams.toString()}`,
+      publicUrl,
+      key: r2Key,
+      r2Key,
+      maxSizeBytes: validated.maxSizeBytes,
+      mediaType: validated.mediaType,
+      mediaRole: normalizedRole,
+      mimeType: validated.mimeType,
+      mode: 'server-r2',
+      storage: 'r2',
     })
   } catch (error) {
-    console.error('Error generating presigned upload:', error)
-    return NextResponse.json({ error: 'Failed to generate upload URL' }, { status: 500 })
+    if (error instanceof MediaStorageError) {
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: error.status }
+      )
+    }
+    console.error('Presign error:', error)
+    return NextResponse.json({ error: 'Failed to prepare R2 upload' }, { status: 500 })
   }
 }

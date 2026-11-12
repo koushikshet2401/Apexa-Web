@@ -18,6 +18,16 @@ interface MediaFieldProps {
   onChange: (url: string) => void
   accept?: 'image/*' | 'video/mp4' | string
   folder?: 'properties' | 'countries' | 'services' | 'homepage' | 'general'
+  countrySlug?: string
+  projectSlug?: string
+  mediaRole?:
+    | 'THUMBNAIL'
+    | 'HERO_VIDEO'
+    | 'GALLERY'
+    | 'SPACE_ROUND'
+    | 'HOMEPAGE_VIDEO'
+    | 'HOMEPAGE_POSTER'
+    | 'OTHER'
   placeholder?: string
 }
 
@@ -27,6 +37,9 @@ export default function MediaField({
   onChange,
   accept = 'image/*',
   folder = 'general',
+  countrySlug,
+  projectSlug,
+  mediaRole,
   placeholder = 'https://... or /images/...',
 }: MediaFieldProps) {
   const [showUploadInline, setShowUploadInline] = useState(false)
@@ -83,7 +96,10 @@ export default function MediaField({
           <MediaUploader
             accept={accept}
             folder={folder}
-            label={isVideo ? 'Upload Video File (MP4)' : 'Choose Image from Explorer'}
+            countrySlug={countrySlug}
+            projectSlug={projectSlug}
+            mediaRole={mediaRole}
+            label={isVideo ? 'Upload Video File (MP4 / MOV / WebM)' : 'Choose Image from Explorer'}
             onUploadComplete={(url) => {
               onChange(url)
               setShowUploadInline(false)

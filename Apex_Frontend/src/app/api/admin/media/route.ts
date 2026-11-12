@@ -1,95 +1,90 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { ListObjectsV2Command } from '@aws-sdk/client-s3'
-import { promises as fs } from 'fs'
-import path from 'path'
-import { requirePermission, PERMISSIONS } from '@/lib/rbac'
-import { r2, isR2Configured, getR2BucketName, getR2PublicUrl } from '@/lib/r2'
+import { PERMISSIONS, requirePermission } from '@/lib/rbac'
+import { db } from '@/lib/db'
+import { assertR2Ready, listR2Objects, MediaStorageError } from '@/lib/mediaStorage'
+import { isMissingMediaAssetTableError } from '@/lib/mediaAssetStore'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   const auth = await requirePermission(request, PERMISSIONS.MEDIA_READ)
   if (auth instanceof Response) return auth
 
   try {
+    assertR2Ready()
+
     const { searchParams } = new URL(request.url)
-    const folder = searchParams.get('folder') // optional: "properties", "countries", etc.
+    const prefix = searchParams.get('prefix') || undefined
 
-    // If R2 is configured, query R2 bucket
-    if (isR2Configured()) {
-      const bucketName = getR2BucketName()
-      const publicBase = getR2PublicUrl()
-      const command = new ListObjectsV2Command({
-        Bucket: bucketName,
-        Prefix: folder && folder !== 'all' ? `${folder}/` : undefined,
-      })
+    const r2Objects = await listR2Objects(prefix)
 
-      const response = await r2.send(command)
-      const objects = (response.Contents || []).map((item) => {
-        const key = item.Key || ''
-        const publicUrl = publicBase
-          ? `${publicBase}/${key}`
-          : `https://${(process.env.R2_ACCOUNT_ID || '').trim()}.r2.cloudflarestorage.com/${bucketName}/${key}`
-
-        const isVideo = key.endsWith('.mp4') || key.endsWith('.mov')
-        const contentType = isVideo ? 'video/mp4' : 'image/jpeg'
-
-        return {
-          key,
-          url: publicUrl,
-          size: item.Size || 0,
-          lastModified: item.LastModified?.toISOString() || new Date().toISOString(),
-          contentType,
-        }
-      })
-
-      return NextResponse.json(objects)
-    }
-
-    // Local file fallback if R2 credentials are not set
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads')
-    const results: Array<{
-      key: string
-      url: string
-      size: number
-      lastModified: string
-      contentType: string
-    }> = []
+    let dbMetaByKey = new Map<
+      string,
+      {
+        id: string
+        propertyId: string | null
+        mediaRole: string
+        originalFilename: string
+        mimeType: string
+        description: string | null
+        displayOrder: number
+      }
+    >()
 
     try {
-      const scanDir = async (currentDir: string, relativePath: string) => {
-        const entries = await fs.readdir(currentDir, { withFileTypes: true })
-        for (const entry of entries) {
-          const res = path.resolve(currentDir, entry.name)
-          const rel = path.join(relativePath, entry.name).replace(/\\/g, '/')
-          if (entry.isDirectory()) {
-            await scanDir(res, rel)
-          } else {
-            const stats = await fs.stat(res)
-            const isVideo = entry.name.endsWith('.mp4')
-            results.push({
-              key: rel,
-              url: `/uploads/${rel}`,
-              size: stats.size,
-              lastModified: stats.mtime.toISOString(),
-              contentType: isVideo ? 'video/mp4' : 'image/jpeg',
-            })
-          }
-        }
+      const assets = await db.mediaAsset.findMany({
+        select: {
+          id: true,
+          propertyId: true,
+          mediaRole: true,
+          originalFilename: true,
+          mimeType: true,
+          description: true,
+          displayOrder: true,
+          r2Key: true,
+        },
+      })
+      for (const a of assets) {
+        dbMetaByKey.set(a.r2Key, a)
       }
-
-      await scanDir(uploadsDir, '')
-    } catch {
-      // Directory may not exist yet if no uploads made
+    } catch (err) {
+      if (!isMissingMediaAssetTableError(err)) {
+        throw err
+      }
     }
 
-    // Filter by folder if requested
-    const filtered =
-      folder && folder !== 'all'
-        ? results.filter((item) => item.key.startsWith(`${folder}/`))
-        : results
+    const items = r2Objects.map((obj) => {
+      const meta = dbMetaByKey.get(obj.key)
+      return {
+        key: obj.key,
+        r2Key: obj.key,
+        url: obj.publicUrl,
+        size: obj.size,
+        lastModified: obj.lastModified,
+        mediaId: meta?.id || null,
+        propertyId: meta?.propertyId || null,
+        mediaRole: meta?.mediaRole || null,
+        originalFilename: meta?.originalFilename || obj.key.split('/').pop() || obj.key,
+        mimeType: meta?.mimeType || null,
+        description: meta?.description || null,
+        storage: 'r2',
+      }
+    })
 
-    return NextResponse.json(filtered)
+    return NextResponse.json({
+      items,
+      storage: 'r2',
+      count: items.length,
+    })
   } catch (error) {
-    console.error('Error listing media objects:', error)
-    return NextResponse.json({ error: 'Failed to list media' }, { status: 500 })
+    if (error instanceof MediaStorageError) {
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: error.status }
+      )
+    }
+    console.error('Error listing media:', error)
+    return NextResponse.json({ error: 'Failed to list R2 media objects' }, { status: 500 })
   }
 }

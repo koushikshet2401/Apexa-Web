@@ -15,6 +15,16 @@ interface MediaUploaderProps {
   onUploadComplete: (url: string, key?: string) => void
   accept?: 'image/*' | 'video/mp4' | string
   folder?: 'properties' | 'countries' | 'services' | 'homepage' | 'general'
+  countrySlug?: string
+  projectSlug?: string
+  mediaRole?:
+    | 'THUMBNAIL'
+    | 'HERO_VIDEO'
+    | 'GALLERY'
+    | 'SPACE_ROUND'
+    | 'HOMEPAGE_VIDEO'
+    | 'HOMEPAGE_POSTER'
+    | 'OTHER'
   label?: string
 }
 
@@ -22,6 +32,9 @@ export default function MediaUploader({
   onUploadComplete,
   accept = 'image/*',
   folder = 'general',
+  countrySlug,
+  projectSlug,
+  mediaRole,
   label = 'Upload Media',
 }: MediaUploaderProps) {
   const [file, setFile] = useState<File | null>(null)
@@ -40,14 +53,23 @@ export default function MediaUploader({
 
     // Check allowed extensions
     const allowedImageExts = ['.jpg', '.jpeg', '.png', '.webp', '.gif']
-    const allowedVideoExts = ['.mp4']
+    const allowedVideoExts = ['.mp4', '.mov', '.webm', '.m4v']
+
+    if (selectedFile.size === 0) {
+      setError('Selected file is empty (0 bytes). Please choose a valid file.')
+      return
+    }
 
     const extMatch = selectedFile.name.toLowerCase().match(/\.[a-z0-9]+$/)
     const ext = extMatch ? extMatch[0] : ''
 
     if (isVideo) {
-      if (!allowedVideoExts.includes(ext) && selectedFile.type !== 'video/mp4') {
-        setError('Only MP4 videos are allowed (.mp4).')
+      const validVideoMime =
+        selectedFile.type === 'video/mp4' ||
+        selectedFile.type === 'video/quicktime' ||
+        selectedFile.type === 'video/webm'
+      if (!allowedVideoExts.includes(ext) && !validVideoMime) {
+        setError('Only MP4, MOV, or WebM videos are allowed (.mp4, .mov, .webm).')
         return
       }
       // 500MB max for video
@@ -93,14 +115,18 @@ export default function MediaUploader({
     setProgress(0)
 
     try {
-      // 1. Get presigned upload URL from API
+      // 1. Get R2 upload target from API
       const presignRes = await fetch('/api/admin/media/presign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           filename: file.name,
           contentType: file.type || (isVideo ? 'video/mp4' : 'image/jpeg'),
+          fileSize: file.size,
           folder,
+          countrySlug: countrySlug || null,
+          projectSlug: projectSlug || null,
+          mediaRole: mediaRole || 'OTHER',
         }),
       })
 
@@ -198,7 +224,7 @@ export default function MediaUploader({
             </div>
             <div className="text-xs font-medium text-white">{label}</div>
             <p className="text-[11px] text-gray-500 font-mono">
-              {isVideo ? 'Click or drag & drop MP4 (max 500MB)' : 'Click or drag & drop PNG, JPG, WebP (max 20MB)'}
+              {isVideo ? 'Click or drag & drop MP4 / MOV / WebM (max 500MB)' : 'Click or drag & drop PNG, JPG, WebP (max 20MB)'}
             </p>
           </div>
         </div>

@@ -43,6 +43,14 @@ export async function PATCH(request: NextRequest) {
       advisoryVideoUrl,
     } = body
 
+    const mediaUrls = [heroVideoUrl, heroVideoThumb, oneTeamVideoUrl, advisoryVideoUrl]
+    if (mediaUrls.some((u) => typeof u === 'string' && u.trim().startsWith('/uploads/'))) {
+      return NextResponse.json(
+        { error: 'Local /uploads/ storage is disabled. Upload homepage media to Cloudflare R2.' },
+        { status: 400 }
+      )
+    }
+
     let content = await db.homepageContent.findFirst()
     if (!content) {
       content = await db.homepageContent.create({

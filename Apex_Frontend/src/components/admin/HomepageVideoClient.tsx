@@ -92,10 +92,11 @@ export default function HomepageVideoClient({
       const formData = new FormData()
       formData.append('file', file)
       formData.append('folder', 'homepage')
+      formData.append('mediaRole', 'HOMEPAGE_VIDEO')
 
       // Use XMLHttpRequest for progress feedback
       const xhr = new XMLHttpRequest()
-      xhr.open('POST', '/api/admin/media/upload-local', true)
+      xhr.open('POST', '/api/admin/media/upload', true)
 
       xhr.upload.onprogress = (ev) => {
         if (ev.lengthComputable) {
@@ -149,14 +150,15 @@ export default function HomepageVideoClient({
       const formData = new FormData()
       formData.append('file', file)
       formData.append('folder', 'homepage')
+      formData.append('mediaRole', 'HOMEPAGE_POSTER')
 
-      const res = await fetch('/api/admin/media/upload-local', {
+      const res = await fetch('/api/admin/media/upload', {
         method: 'POST',
         body: formData,
       })
 
-      if (!res.ok) throw new Error('Thumbnail upload failed')
       const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Thumbnail upload failed')
       setVideoThumb(data.publicUrl)
       setToast({ type: 'success', message: 'Video poster thumbnail updated.' })
     } catch (err: any) {

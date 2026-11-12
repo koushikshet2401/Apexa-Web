@@ -4,6 +4,7 @@ import { requirePermission, PERMISSIONS } from '@/lib/rbac'
 import { logAdminActivity } from '@/lib/activityLog'
 import { reconcileFeaturedLaunches } from '@/lib/launchesQueue'
 import { hasForbiddenFinancialFields } from '@/lib/projectValidation'
+import { syncProjectMediaAssets } from '@/lib/mediaAssetStore'
 import { Prisma } from '@prisma/client'
 
 /**
@@ -206,50 +207,81 @@ export async function PATCH(
       }),
     }
 
-    // Reconcile services if serviceIds provided
-    if (Array.isArray(serviceIds)) {
-      await db.propertyService.deleteMany({
-        where: { propertyId: id },
-      })
-      if (serviceIds.length > 0) {
-        await db.propertyService.createMany({
-          data: serviceIds.map((sid: string) => ({
+    // Guard against legacy local /uploads/ paths during updates
+    const candidateUrls = [
+      updateData.mainImage,
+      updateData.mainVideoUrl,
+      updateData.mainVideoThumb,
+      updateData.spaceRoundImage,
+      ...(Array.isArray(images) ? images.map((img: any) => (typeof img === 'string' ? img : img?.url)) : []),
+    ]
+    if (candidateUrls.some((u) => typeof u === 'string' && u.trim().startsWith('/uploads/'))) {
+      return NextResponse.json(
+        { error: 'Local /uploads/ storage is disabled. Upload all property media to Cloudflare R2.' },
+        { status: 400 }
+      )
+    }
+
+    const updated = await db.$transaction(async (tx) => {
+      // Reconcile services if serviceIds provided
+      if (Array.isArray(serviceIds)) {
+        await tx.propertyService.deleteMany({
+          where: { propertyId: id },
+        })
+        if (serviceIds.length > 0) {
+          await tx.propertyService.createMany({
+            data: serviceIds.map((sid: string) => ({
+              propertyId: id,
+              serviceId: sid,
+            })),
+          })
+        }
+      }
+
+      // Reconcile gallery images if images provided
+      if (Array.isArray(images)) {
+        await tx.propertyImage.deleteMany({
+          where: { propertyId: id },
+        })
+        const validImages = images
+          .filter((img: any) => Boolean(img?.url && String(img.url).trim()))
+          .map((img: any, idx: number) => ({
             propertyId: id,
-            serviceId: sid,
-          })),
-        })
+            url: String(img.url).trim(),
+            alt: img.alt ? String(img.alt).trim() : (img.description ? String(img.description).trim() : null),
+            description: img.description ? String(img.description).trim() : (img.alt ? String(img.alt).trim() : null),
+            order: typeof img.order === 'number' ? img.order : idx,
+          }))
+        if (validImages.length > 0) {
+          await tx.propertyImage.createMany({
+            data: validImages,
+          })
+        }
       }
-    }
 
-    // Reconcile gallery images if images provided
-    if (Array.isArray(images)) {
-      await db.propertyImage.deleteMany({
-        where: { propertyId: id },
+      const saved = await tx.property.update({
+        where: { id },
+        data: updateData,
+        include: {
+          country: true,
+          images: { orderBy: { order: 'asc' } },
+          services: { include: { service: true } },
+        },
       })
-      const validImages = images
-        .filter((img: any) => Boolean(img?.url && String(img.url).trim()))
-        .map((img: any, idx: number) => ({
-          propertyId: id,
-          url: String(img.url).trim(),
-          alt: img.alt ? String(img.alt).trim() : (img.description ? String(img.description).trim() : null),
-          description: img.description ? String(img.description).trim() : (img.alt ? String(img.alt).trim() : null),
-          order: typeof img.order === 'number' ? img.order : idx,
-        }))
-      if (validImages.length > 0) {
-        await db.propertyImage.createMany({
-          data: validImages,
-        })
-      }
-    }
 
-    const updated = await db.property.update({
-      where: { id },
-      data: updateData,
-      include: {
-        country: true,
-        images: { orderBy: { order: 'asc' } },
-        services: { include: { service: true } },
-      },
+      await syncProjectMediaAssets(tx, {
+        propertyId: saved.id,
+        mainImage: saved.mainImage,
+        mainVideoUrl: saved.mainVideoUrl,
+        spaceRoundImage: saved.spaceRoundImage,
+        galleryImages: saved.images.map((img) => ({
+          url: img.url,
+          description: img.description || img.alt,
+          order: img.order,
+        })),
+      })
+
+      return saved
     })
 
     // Reconcile featured launches queue if isFeaturedLaunch was modified

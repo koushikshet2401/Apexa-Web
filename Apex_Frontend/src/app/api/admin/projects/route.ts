@@ -4,6 +4,7 @@ import { requirePermission, PERMISSIONS } from '@/lib/rbac'
 import { logAdminActivity } from '@/lib/activityLog'
 import { reconcileFeaturedLaunches } from '@/lib/launchesQueue'
 import { validateAndNormalizePricing } from '@/lib/projectValidation'
+import { syncProjectMediaAssets } from '@/lib/mediaAssetStore'
 import { Prisma } from '@prisma/client'
 
 /**
@@ -174,74 +175,103 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const project = await db.property.create({
-      data: {
-        name: trimmedName,
-        slug: generatedSlug,
-        countryId: countryId || null,
-        cardLabel: cardLabel || null,
-        tagline: tagline || null,
-        shortDescription: shortDescription || null,
-        description: description || null,
-        type: type || 'residential',
-        beds: beds || null,
-        baths: baths || null,
-        area: area || null,
-        price: (customPrice && typeof customPrice === 'string' && customPrice.trim()) ? customPrice.trim() : pricing.formattedPrice,
-        askingPriceNumeric: pricing.askingPriceNumeric !== null ? new Prisma.Decimal(pricing.askingPriceNumeric) : null,
-        askingCurrency: pricing.askingCurrency,
-        isPOA: pricing.isPOA,
-        bedroomsCount: bedroomsCount !== undefined && bedroomsCount !== null && bedroomsCount !== '' ? parseInt(bedroomsCount, 10) : null,
-        bathroomsCount: bathroomsCount !== undefined && bathroomsCount !== null && bathroomsCount !== '' ? new Prisma.Decimal(bathroomsCount.toString()) : null,
-        areaNumeric: areaNumeric !== undefined && areaNumeric !== null && areaNumeric !== '' ? new Prisma.Decimal(areaNumeric.toString()) : null,
-        areaUnit: areaUnit || 'sqft',
-        latitude: latitude !== undefined && latitude !== null && latitude !== '' ? parseFloat(latitude.toString()) : null,
-        longitude: longitude !== undefined && longitude !== null && longitude !== '' ? parseFloat(longitude.toString()) : null,
-        mapUrl: mapUrl ? mapUrl.trim() : null,
-        cityName: cityName || null,
-        locationLine: locationLine || null,
-        mainVideoUrl: mainVideoUrl || null,
-        mainVideoThumb: mainVideoThumb || null,
-        mainImage: mainImage || null,
-        spaceRoundImage: spaceRoundImage || null,
-        highlights: Array.isArray(highlights) ? highlights : [],
-        layoutVariant: typeof layoutVariant === 'number' ? layoutVariant : parseInt(layoutVariant || '1', 10),
-        // Canonical lifecycle initialization (supports publishing directly on creation)
-        isDraft: !Boolean(isPublished),
-        isPublished: Boolean(isPublished),
-        isPubliclyVisible: Boolean(isPublished),
-        isArchived: false,
-        hasCompletedDeal: false,
-        isFeaturedLaunch: Boolean(isFeaturedLaunch),
-        launchOrder: launchOrder !== null && launchOrder !== undefined && launchOrder !== '' ? parseInt(launchOrder, 10) : null,
-        launchDate: launchDate ? new Date(launchDate) : null,
-        isSpaceInRound: Boolean(isSpaceInRound),
-        spaceOrder: spaceOrder !== null && spaceOrder !== undefined && spaceOrder !== '' ? parseInt(spaceOrder, 10) : null,
-        images: Array.isArray(images) && images.length > 0
-          ? {
-              create: images
-                .filter((img: any) => (typeof img === 'string' ? img.trim() : Boolean(img?.url && img.url.trim())))
-                .map((img: any, idx: number) => ({
-                  url: typeof img === 'string' ? img.trim() : img.url.trim(),
-                  alt: typeof img === 'string' ? null : (img.alt || img.description || null),
-                  description: typeof img === 'string' ? null : (img.description || img.alt || null),
-                  order: typeof img?.order === 'number' ? img.order : idx,
+    // Guard against legacy local /uploads/ paths on newly created projects
+    const candidateUrls = [
+      mainImage,
+      mainVideoUrl,
+      mainVideoThumb,
+      spaceRoundImage,
+      ...(Array.isArray(images) ? images.map((img: any) => (typeof img === 'string' ? img : img?.url)) : []),
+    ]
+    if (candidateUrls.some((u) => typeof u === 'string' && u.trim().startsWith('/uploads/'))) {
+      return NextResponse.json(
+        { error: 'Local /uploads/ storage is disabled. Upload all property media to Cloudflare R2.' },
+        { status: 400 }
+      )
+    }
+
+    const normalizedGalleryImages = Array.isArray(images)
+      ? images
+          .filter((img: any) => (typeof img === 'string' ? img.trim() : Boolean(img?.url && img.url.trim())))
+          .map((img: any, idx: number) => ({
+            url: typeof img === 'string' ? img.trim() : img.url.trim(),
+            alt: typeof img === 'string' ? null : (img.alt || img.description || null),
+            description: typeof img === 'string' ? null : (img.description || img.alt || null),
+            order: typeof img?.order === 'number' ? img.order : idx,
+          }))
+      : []
+
+    const project = await db.$transaction(async (tx) => {
+      const created = await tx.property.create({
+        data: {
+          name: trimmedName,
+          slug: generatedSlug,
+          countryId: countryId || null,
+          cardLabel: cardLabel || null,
+          tagline: tagline || null,
+          shortDescription: shortDescription || null,
+          description: description || null,
+          type: type || 'residential',
+          beds: beds || null,
+          baths: baths || null,
+          area: area || null,
+          price: (customPrice && typeof customPrice === 'string' && customPrice.trim()) ? customPrice.trim() : pricing.formattedPrice,
+          askingPriceNumeric: pricing.askingPriceNumeric !== null ? new Prisma.Decimal(pricing.askingPriceNumeric) : null,
+          askingCurrency: pricing.askingCurrency,
+          isPOA: pricing.isPOA,
+          bedroomsCount: bedroomsCount !== undefined && bedroomsCount !== null && bedroomsCount !== '' ? parseInt(bedroomsCount, 10) : null,
+          bathroomsCount: bathroomsCount !== undefined && bathroomsCount !== null && bathroomsCount !== '' ? new Prisma.Decimal(bathroomsCount.toString()) : null,
+          areaNumeric: areaNumeric !== undefined && areaNumeric !== null && areaNumeric !== '' ? new Prisma.Decimal(areaNumeric.toString()) : null,
+          areaUnit: areaUnit || 'sqft',
+          latitude: latitude !== undefined && latitude !== null && latitude !== '' ? parseFloat(latitude.toString()) : null,
+          longitude: longitude !== undefined && longitude !== null && longitude !== '' ? parseFloat(longitude.toString()) : null,
+          mapUrl: mapUrl ? mapUrl.trim() : null,
+          cityName: cityName || null,
+          locationLine: locationLine || null,
+          mainVideoUrl: mainVideoUrl || null,
+          mainVideoThumb: mainVideoThumb || null,
+          mainImage: mainImage || null,
+          spaceRoundImage: spaceRoundImage || null,
+          highlights: Array.isArray(highlights) ? highlights : [],
+          layoutVariant: typeof layoutVariant === 'number' ? layoutVariant : parseInt(layoutVariant || '1', 10),
+          // Canonical lifecycle initialization (supports publishing directly on creation)
+          isDraft: !Boolean(isPublished),
+          isPublished: Boolean(isPublished),
+          isPubliclyVisible: Boolean(isPublished),
+          isArchived: false,
+          hasCompletedDeal: false,
+          isFeaturedLaunch: Boolean(isFeaturedLaunch),
+          launchOrder: launchOrder !== null && launchOrder !== undefined && launchOrder !== '' ? parseInt(launchOrder, 10) : null,
+          launchDate: launchDate ? new Date(launchDate) : null,
+          isSpaceInRound: Boolean(isSpaceInRound),
+          spaceOrder: spaceOrder !== null && spaceOrder !== undefined && spaceOrder !== '' ? parseInt(spaceOrder, 10) : null,
+          images: normalizedGalleryImages.length > 0
+            ? { create: normalizedGalleryImages }
+            : undefined,
+          services: Array.isArray(serviceIds) && serviceIds.length > 0
+            ? {
+                create: serviceIds.map((sid: string) => ({
+                  service: { connect: { id: sid } },
                 })),
-            }
-          : undefined,
-        services: Array.isArray(serviceIds) && serviceIds.length > 0
-          ? {
-              create: serviceIds.map((sid: string) => ({
-                service: { connect: { id: sid } },
-              })),
-            }
-          : undefined,
-      },
-      include: {
-        country: true,
-        images: true,
-        services: { include: { service: true } },
-      },
+              }
+            : undefined,
+        },
+        include: {
+          country: true,
+          images: true,
+          services: { include: { service: true } },
+        },
+      })
+
+      await syncProjectMediaAssets(tx, {
+        propertyId: created.id,
+        mainImage: created.mainImage,
+        mainVideoUrl: created.mainVideoUrl,
+        spaceRoundImage: created.spaceRoundImage,
+        galleryImages: normalizedGalleryImages,
+      })
+
+      return created
     })
 
     // Reconcile featured launches queue if marked as featured launch

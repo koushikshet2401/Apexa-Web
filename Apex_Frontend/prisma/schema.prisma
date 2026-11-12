@@ -200,6 +200,7 @@ model Property {
   countryId          String?
   country            Country?                    @relation(fields: [countryId], references: [id], onDelete: SetNull)
   images             PropertyImage[]
+  mediaAssets        MediaAsset[]
   services           PropertyService[]
   enquiries          Enquiry[]
   deals              Deal[]
@@ -227,6 +228,41 @@ model PropertyImage {
   property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
   @@index([propertyId, order])
+}
+
+enum MediaRole {
+  THUMBNAIL
+  HERO_VIDEO
+  VIDEO_THUMB
+  GALLERY_IMAGE
+  SPACE_IN_ROUND
+  HOMEPAGE_VIDEO
+  HOMEPAGE_THUMB
+  COUNTRY_MEDIA
+  SERVICE_MEDIA
+  GENERAL
+}
+
+model MediaAsset {
+  id               String    @id @default(cuid())
+  propertyId       String?
+  property         Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  mediaType        String    // "IMAGE" | "VIDEO"
+  mediaRole        MediaRole @default(GENERAL)
+  originalFilename String
+  r2Key            String    @unique
+  publicUrl        String
+  mimeType         String
+  fileSize         Int
+  displayOrder     Int       @default(0)
+  description      String?
+  uploadedById     String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([propertyId, mediaRole])
+  @@index([r2Key])
+  @@index([createdAt(sort: Desc)])
 }
 
 model PropertyService {

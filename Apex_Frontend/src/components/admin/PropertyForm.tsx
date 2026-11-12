@@ -86,6 +86,9 @@ export default function PropertyForm({
   const [tagline, setTagline] = useState(initialProperty?.tagline || '')
   const [description, setDescription] = useState(initialProperty?.description || '')
   const [countryId, setCountryId] = useState(initialProperty?.countryId || (countries[0]?.id || ''))
+  const selectedCountryObj = countries.find((c) => c.id === countryId)
+  const selectedCountrySlug = selectedCountryObj?.slug || selectedCountryObj?.name || 'general'
+  const effectiveProjectSlug = (slug || name || 'new-project').trim()
 
   // 6 Key Features / Highlights
   const [highlights, setHighlights] = useState<string[]>(() => {
@@ -300,13 +303,24 @@ export default function PropertyForm({
       setUploadingSlot(index)
       setToast(null)
 
+      if (file.size === 0) {
+        throw new Error('Selected image cannot be empty (0 bytes).')
+      }
+      if (file.size > 20 * 1024 * 1024) {
+        throw new Error('Gallery image exceeds 20MB limit.')
+      }
+
       const presignRes = await fetch('/api/admin/media/presign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           filename: file.name,
           contentType: file.type || 'image/jpeg',
+          fileSize: file.size,
           folder: 'properties',
+          countrySlug: selectedCountrySlug,
+          projectSlug: effectiveProjectSlug,
+          mediaRole: 'GALLERY',
         }),
       })
 
@@ -325,7 +339,12 @@ export default function PropertyForm({
           if (xhr.status >= 200 && xhr.status < 300) {
             resolve()
           } else {
-            reject(new Error(`Upload failed with status ${xhr.status}`))
+            let errMsg = `Upload failed with status ${xhr.status}`
+            try {
+              const errJson = JSON.parse(xhr.responseText)
+              if (errJson?.error) errMsg = errJson.error
+            } catch {}
+            reject(new Error(errMsg))
           }
         }
         xhr.onerror = () => reject(new Error('Network error during file upload.'))
@@ -338,13 +357,15 @@ export default function PropertyForm({
         if (res && res.publicUrl) finalUrl = res.publicUrl
       } catch {}
 
-      const updated = [...galleryImages]
-      updated[index] = {
-        ...updated[index],
-        url: finalUrl,
-        alt: updated[index].alt || file.name.replace(/\.[a-z0-9]+$/i, '').replace(/[-_]/g, ' '),
-      }
-      setGalleryImages(updated)
+      setGalleryImages((prev) => {
+        const updated = [...prev]
+        updated[index] = {
+          ...updated[index],
+          url: finalUrl,
+          alt: updated[index].alt || file.name.replace(/\.[a-z0-9]+$/i, '').replace(/[-_]/g, ' '),
+        }
+        return updated
+      })
     } catch (err: any) {
       console.error('Gallery image upload failed:', err)
       setToast({ type: 'error', message: err.message || 'Image upload failed. Please try again.' })
@@ -1014,7 +1035,10 @@ export default function PropertyForm({
             onChange={(url) => setMainImage(url)}
             accept="image/*"
             folder="properties"
-            placeholder="/images/... or https://..."
+            countrySlug={selectedCountrySlug}
+            projectSlug={effectiveProjectSlug}
+            mediaRole="THUMBNAIL"
+            placeholder="https://... or /images/..."
           />
           <p className="text-[11px] text-gray-400 mt-2">
             This image is featured on the Country Collection page (&quot;Signature Projects in [Country]&quot;) and in Service Portfolios.
@@ -1024,12 +1048,15 @@ export default function PropertyForm({
         {/* 2. Project Video */}
         <div className="p-4 rounded-xl bg-[#040810] border border-white/10">
           <MediaField
-            label="Project Video (MP4 / WebM)"
+            label="Project Video (MP4 / MOV / WebM)"
             value={mainVideoUrl}
             onChange={(url) => setMainVideoUrl(url)}
-            accept="video/mp4"
+            accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm,.m4v"
             folder="properties"
-            placeholder="/videos/... or https://..."
+            countrySlug={selectedCountrySlug}
+            projectSlug={effectiveProjectSlug}
+            mediaRole="HERO_VIDEO"
+            placeholder="https://... or /videos/..."
           />
           <p className="text-[11px] text-gray-400 mt-2">
             This video is featured in the full-screen cinematic hero of the property detail page, and also used for the New Launch showcase if enabled.
@@ -1299,7 +1326,10 @@ export default function PropertyForm({
                   onChange={(url) => setSpaceRoundImage(url)}
                   accept="image/*"
                   folder="properties"
-                  placeholder="/images/... or https://..."
+                  countrySlug={selectedCountrySlug}
+                  projectSlug={effectiveProjectSlug}
+                  mediaRole="SPACE_ROUND"
+                  placeholder="https://... or /images/..."
                 />
               </div>
             )}
