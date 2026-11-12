@@ -33,8 +33,8 @@ export default function HomepageVideoClient({
 }: {
   initialContent: HomepageContentData
 }) {
-  const currentSavedVideo = initialContent?.heroVideoUrl || '/videos/home-page.mp4'
-  const currentSavedThumb = initialContent?.heroVideoThumb || '/images/skyResidenceImage.png'
+  const currentSavedVideo = initialContent?.heroVideoUrl || ''
+  const currentSavedThumb = initialContent?.heroVideoThumb || ''
 
   const [videoUrl, setVideoUrl] = useState<string>(currentSavedVideo)
   const [videoThumb, setVideoThumb] = useState<string>(currentSavedThumb)
@@ -270,7 +270,14 @@ export default function HomepageVideoClient({
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <Link
+            href="/admin/homepage"
+            className="px-3.5 py-2 rounded-lg bg-[#070E1C] border border-white/15 hover:border-[#7DD3FC]/50 text-xs text-white hover:text-[#7DD3FC] flex items-center gap-2 transition-all shadow-sm"
+          >
+            <span>Edit Unveil Headings</span>
+          </Link>
+
           <Link
             href="/"
             target="_blank"

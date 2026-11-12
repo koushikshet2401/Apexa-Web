@@ -1,31 +1,10 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { db } from '@/lib/db'
-import { DESTINATIONS } from '@/data/destinations'
-import { PROPERTIES_DATA } from '@/data/properties'
+import { isMissingCmsExtensionError } from '@/lib/mediaAssetStore'
 import { CollectionCountryClient, CountryData, CountryProjectData } from '@/components/pages/CollectionCountryClient'
 
-export const revalidate = 60
-
-export async function generateStaticParams() {
-  try {
-    const countries = await db.country.findMany({
-      where: { isPublished: true },
-      select: { slug: true },
-    })
-    return countries.map((c) => ({
-      country: c.slug,
-    }))
-  } catch {
-    return [
-      { country: 'dubai' },
-      { country: 'thailand' },
-      { country: 'malaysia' },
-      { country: 'australia' },
-      { country: 'georgia' },
-    ]
-  }
-}
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({
   params,
@@ -39,28 +18,18 @@ export async function generateMetadata({
       where: { slug: countrySlug },
     })
   } catch {
-    // Database connection offline
+    // Database connection error
   }
 
-  const legacyDest = DESTINATIONS.find(
-    (d) => d.slug === countrySlug || (countrySlug === 'dubai' && d.slug === 'uae')
-  )
-
-  if (!country && !legacyDest) {
+  if (!country || !country.isPublished) {
     notFound()
   }
 
-  const titleName =
-    country?.displayName ||
-    country?.name ||
-    (countrySlug === 'dubai' ? 'Dubai / UAE' : legacyDest?.country || countrySlug.toUpperCase())
-
+  const titleName = country.displayName || country.name || countrySlug.toUpperCase()
   const description =
-    country?.description ||
-    country?.tagline ||
-    legacyDest?.description ||
-    legacyDest?.tagline ||
-    'Private architecture and luxury residences.'
+    country.description ||
+    country.tagline ||
+    `${titleName} Portfolio — Apex Pacific Holdings.`
 
   return {
     title: `${titleName} Collection — Apex Pacific Holdings`,
@@ -76,102 +45,76 @@ export default async function CollectionCountryPage({
   const { country: countrySlug } = await params
   let country: any = null
 
+  const propertyInclude = {
+    where: {
+      isPublished: true,
+      isPubliclyVisible: true,
+      isArchived: false,
+    },
+    include: {
+      images: { orderBy: { order: 'asc' as const } },
+    },
+    orderBy: { createdAt: 'desc' as const },
+  }
+
   try {
     country = await db.country.findUnique({
       where: { slug: countrySlug },
       include: {
-        properties: {
-          where: {
-            isPublished: true,
-            isPubliclyVisible: true,
-            isArchived: false,
-          },
-          include: {
-            images: { orderBy: { order: 'asc' } },
-          },
-          orderBy: { createdAt: 'desc' },
-        },
+        collectionMedia: true,
+        properties: propertyInclude,
       },
     })
-  } catch {
-    // Database connection offline
+  } catch (err) {
+    if (isMissingCmsExtensionError(err)) {
+      country = await db.country.findUnique({
+        where: { slug: countrySlug },
+        include: {
+          properties: propertyInclude,
+        },
+      })
+    } else {
+      throw err
+    }
   }
 
-  // Find destination matching projects as fallback if DB is offline or has no record
-  const legacyDest = DESTINATIONS.find(
-    (d) => d.slug === countrySlug || (countrySlug === 'dubai' && d.slug === 'uae')
-  )
-
-  if (!country && !legacyDest) {
+  if (!country || !country.isPublished) {
     notFound()
   }
 
-  const displayedProjects: CountryProjectData[] =
-    country && country.properties && country.properties.length > 0
-      ? country.properties.map((p: any) => ({
-          id: p.id,
-          title: p.name,
-          type: p.type || 'Residence',
-          city: p.cityName || country.name,
-          beds: p.beds ? (p.beds.toLowerCase().includes('bed') ? p.beds : `${p.beds} Bedrooms`) : 'Bespoke',
-          baths: p.baths ? (p.baths.toLowerCase().includes('bath') ? p.baths : `${p.baths} Baths`) : undefined,
-          area: p.area || undefined,
-          price: p.price || undefined,
-          description:
-            p.description ||
-            p.shortDescription ||
-            p.tagline ||
-            'Ultra-prime architectural residence curated by Apex Pacific Holdings.',
-          shortDescription: p.shortDescription || p.tagline || undefined,
-          highlights: p.highlights || [],
-          image: p.mainImage || p.images[0]?.url || country.cardImage || '/images/DuabiCoolection.png',
-          slug: p.slug,
-        }))
-      : (legacyDest?.projects || []).map((lp) => {
-          const detail = PROPERTIES_DATA[lp.slug]
-          return {
-            id: lp.id,
-            title: lp.title,
-            type: lp.type,
-            city: lp.city,
-            beds: detail?.beds != null ? `${detail.beds} Bedrooms` : lp.beds,
-            baths: detail?.baths != null ? `${detail.baths} Baths` : undefined,
-            area: detail?.area,
-            price: detail?.price,
-            description:
-              detail?.shortDescription ||
-              detail?.description ||
-              'Ultra-prime architectural residence curated by Apex Pacific Holdings.',
-            shortDescription: detail?.shortDescription || detail?.tagline,
-            highlights: detail?.highlights || [],
-            image: detail?.image || lp.image,
-            slug: lp.slug,
-          }
-        })
+  const resolvedCoverImage =
+    country.collectionMedia?.coverImageUrl ?? country.cardImage ?? country.heroVideoThumb ?? undefined
+  const resolvedHeroVideoUrl =
+    country.collectionMedia?.heroVideoUrl ?? country.heroVideoUrl ?? undefined
+
+  const displayedProjects: CountryProjectData[] = (country.properties || []).map((p: any) => ({
+    id: p.id,
+    title: p.name,
+    type: p.type || '',
+    city: p.cityName || country.name,
+    beds: p.beds ? (p.beds.toLowerCase().includes('bed') ? p.beds : `${p.beds} Bedrooms`) : '',
+    baths: p.baths ? (p.baths.toLowerCase().includes('bath') ? p.baths : `${p.baths} Baths`) : undefined,
+    area: p.area || undefined,
+    price: p.price || undefined,
+    description: p.description || p.shortDescription || p.tagline || '',
+    shortDescription: p.shortDescription || p.tagline || undefined,
+    highlights: Array.isArray(p.highlights) ? p.highlights : [],
+    image: p.mainImage || p.images[0]?.url || resolvedCoverImage || '',
+    slug: p.slug,
+  }))
 
   const countryData: CountryData = {
-    id: country?.id || legacyDest?.id || countrySlug,
-    slug: countrySlug,
-    name: country?.name || legacyDest?.country || countrySlug,
-    displayName:
-      country?.displayName ||
-      country?.name ||
-      (countrySlug === 'dubai' ? 'Dubai / UAE' : legacyDest?.country || countrySlug.toUpperCase()),
-    region: country?.region || legacyDest?.region || undefined,
-    cities: country?.cities || legacyDest?.cities || undefined,
-    tagline: country?.tagline || legacyDest?.tagline || undefined,
-    description: country?.description || legacyDest?.description || undefined,
-    heroVideoUrl:
-      country?.heroVideoUrl ||
-      (countrySlug === 'dubai' ? '/videos/VID02.mp4' : '/videos/luxury-palm-beach.mp4'),
-    heroVideoThumb:
-      country?.heroVideoThumb ||
-      legacyDest?.image ||
-      (countrySlug === 'thailand' ? '/images/Thailand.png' : '/images/DuabiCoolection.png'),
-    cardImage:
-      country?.cardImage ||
-      legacyDest?.image ||
-      (countrySlug === 'thailand' ? '/images/Thailand.png' : '/images/DuabiCoolection.png'),
+    id: country.id,
+    slug: country.slug,
+    name: country.name,
+    displayName: country.displayName || country.name,
+    region: country.region || undefined,
+    cities: country.cities || undefined,
+    tagline: country.tagline || undefined,
+    description: country.description || undefined,
+    heroVideoUrl: resolvedHeroVideoUrl,
+    heroVideoThumb: resolvedCoverImage,
+    cardImage: resolvedCoverImage,
   }
 
   return (

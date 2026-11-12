@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
+import { Prisma } from '@prisma/client'
 import { db } from '@/lib/db'
-import { requirePermission, PERMISSIONS } from '@/lib/rbac'
+import { requireAnyPermission, requirePermission, PERMISSIONS } from '@/lib/rbac'
+import { logAdminActivity } from '@/lib/activityLog'
 
 export async function GET(
   request: NextRequest,
@@ -35,7 +38,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requirePermission(request, PERMISSIONS.CONTENT_UPDATE)
+  const auth = await requireAnyPermission(request, [PERMISSIONS.SERVICES_UPDATE, PERMISSIONS.CONTENT_UPDATE])
   if (auth instanceof Response) return auth
 
   try {
@@ -55,9 +58,18 @@ export async function PATCH(
       heroDescription,
       image,
       videoUrl,
+      architecturalFocus,
+      deliverables,
       displayOrder,
       isPublished,
     } = body
+
+    if ([image, videoUrl].some((u) => typeof u === 'string' && u.trim().startsWith('/uploads/'))) {
+      return NextResponse.json(
+        { error: 'Local /uploads/ storage is disabled. Upload media to Cloudflare R2.' },
+        { status: 400 }
+      )
+    }
 
     let newSlug = existing.slug
     if (slug && slug.trim() !== existing.slug) {
@@ -70,6 +82,25 @@ export async function PATCH(
       }
     }
 
+    const parsedFocus =
+      architecturalFocus !== undefined
+        ? Array.isArray(architecturalFocus)
+          ? architecturalFocus.map((s) => String(s).trim()).filter(Boolean)
+          : []
+        : undefined
+
+    const parsedDeliverables =
+      deliverables !== undefined
+        ? Array.isArray(deliverables)
+          ? deliverables
+              .filter((d: any) => d && (d.title || d.description || d.detail))
+              .map((d: any) => ({
+                title: String(d.title || '').trim(),
+                description: String(d.description || d.detail || '').trim(),
+              }))
+          : Prisma.DbNull
+        : undefined
+
     const updated = await db.serviceCategory.update({
       where: { id },
       data: {
@@ -81,11 +112,32 @@ export async function PATCH(
         ...(heroDescription !== undefined && { heroDescription: heroDescription || null }),
         ...(image !== undefined && { image: image || null }),
         ...(videoUrl !== undefined && { videoUrl: videoUrl || null }),
+        ...(parsedFocus !== undefined && { architecturalFocus: parsedFocus }),
+        ...(parsedDeliverables !== undefined && { deliverables: parsedDeliverables }),
         ...(displayOrder !== undefined && {
           displayOrder: displayOrder !== '' ? parseInt(displayOrder, 10) : 0,
         }),
         ...(isPublished !== undefined && { isPublished: Boolean(isPublished) }),
       },
+    })
+
+    try {
+      revalidatePath('/')
+      revalidatePath('/services')
+      revalidatePath(`/services/${updated.slug}`)
+      revalidatePath('/admin/services')
+      revalidatePath('/admin/one-team')
+    } catch (revalidateErr) {
+      console.warn('Revalidation warning:', revalidateErr)
+    }
+
+    await logAdminActivity({
+      adminId: auth.id,
+      adminEmail: auth.email,
+      action: 'UPDATE',
+      entityType: 'ServiceCategory',
+      entityId: updated.id,
+      summary: `Updated service category "${updated.name}" (${updated.slug})`,
     })
 
     return NextResponse.json(updated)

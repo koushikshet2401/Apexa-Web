@@ -224,12 +224,6 @@ export const CircularTestimonials = ({
               key={testimonial.src + index}
               src={testimonial.src}
               alt={testimonial.name}
-              onError={(e) => {
-                const target = e.currentTarget
-                if (!target.src.includes('unsplash.com')) {
-                  target.src = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'
-                }
-              }}
               className="absolute inset-0 w-full h-full object-cover rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.7)] border border-white/10"
               data-index={index}
               style={getImageStyle(index)}

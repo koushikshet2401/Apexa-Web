@@ -215,3 +215,180 @@ export async function markMediaAssetDeleted(r2Key: string): Promise<void> {
     throw err
   }
 }
+
+export function isMissingCmsExtensionError(err: unknown): boolean {
+  const anyErr = err as any
+  const code = anyErr?.code || anyErr?.meta?.code
+  const message = String(anyErr?.message || '')
+  return (
+    code === 'P2021' ||
+    code === 'P2022' ||
+    code === '42P01' ||
+    code === '42703' ||
+    /does not exist/i.test(message)
+  )
+}
+
+/**
+ * Ensures a MediaAsset record exists for an R2 URL and returns its ID (or null for non-R2/missing table).
+ */
+export async function resolveOrUpsertR2AssetId(
+  tx: DbClient,
+  params: {
+    url: string | null | undefined
+    mediaType: 'IMAGE' | 'VIDEO'
+    mediaRole: MediaRole
+    uploadedById?: string | null
+  }
+): Promise<string | null> {
+  if (!params.url) return null
+  const r2Key = extractR2KeyFromUrl(params.url)
+  if (!r2Key) return null
+
+  try {
+    const asset = await tx.mediaAsset.upsert({
+      where: { r2Key },
+      create: {
+        mediaType: params.mediaType,
+        mediaRole: params.mediaRole,
+        originalFilename: inferFilenameFromKey(r2Key),
+        r2Key,
+        publicUrl: params.url.trim(),
+        mimeType: inferMimeFromKey(r2Key, params.mediaType),
+        fileSize: 0,
+        displayOrder: 0,
+        uploadedById: params.uploadedById || null,
+      },
+      update: {
+        mediaType: params.mediaType,
+        mediaRole: params.mediaRole,
+        publicUrl: params.url.trim(),
+      },
+      select: { id: true },
+    })
+    return asset.id
+  } catch (err) {
+    if (isMissingMediaAssetTableError(err)) {
+      return null
+    }
+    throw err
+  }
+}
+
+/**
+ * Checks whether an R2 key or its corresponding publicUrl is still referenced by active CMS/Property records.
+ */
+export async function findMediaAssetReferences(r2Key: string): Promise<string[]> {
+  const refs: string[] = []
+  const key = r2Key.replace(/^\/+/, '')
+
+  let assetId: string | null = null
+  try {
+    const existingAsset = await db.mediaAsset.findUnique({
+      where: { r2Key: key },
+      select: { id: true },
+    })
+    assetId = existingAsset?.id || null
+  } catch (err) {
+    if (!isMissingMediaAssetTableError(err)) throw err
+  }
+
+  const containsKeyOrAsset = (urlField: string) => ({
+    OR: [
+      { [urlField]: { endsWith: `/${key}` } },
+      { [urlField]: key },
+    ],
+  })
+
+  const [propCount, propImgCount, countryCount, serviceCount, homeCount] = await Promise.all([
+    db.property.count({
+      where: {
+        OR: [
+          containsKeyOrAsset('mainImage'),
+          containsKeyOrAsset('mainVideoUrl'),
+          containsKeyOrAsset('mainVideoThumb'),
+          containsKeyOrAsset('spaceRoundImage'),
+        ],
+      },
+    }),
+    db.propertyImage.count({ where: containsKeyOrAsset('url') }),
+    db.country.count({
+      where: {
+        OR: [
+          containsKeyOrAsset('heroVideoUrl'),
+          containsKeyOrAsset('heroVideoThumb'),
+          containsKeyOrAsset('cardImage'),
+        ],
+      },
+    }),
+    db.serviceCategory.count({
+      where: {
+        OR: [containsKeyOrAsset('image'), containsKeyOrAsset('videoUrl')],
+      },
+    }),
+    db.homepageContent.count({
+      where: {
+        OR: [
+          containsKeyOrAsset('heroVideoUrl'),
+          containsKeyOrAsset('heroVideoThumb'),
+          containsKeyOrAsset('oneTeamVideoUrl'),
+          containsKeyOrAsset('advisoryVideoUrl'),
+        ],
+      },
+    }),
+  ])
+
+  if (propCount > 0) refs.push(`Property (${propCount})`)
+  if (propImgCount > 0) refs.push(`PropertyImage (${propImgCount})`)
+  if (countryCount > 0) refs.push(`Country (${countryCount})`)
+  if (serviceCount > 0) refs.push(`ServiceCategory (${serviceCount})`)
+  if (homeCount > 0) refs.push(`HomepageContent (${homeCount})`)
+
+  try {
+    const oneTeamCount = await db.oneTeamContent.count({
+      where: {
+        OR: [
+          containsKeyOrAsset('luxuryVillasImageUrl'),
+          containsKeyOrAsset('commercialImageUrl'),
+          containsKeyOrAsset('skyResidencesImageUrl'),
+          containsKeyOrAsset('waterfrontImageUrl'),
+          containsKeyOrAsset('centerVideoUrl'),
+          ...(assetId
+            ? [
+                { luxuryVillasMediaAssetId: assetId },
+                { commercialMediaAssetId: assetId },
+                { skyResidencesMediaAssetId: assetId },
+                { waterfrontMediaAssetId: assetId },
+                { centerVideoMediaAssetId: assetId },
+              ]
+            : []),
+        ],
+      },
+    })
+    if (oneTeamCount > 0) refs.push(`OneTeamContent (${oneTeamCount})`)
+  } catch (err) {
+    if (!isMissingCmsExtensionError(err)) throw err
+  }
+
+  try {
+    const collectionMediaCount = await db.collectionMedia.count({
+      where: {
+        OR: [
+          containsKeyOrAsset('coverImageUrl'),
+          containsKeyOrAsset('heroVideoUrl'),
+          ...(assetId
+            ? [
+                { coverImageMediaAssetId: assetId },
+                { heroVideoMediaAssetId: assetId },
+              ]
+            : []),
+        ],
+      },
+    })
+    if (collectionMediaCount > 0) refs.push(`CollectionMedia (${collectionMediaCount})`)
+  } catch (err) {
+    if (!isMissingCmsExtensionError(err)) throw err
+  }
+
+  return refs
+}

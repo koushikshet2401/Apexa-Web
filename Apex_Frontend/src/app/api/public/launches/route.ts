@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const properties = await db.property.findMany({
@@ -36,13 +38,13 @@ export async function GET() {
         slug: p.slug,
         title: p.name,
         name: p.name,
-        location: p.locationLine || p.cityName || 'INTERNATIONAL',
-        type: p.type || 'Residence',
-        beds: p.beds || 'Bespoke',
-        price: p.price || 'Price on Application',
-        videoSrc: p.mainVideoUrl || '/videos/luxury-palm-beach.mp4',
-        mainVideoUrl: p.mainVideoUrl || '/videos/luxury-palm-beach.mp4',
-        mainImage: p.mainImage || '',
+        location: p.locationLine || p.cityName || p.country?.displayName || '',
+        type: p.type || '',
+        beds: p.beds || '',
+        price: p.price || '',
+        videoSrc: p.mainVideoUrl || null,
+        mainVideoUrl: p.mainVideoUrl || null,
+        mainImage: p.mainImage || null,
         href: `/collection/${countrySlug}/${p.slug}`,
         country: p.country,
       }

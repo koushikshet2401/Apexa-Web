@@ -116,6 +116,8 @@ async function processR2UploadAndPersist(params: {
     mediaId: dbAsset?.id || null,
     key: uploaded.key,
     r2Key: uploaded.key,
+    objectKey: uploaded.key,
+    url: uploaded.publicUrl,
     publicUrl: uploaded.publicUrl,
     originalFilename: validated.originalFilename,
     mimeType: validated.mimeType,

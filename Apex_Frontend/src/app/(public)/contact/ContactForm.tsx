@@ -18,31 +18,50 @@ import { useTheme } from '@/components/providers/ThemeProvider'
 import { themeTokens } from '@/lib/theme'
 import { cn } from '@/lib/utils'
 
-const SERVICE_OPTIONS = [
-  'Luxury Villas',
-  'Commercial Properties',
-  'Sky Residences',
-  'Waterfront Residences',
-  'General Enquiry',
-]
-
-export function ContactForm() {
+export function ContactForm({ serviceOptions }: { serviceOptions?: string[] }) {
   const { isLight } = useTheme()
   const searchParams = useSearchParams()
   const prefillPropertyId = searchParams.get('propertyId') || ''
   const prefillPropertyName = searchParams.get('propertyName') || ''
   const prefillService = searchParams.get('service') || ''
 
+  const [servicesList, setServicesList] = useState<string[]>(() =>
+    serviceOptions && serviceOptions.length > 0 ? serviceOptions : ['General Enquiry']
+  )
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [selectedCountry, setSelectedCountry] = useState<Country>(DEFAULT_COUNTRY)
   const [phoneNumber, setPhoneNumber] = useState('')
   const [selectedService, setSelectedService] = useState(() => {
-    if (prefillService && SERVICE_OPTIONS.includes(prefillService)) {
+    const initial = serviceOptions && serviceOptions.length > 0 ? serviceOptions : ['General Enquiry']
+    if (prefillService && initial.includes(prefillService)) {
       return prefillService
     }
-    return 'Luxury Villas'
+    return initial[0] || 'General Enquiry'
   })
+
+  useEffect(() => {
+    if (serviceOptions && serviceOptions.length > 0) return
+    let cancelled = false
+    fetch('/api/public/services')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (cancelled || !Array.isArray(data) || data.length === 0) return
+        const names = [...data.map((s: { name: string }) => s.name).filter(Boolean), 'General Enquiry']
+        setServicesList(names)
+        setSelectedService((prev) =>
+          prefillService && names.includes(prefillService)
+            ? prefillService
+            : prev === 'General Enquiry'
+              ? names[0] || 'General Enquiry'
+              : prev
+        )
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [serviceOptions, prefillService])
   const [message, setMessage] = useState('')
   const [consentGiven, setConsentGiven] = useState(false)
   const [honeypot, setHoneypot] = useState('')
@@ -410,7 +429,7 @@ export function ContactForm() {
                 </button>
                 {isServiceDropdownOpen && (
                   <div className={cn("absolute top-full left-0 right-0 mt-1 rounded-lg z-40 py-1 overflow-hidden transition-colors", themeTokens.contact.dropdownMenu(isLight))}>
-                    {SERVICE_OPTIONS.map((svc) => (
+                    {servicesList.map((svc) => (
                       <button
                         key={svc}
                         type="button"

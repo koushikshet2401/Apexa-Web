@@ -24,14 +24,6 @@ import { ApexMonogram } from '@/components/ui/ApexMonogram'
 import { useTheme } from '@/components/providers/ThemeProvider'
 import { cn } from '@/lib/utils'
 
-// Verified practice categories
-const SERVICE_OPTIONS = [
-  'Luxury Villas',
-  'Commercial Properties',
-  'Sky Residences',
-  'General Enquiry',
-]
-
 export interface ContactSectionProps {
   isOpen?: boolean
   onClose?: () => void
@@ -44,17 +36,41 @@ export function ContactSection({ isOpen, onClose }: ContactSectionProps) {
   const activeOpen = isOpen !== undefined ? isOpen : isModalOpen
   const pathname = usePathname()
 
+  const [advisoryVideoUrl, setAdvisoryVideoUrl] = useState<string | null>(null)
+  const [servicesList, setServicesList] = useState<string[]>(['General Enquiry'])
+
   // Ensure modal closes on route change
   useEffect(() => {
     setIsModalOpen(false)
   }, [pathname])
+
+  // Load dynamic advisory video & published service pillars when dialog opens
+  useEffect(() => {
+    if (!activeOpen) return
+    let cancelled = false
+    fetch('/api/public/homepage')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data) return
+        setAdvisoryVideoUrl(data.advisoryVideoUrl || null)
+        if (Array.isArray(data.services) && data.services.length > 0) {
+          const names = [...data.services.map((s: { name: string }) => s.name).filter(Boolean), 'General Enquiry']
+          setServicesList(names)
+          setSelectedService((prev) => (prev === 'General Enquiry' ? names[0] || 'General Enquiry' : prev))
+        }
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [activeOpen])
 
   // Form field states
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [selectedCountry, setSelectedCountry] = useState<Country>(DEFAULT_COUNTRY)
   const [phoneNumber, setPhoneNumber] = useState('')
-  const [selectedService, setSelectedService] = useState('Luxury Villas')
+  const [selectedService, setSelectedService] = useState('General Enquiry')
   const [message, setMessage] = useState('')
   const [consentGiven, setConsentGiven] = useState(false)
   const [honeypot, setHoneypot] = useState('')
@@ -299,17 +315,19 @@ export function ContactSection({ isOpen, onClose }: ContactSectionProps) {
           role="dialog"
           aria-modal="true"
         >
-          {/* Background Video: public/videos/gemini_generated_video_0e105bc8.mp4 */}
+          {/* Background Video (Admin-managed via Homepage Content advisoryVideoUrl) */}
           <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
-            <video
-              src="/videos/gemini_generated_video_0e105bc8.mp4"
-              autoPlay
-              loop
-              muted
-              playsInline
-              preload="auto"
-              className="w-full h-full object-cover object-center"
-            />
+            {advisoryVideoUrl && (
+              <video
+                src={advisoryVideoUrl}
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
+                className="w-full h-full object-cover object-center"
+              />
+            )}
             {/* Subtle clean overlay without blur or heavy gradients */}
             <div className={cn(
               "absolute inset-0 pointer-events-none transition-colors duration-300",
@@ -616,7 +634,7 @@ export function ContactSection({ isOpen, onClose }: ContactSectionProps) {
                             "absolute left-0 right-0 top-full mt-2 rounded-lg shadow-2xl z-50 p-1.5 border",
                             isLight ? "bg-white border-[#0B1325]/15 text-[#0B1325]" : "bg-[#070E1C] border-[#3B5373]/60 text-white"
                           )}>
-                            {SERVICE_OPTIONS.map((srv) => (
+                            {servicesList.map((srv) => (
                               <button
                                 key={srv}
                                 type="button"

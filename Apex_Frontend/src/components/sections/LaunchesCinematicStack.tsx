@@ -22,7 +22,7 @@ import {
   X,
   Loader2,
 } from 'lucide-react'
-import { PERSPECTIVE_GALLERY_PROPERTIES, PropertyItem } from '@/data/properties'
+import { PropertyItem } from '@/data/properties'
 import { PropertySearchDrawer } from '@/components/search/PropertySearchDrawer'
 import { OrbitalLoader } from '@/components/ui/orbital-loader'
 import { ThreeDPhotoCarousel, CarouselCardItem } from '@/components/ui/3d-carousel'
@@ -44,50 +44,12 @@ export interface VideoLaunch {
   href: string
 }
 
-const DEFAULT_LAUNCHES: VideoLaunch[] = [
-  {
-    id: 'launch-1',
-    number: '01',
-    tag: 'FEATURED LAUNCH · 01 OF 03',
-    title: 'The Meridian',
-    location: 'DUBAI MARITIME CITY, UAE',
-    type: 'Signature Sky Residence',
-    beds: '3–4 Bedrooms',
-    price: 'AED 8.2M',
-    videoSrc: '/videos/luxury-palm-beach.mp4',
-    href: '/collection/dubai/the-meridian',
-  },
-  {
-    id: 'launch-2',
-    number: '02',
-    tag: 'FEATURED LAUNCH · 02 OF 03',
-    title: 'Aurelia Villa',
-    location: 'JUBILEE HILLS, HYDERABAD',
-    type: 'Contemporary Private Estate',
-    beds: '5 Bedrooms',
-    price: '₹ 12.5 Cr',
-    videoSrc: '/videos/VID02.mp4',
-    href: '/collection/dubai/aurelia-villa',
-  },
-  {
-    id: 'launch-3',
-    number: '03',
-    tag: 'FEATURED LAUNCH · 03 OF 03',
-    title: 'The Peninsula Reserve',
-    location: 'PHUKET, THAILAND',
-    type: 'Luxury Waterfront Villa',
-    beds: '4–6 Bedrooms',
-    price: 'THB 68M',
-    videoSrc: '/videos/VID01.mp4',
-    href: '/collection/thailand/the-peninsula-reserve',
-  },
-]
-
 export interface CollectionCountry {
   id: string
   countryCode: string
-  countryKey: 'UAE' | 'Thailand' | 'Georgia' | 'Australia' | 'Malaysia'
+  countryKey: string
   countryName: string
+  displayName?: string
   region: string
   title: string
   category: string
@@ -99,95 +61,6 @@ export interface CollectionCountry {
   description: string
 }
 
-const DEFAULT_COLLECTION_COUNTRIES: CollectionCountry[] = [
-  {
-    id: 'dubai-uae',
-    countryCode: 'AE',
-    countryKey: 'UAE',
-    countryName: 'United Arab Emirates',
-    region: 'Middle East',
-    title: 'The Dubai Portfolio',
-    category: 'WATERFRONT VILLAS & SKY RESIDENCES',
-    location: 'DUBAI & PALM JUMEIRAH, UAE',
-    specs: 'DUBAI · PALM JUMEIRAH · 3–6 BEDROOMS',
-    image: '/images/DuabiCoolection.png',
-    href: '/collection/dubai',
-    cities: 'DUBAI · PALM JUMEIRAH · ABU DHABI',
-    description: 'Architectural masterworks rising along the Arabian Gulf with private moorings and cantilevered terraces.',
-  },
-  {
-    id: 'thailand',
-    countryCode: 'TH',
-    countryKey: 'Thailand',
-    countryName: 'Thailand',
-    region: 'Southeast Asia',
-    title: 'Andaman & Samui Estates',
-    category: 'TROPICAL POOL VILLAS & SANCTUARIES',
-    location: 'PHUKET & KOH SAMUI, THAILAND',
-    specs: 'PHUKET · KOH SAMUI · 4–6 BEDROOMS',
-    image: '/images/Thailand.png',
-    href: '/collection/thailand',
-    cities: 'PHUKET · BANGKOK · KOH SAMUI',
-    description: 'Secluded hillside retreats and beachfront estates shaped by Thai craftsmanship overlooking the Andaman horizon.',
-  },
-  {
-    id: 'georgia',
-    countryCode: 'GE',
-    countryKey: 'Georgia',
-    countryName: 'Georgia',
-    region: 'Caucasus & Black Sea',
-    title: 'Caucasian Panoramic Estates',
-    category: 'MOUNTAIN CHALETS & SEASIDE ESTATES',
-    location: 'TBILISI & BATUMI, GEORGIA',
-    specs: 'TBILISI · BATUMI · 3–5 BEDROOMS',
-    image: '/images/GeorgiaCollection.png',
-    href: '/collection/georgia',
-    cities: 'TBILISI · BATUMI · BORJOMI',
-    description: 'Where ancient Caucasian heritage meets contemporary stone chalets and Black Sea coastal residences.',
-  },
-  {
-    id: 'australia',
-    countryCode: 'AU',
-    countryKey: 'Australia',
-    countryName: 'Australia',
-    region: 'Australasia & Pacific',
-    title: 'Pacific Coast Residences',
-    category: 'HARBOURFRONT PENTHOUSES & ESTATES',
-    location: 'SYDNEY & MELBOURNE, AUSTRALIA',
-    specs: 'SYDNEY · MELBOURNE · 3–5 BEDROOMS',
-    image: '/images/AusCollection.png',
-    href: '/collection/australia',
-    cities: 'SYDNEY · MELBOURNE · GOLD COAST',
-    description: 'Coastal architectural villas and harbourfront penthouses shaped by natural light and ocean panoramas.',
-  },
-  {
-    id: 'malaysia',
-    countryCode: 'MY',
-    countryKey: 'Malaysia',
-    countryName: 'Malaysia',
-    region: 'Southeast Asia',
-    title: 'Horizon Pavilion & Coastal Villas',
-    category: 'SCULPTURAL RESIDENCES & SANCTUARIES',
-    location: 'KUALA LUMPUR & COAST, MALAYSIA',
-    specs: 'KUALA LUMPUR · PENANG · 2–4 BEDROOMS',
-    image: '/images/MalaysiaCollection.png',
-    href: '/collection/malaysia',
-    cities: 'KUALA LUMPUR · PENANG · LANGKAWI',
-    description: 'Tropical sanctuaries nestled between lush rainforest canopies and cosmopolitan coastlines.',
-  },
-]
-
-const COUNTRY_FILTERS = [
-  { label: 'All', value: 'All' },
-  { label: 'Dubai / UAE', value: 'UAE' },
-  { label: 'Thailand', value: 'Thailand' },
-  { label: 'Georgia', value: 'Georgia' },
-  { label: 'Australia', value: 'Australia' },
-  { label: 'Malaysia', value: 'Malaysia' },
-]
-
-const DEFAULT_SPACE_PROPERTIES = PERSPECTIVE_GALLERY_PROPERTIES
-
 export interface HomepageContentProps {
   heroVideoUrl?: string | null
   heroVideoThumb?: string | null
@@ -197,11 +70,30 @@ export interface HomepageContentProps {
   advisoryVideoUrl?: string | null
 }
 
+export interface OneTeamServiceItem {
+  id: string
+  slug: string
+  name: string
+  subtitle?: string | null
+  image?: string | null
+  videoUrl?: string | null
+}
+
+export interface OneTeamMediaProps {
+  luxuryVillasImageUrl?: string | null
+  commercialImageUrl?: string | null
+  skyResidencesImageUrl?: string | null
+  waterfrontImageUrl?: string | null
+  centerVideoUrl?: string | null
+}
+
 export interface LaunchesCinematicStackProps {
   launches?: VideoLaunch[]
   countries?: CollectionCountry[]
   spaceProperties?: PropertyItem[]
   homepageContent?: HomepageContentProps | null
+  services?: OneTeamServiceItem[]
+  oneTeamContent?: OneTeamMediaProps | null
 }
 
 export function LaunchesCinematicStack({
@@ -209,45 +101,71 @@ export function LaunchesCinematicStack({
   countries,
   spaceProperties,
   homepageContent,
+  services,
+  oneTeamContent,
 }: LaunchesCinematicStackProps = {}) {
   const LAUNCHES = useMemo(() => {
-    if (!launches || launches.length === 0) return DEFAULT_LAUNCHES
-    if (launches.length >= 3) return launches.slice(0, 3)
-
-    const list = [...launches]
-    const existingTitles = new Set(list.map((l) => l.title.trim().toLowerCase()))
-    for (const def of DEFAULT_LAUNCHES) {
-      if (!existingTitles.has(def.title.trim().toLowerCase())) {
-        list.push({
-          ...def,
-          number: `0${list.length + 1}`,
-          tag: `FEATURED LAUNCH · 0${list.length + 1} OF 03`,
-        })
-        existingTitles.add(def.title.trim().toLowerCase())
-      }
-      if (list.length >= 3) break
-    }
-    return list
+    if (!launches || launches.length === 0) return []
+    return launches.slice(0, 3)
   }, [launches])
-  const COLLECTION_COUNTRIES = countries && countries.length > 0 ? countries : DEFAULT_COLLECTION_COUNTRIES
-  const PERSPECTIVE_GALLERY_PROPERTIES = useMemo(() => {
-    const list: PropertyItem[] = spaceProperties && spaceProperties.length > 0 ? [...spaceProperties] : []
-    if (list.length >= 6) return list
+  const COLLECTION_COUNTRIES = useMemo(() => countries ?? [], [countries])
+  const COUNTRY_FILTERS = useMemo(() => {
+    return [
+      { label: 'All', value: 'All' },
+      ...COLLECTION_COUNTRIES.map((c) => ({
+        label: c.displayName || c.countryName,
+        value: c.countryKey,
+      })),
+    ]
+  }, [COLLECTION_COUNTRIES])
+  const PERSPECTIVE_GALLERY_PROPERTIES = useMemo(() => spaceProperties ?? [], [spaceProperties])
 
-    // Pad with DEFAULT_SPACE_PROPERTIES so 3D cylinder always has complete circular geometry (minimum 6 faces)
-    const existingSlugs = new Set(list.map((p) => p.slug || p.id))
-    const existingNames = new Set(list.map((p) => p.name?.trim().toLowerCase()))
-    for (const def of DEFAULT_SPACE_PROPERTIES) {
-      const nameLower = def.name?.trim().toLowerCase()
-      if (!existingSlugs.has(def.slug) && !existingSlugs.has(def.id) && !existingNames.has(nameLower)) {
-        list.push(def)
-        existingSlugs.add(def.slug || def.id)
-        if (nameLower) existingNames.add(nameLower)
-      }
-      if (list.length >= 6) break
+  const serviceBySlug = useMemo(() => {
+    const map = new Map<string, OneTeamServiceItem>()
+    for (const s of services ?? []) {
+      map.set(s.slug, s)
     }
-    return list.length > 0 ? list : DEFAULT_SPACE_PROPERTIES
-  }, [spaceProperties])
+    return map
+  }, [services])
+
+  const luxuryVillasCard = useMemo(() => {
+    const svc = serviceBySlug.get('luxury-villas')
+    return {
+      title: svc?.name || 'Luxury Villas',
+      href: svc ? `/services/${svc.slug}` : '/services/luxury-villas',
+      image: oneTeamContent?.luxuryVillasImageUrl ?? svc?.image ?? null,
+    }
+  }, [serviceBySlug, oneTeamContent])
+
+  const commercialCard = useMemo(() => {
+    const svc = serviceBySlug.get('commercial-properties')
+    return {
+      title: svc?.name || 'Commercial Properties',
+      href: svc ? `/services/${svc.slug}` : '/services/commercial-properties',
+      image: oneTeamContent?.commercialImageUrl ?? svc?.image ?? null,
+    }
+  }, [serviceBySlug, oneTeamContent])
+
+  const skyResidencesCard = useMemo(() => {
+    const svc = serviceBySlug.get('sky-residences')
+    return {
+      title: svc?.name || 'Sky Residences',
+      href: svc ? `/services/${svc.slug}` : '/services/sky-residences',
+      image: oneTeamContent?.skyResidencesImageUrl ?? svc?.image ?? null,
+    }
+  }, [serviceBySlug, oneTeamContent])
+
+  const waterfrontCard = useMemo(() => {
+    const svc = serviceBySlug.get('waterfront-residences')
+    return {
+      title: svc?.name || 'Waterfront Residences',
+      href: svc ? `/services/${svc.slug}` : '/services/waterfront-residences',
+      image: oneTeamContent?.waterfrontImageUrl ?? svc?.image ?? null,
+    }
+  }, [serviceBySlug, oneTeamContent])
+
+  const resolvedOneTeamVideoUrl =
+    oneTeamContent?.centerVideoUrl ?? homepageContent?.oneTeamVideoUrl ?? null
   const router = useRouter()
   const { isLight } = useTheme()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -329,6 +247,12 @@ export function LaunchesCinematicStack({
   const [colSearchQuery, setColSearchQuery] = useState('')
   const [selectedCountry, setSelectedCountry] = useState('All')
   const [activeColIndex, setActiveColIndex] = useState(0)
+  const prevActiveColIndexRef = useRef(0)
+  const isDraggingColRef = useRef(false)
+  const colDragStartXRef = useRef(0)
+  const colLastStepXRef = useRef(0)
+  const colSteppedInGestureRef = useRef(false)
+  const hasDraggedColRef = useRef(false)
   const [isMobile, setIsMobile] = useState(false)
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768)
@@ -345,13 +269,13 @@ export function LaunchesCinematicStack({
     console.log('[Apex Lifecycle] Mounted LaunchesCinematicStack')
   }, [])
 
-  // Mark homepage ready when both GSAP is initialized and hero video has loaded
+  // Mark homepage ready when GSAP is initialized and hero video (if configured) has loaded
   useEffect(() => {
-    if (isGsapReady && videoLoaded) {
-      console.log('[Apex Lifecycle] Homepage ready (GSAP + Hero Video). Dismissing loader.')
+    if (isGsapReady && (videoLoaded || !homepageContent?.heroVideoUrl)) {
+      console.log('[Apex Lifecycle] Homepage ready. Dismissing loader.')
       setIsPageReady(true)
     }
-  }, [isGsapReady, videoLoaded])
+  }, [isGsapReady, videoLoaded, homepageContent?.heroVideoUrl])
 
   // Safety fallback timer ensuring loading overlay dismisses cleanly after at most 2500ms
   useEffect(() => {
@@ -485,15 +409,90 @@ export function LaunchesCinematicStack({
   }
 
   const totalItems = COLLECTION_COUNTRIES.length
+  const normalizedActiveColIndex =
+    totalItems > 0 ? ((activeColIndex % totalItems) + totalItems) % totalItems : 0
+
+  useEffect(() => {
+    prevActiveColIndexRef.current = normalizedActiveColIndex
+  }, [normalizedActiveColIndex])
 
   // Infinite looping in both directions
   const handlePrevCol = useCallback(() => {
-    setActiveColIndex((prev) => (prev - 1 + totalItems) % totalItems)
+    if (totalItems === 0) return
+    setActiveColIndex((prev) => (((prev - 1) % totalItems) + totalItems) % totalItems)
   }, [totalItems])
 
   const handleNextCol = useCallback(() => {
-    setActiveColIndex((prev) => (prev + 1) % totalItems)
+    if (totalItems === 0) return
+    setActiveColIndex((prev) => ((prev + 1) % totalItems + totalItems) % totalItems)
   }, [totalItems])
+
+  const handleColPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (totalItems <= 1) return
+    const target = e.target as HTMLElement | null
+    if (target?.closest('button, a, input')) return
+    isDraggingColRef.current = true
+    colDragStartXRef.current = e.clientX
+    colLastStepXRef.current = e.clientX
+    colSteppedInGestureRef.current = false
+    hasDraggedColRef.current = false
+  }
+
+  const handleColPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingColRef.current) return
+    const totalDelta = e.clientX - colDragStartXRef.current
+    if (Math.abs(totalDelta) > 10) {
+      hasDraggedColRef.current = true
+      try {
+        if (!e.currentTarget.hasPointerCapture(e.pointerId)) {
+          e.currentTarget.setPointerCapture(e.pointerId)
+        }
+      } catch {
+        // safe fallback
+      }
+    }
+
+    const stepThreshold = isMobile ? 65 : 95
+    const stepDelta = e.clientX - colLastStepXRef.current
+    if (stepDelta <= -stepThreshold) {
+      handleNextCol()
+      colLastStepXRef.current = e.clientX
+      colSteppedInGestureRef.current = true
+    } else if (stepDelta >= stepThreshold) {
+      handlePrevCol()
+      colLastStepXRef.current = e.clientX
+      colSteppedInGestureRef.current = true
+    }
+  }
+
+  const handleColPointerEnd = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingColRef.current) return
+    isDraggingColRef.current = false
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId)
+      }
+    } catch {
+      // safe fallback
+    }
+
+    const totalDelta = e.clientX - colDragStartXRef.current
+    if (!colSteppedInGestureRef.current) {
+      if (totalDelta < -35) {
+        handleNextCol()
+        hasDraggedColRef.current = true
+      } else if (totalDelta > 35) {
+        handlePrevCol()
+        hasDraggedColRef.current = true
+      }
+    }
+
+    if (hasDraggedColRef.current) {
+      setTimeout(() => {
+        hasDraggedColRef.current = false
+      }, 50)
+    }
+  }
 
   // Country selection filter
   const handleSelectCountry = (filterVal: string) => {
@@ -614,13 +613,15 @@ export function LaunchesCinematicStack({
   }
 
   const handleRoundPrev = () => {
-    const step = 360 / PERSPECTIVE_GALLERY_PROPERTIES.length
+    const count = Math.max(PERSPECTIVE_GALLERY_PROPERTIES.length, 1)
+    const step = 360 / count
     roundRotationRef.current = (roundRotationRef.current - step) % 360
     setRoundRotation(roundRotationRef.current)
   }
 
   const handleRoundNext = () => {
-    const step = 360 / PERSPECTIVE_GALLERY_PROPERTIES.length
+    const count = Math.max(PERSPECTIVE_GALLERY_PROPERTIES.length, 1)
+    const step = 360 / count
     roundRotationRef.current = (roundRotationRef.current + step) % 360
     setRoundRotation(roundRotationRef.current)
   }
@@ -1062,7 +1063,8 @@ export function LaunchesCinematicStack({
     return () => ctx.revert()
   }, [])
 
-  const activeColItem: CollectionCountry = COLLECTION_COUNTRIES[activeColIndex] || COLLECTION_COUNTRIES[0]
+  const activeColItem: CollectionCountry =
+    COLLECTION_COUNTRIES[normalizedActiveColIndex] || COLLECTION_COUNTRIES[0]
 
   return (
     <section ref={containerRef} id="home" className={cn("relative w-full transition-colors duration-300", isLight ? "bg-[#FBF9F6]" : "bg-[#040810]")}>
@@ -1087,32 +1089,42 @@ export function LaunchesCinematicStack({
             onClick={togglePlayPause}
             className="absolute inset-0 overflow-hidden cursor-pointer"
           >
-            <video
-              ref={heroVideoRef}
-              src={encodeURI(homepageContent?.heroVideoUrl || "/videos/home-page.mp4")}
-              poster={homepageContent?.heroVideoThumb || "/images/skyResidenceImage.png"}
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="auto"
-              onLoadedData={() => {
-                console.log('[Apex Lifecycle] Homepage hero video loaded successfully')
-                setVideoLoaded(true)
-                playSafely(heroVideoRef.current)
-              }}
-              className="absolute inset-0 w-full h-full object-cover object-center"
-              style={{
-                position: 'absolute',
-                inset: 0,
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                opacity: 1,
-              }}
-            >
-              <source src={encodeURI(homepageContent?.heroVideoUrl || "/videos/home-page.mp4")} type="video/mp4" />
-            </video>
+            {homepageContent?.heroVideoUrl ? (
+              <video
+                ref={heroVideoRef}
+                src={encodeURI(homepageContent.heroVideoUrl)}
+                poster={homepageContent.heroVideoThumb || undefined}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+                onLoadedData={() => {
+                  console.log('[Apex Lifecycle] Homepage hero video loaded successfully')
+                  setVideoLoaded(true)
+                  playSafely(heroVideoRef.current)
+                }}
+                className="absolute inset-0 w-full h-full object-cover object-center"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  opacity: 1,
+                }}
+              >
+                <source src={encodeURI(homepageContent.heroVideoUrl)} type="video/mp4" />
+              </video>
+            ) : homepageContent?.heroVideoThumb ? (
+              <img
+                src={homepageContent.heroVideoThumb}
+                alt="Apex Pacific Holdings"
+                className="absolute inset-0 w-full h-full object-cover object-center"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-[#040810]" />
+            )}
 
             {/* 1. Base Subtle Transparent Midnight Navy Blue Tint (18% opacity, pure architectural cinematic tone) */}
             <div
@@ -1347,321 +1359,390 @@ export function LaunchesCinematicStack({
         </div>
 
         {/* ══════════════════════════════════════════════════════════════════
-            LAYER 2: LAUNCH 1 — THE MERIDIAN (Glides up from bottom)
+            LAYER 2: LAUNCH 1 (Glides up from bottom)
            ══════════════════════════════════════════════════════════════════ */}
         <div
           ref={layer2Ref}
           style={{ zIndex: 30 }}
           className="absolute inset-0 w-full h-full will-change-transform z-30 bg-black shadow-[0_-25px_60px_rgba(0,0,0,0.95)] overflow-hidden"
         >
-          <video
-            ref={launch1VideoRef}
-            src={LAUNCHES[0].videoSrc}
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="auto"
-            onLoadedData={() => playSafely(launch1VideoRef.current)}
-            className="absolute inset-0 w-full h-full object-cover object-center"
-            style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              opacity: 1,
-            }}
-          />
-          {/* Subtle bottom-only gradient */}
-          <div className={cn(
-            "absolute inset-0 pointer-events-none transition-colors duration-300",
-            isLight
-              ? "bg-gradient-to-t from-[#FBF9F6]/80 via-transparent to-transparent"
-              : "bg-gradient-to-t from-[#040810]/90 via-black/20 to-transparent"
-          )} />
-
-          {/* Overlay Content with safe pb for mobile nav */}
-          <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-10 md:p-14 lg:p-16 pb-20 sm:pb-12 md:pb-16 z-20 pointer-events-none">
-            <div className={cn(
-              "max-w-xl pointer-events-auto backdrop-blur-md p-5 sm:p-6 rounded-2xl border transition-all duration-300",
-              isLight
-                ? "bg-white/75 border-[#0B1325]/15 shadow-xl text-[#0B1325]"
-                : "bg-black/50 border-white/15 shadow-[0_8px_30px_rgba(0,0,0,0.8)] text-white"
-            )}>
-              <span className={cn(
-                "inline-block text-[10px] sm:text-xs font-mono tracking-[0.25em] uppercase mb-0.5 sm:mb-1 transition-colors",
-                isLight ? "text-[#6B6661] font-semibold" : "text-[#7DD3FC]"
-              )}>
-                {LAUNCHES[0].tag}
-              </span>
-              <h2 className={cn(
-                "font-display text-xl sm:text-4xl md:text-5xl lg:text-6xl font-light tracking-tight mb-0.5 sm:mb-1 transition-colors",
-                isLight ? "text-[#0B1325]" : "text-white"
-              )}>
-                {LAUNCHES[0].title}
-              </h2>
+          {LAUNCHES[0] ? (
+            <>
+              {LAUNCHES[0].videoSrc ? (
+                <video
+                  ref={launch1VideoRef}
+                  src={LAUNCHES[0].videoSrc}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="auto"
+                  onLoadedData={() => playSafely(launch1VideoRef.current)}
+                  className="absolute inset-0 w-full h-full object-cover object-center"
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    opacity: 1,
+                  }}
+                />
+              ) : LAUNCHES[0].fallbackSrc ? (
+                <img
+                  src={LAUNCHES[0].fallbackSrc}
+                  alt={LAUNCHES[0].title}
+                  className="absolute inset-0 w-full h-full object-cover object-center"
+                />
+              ) : null}
               <div className={cn(
-                "flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase mb-0.5 sm:mb-2 transition-colors",
-                isLight ? "text-[#6B6661]" : "text-[#94A3B8]"
-              )}>
-                <span>{LAUNCHES[0].location}</span>
-                <span>·</span>
-                <span>{LAUNCHES[0].type}</span>
-                <span>·</span>
-                <span>{LAUNCHES[0].beds}</span>
-              </div>
-              <div className="flex items-baseline gap-2 mb-2.5 sm:mb-4">
-                <span className={cn(
-                  "text-[9px] sm:text-[10px] uppercase tracking-[0.2em] transition-colors",
-                  isLight ? "text-[#6B6661]" : "text-[#94A3B8]"
-                )}>
-                  From
-                </span>
-                <span className={cn(
-                  "font-display text-base sm:text-2xl md:text-3xl tracking-wide transition-colors",
-                  isLight ? "text-[#0B1325] font-normal" : "text-white"
-                )}>
-                  {LAUNCHES[0].price}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={(e) => handleExploreLaunch(e, `${LAUNCHES[0].href}?from=launches`)}
-                disabled={navigatingHref?.startsWith(LAUNCHES[0].href)}
-                className={cn(
-                  "inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 cursor-pointer disabled:opacity-90",
+                "absolute inset-0 pointer-events-none transition-colors duration-300",
+                isLight
+                  ? "bg-gradient-to-t from-[#FBF9F6]/80 via-transparent to-transparent"
+                  : "bg-gradient-to-t from-[#040810]/90 via-black/20 to-transparent"
+              )} />
+              <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-10 md:p-14 lg:p-16 pb-20 sm:pb-12 md:pb-16 z-20 pointer-events-none">
+                <div className={cn(
+                  "max-w-xl pointer-events-auto backdrop-blur-md p-5 sm:p-6 rounded-2xl border transition-all duration-300",
                   isLight
-                    ? "bg-white text-[#0B1325] border border-[#0B1325]/20 hover:border-[#0B1325]/50 hover:bg-[#FDFCFB] shadow-md"
-                    : "bg-white text-black hover:bg-sky-200 border border-white shadow-[0_4px_25px_rgba(0,0,0,0.9)]"
-                )}
-              >
-                {navigatingHref?.startsWith(LAUNCHES[0].href) ? (
-                  <>
-                    <OrbitalLoader size="xs" className="w-3.5 h-3.5" />
-                    <span>Entering...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Explore Launch</span>
-                    <ArrowUpRight size={14} />
-                  </>
-                )}
-              </button>
+                    ? "bg-white/75 border-[#0B1325]/15 shadow-xl text-[#0B1325]"
+                    : "bg-black/50 border-white/15 shadow-[0_8px_30px_rgba(0,0,0,0.8)] text-white"
+                )}>
+                  <span className={cn(
+                    "inline-block text-[10px] sm:text-xs font-mono tracking-[0.25em] uppercase mb-0.5 sm:mb-1 transition-colors",
+                    isLight ? "text-[#6B6661] font-semibold" : "text-[#7DD3FC]"
+                  )}>
+                    {LAUNCHES[0].tag}
+                  </span>
+                  <h2 className={cn(
+                    "font-display text-xl sm:text-4xl md:text-5xl lg:text-6xl font-light tracking-tight mb-0.5 sm:mb-1 transition-colors",
+                    isLight ? "text-[#0B1325]" : "text-white"
+                  )}>
+                    {LAUNCHES[0].title}
+                  </h2>
+                  <div className={cn(
+                    "flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase mb-0.5 sm:mb-2 transition-colors",
+                    isLight ? "text-[#6B6661]" : "text-[#94A3B8]"
+                  )}>
+                    {[LAUNCHES[0].location, LAUNCHES[0].type, LAUNCHES[0].beds].filter(Boolean).map((tok, i) => (
+                      <React.Fragment key={i}>
+                        {i > 0 && <span>·</span>}
+                        <span>{tok}</span>
+                      </React.Fragment>
+                    ))}
+                  </div>
+                  {LAUNCHES[0].price && (
+                    <div className="flex items-baseline gap-2 mb-2.5 sm:mb-4">
+                      <span className={cn(
+                        "text-[9px] sm:text-[10px] uppercase tracking-[0.2em] transition-colors",
+                        isLight ? "text-[#6B6661]" : "text-[#94A3B8]"
+                      )}>
+                        From
+                      </span>
+                      <span className={cn(
+                        "font-display text-base sm:text-2xl md:text-3xl tracking-wide transition-colors",
+                        isLight ? "text-[#0B1325] font-normal" : "text-white"
+                      )}>
+                        {LAUNCHES[0].price}
+                      </span>
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={(e) => handleExploreLaunch(e, `${LAUNCHES[0].href}?from=launches`)}
+                    disabled={navigatingHref?.startsWith(LAUNCHES[0].href)}
+                    className={cn(
+                      "inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 cursor-pointer disabled:opacity-90",
+                      isLight
+                        ? "bg-white text-[#0B1325] border border-[#0B1325]/20 hover:border-[#0B1325]/50 hover:bg-[#FDFCFB] shadow-md"
+                        : "bg-white text-black hover:bg-sky-200 border border-white shadow-[0_4px_25px_rgba(0,0,0,0.9)]"
+                    )}
+                  >
+                    {navigatingHref?.startsWith(LAUNCHES[0].href) ? (
+                      <>
+                        <OrbitalLoader size="xs" className="w-3.5 h-3.5" />
+                        <span>Entering...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Explore Launch</span>
+                        <ArrowUpRight size={14} />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-[#040810] text-center px-6">
+              <div className="max-w-md space-y-2">
+                <span className="text-[10px] font-mono uppercase tracking-[0.24em] text-[#7DD3FC]">
+                  Featured Launch · 01
+                </span>
+                <p className="font-display text-2xl text-white/80 font-light">
+                  New Residences Unveiling Soon
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* ══════════════════════════════════════════════════════════════════
-            LAYER 3: LAUNCH 2 — AURELIA VILLA (Glides up from bottom)
+            LAYER 3: LAUNCH 2 (Glides up from bottom)
            ══════════════════════════════════════════════════════════════════ */}
         <div
           ref={layer3Ref}
           style={{ zIndex: 40 }}
           className="absolute inset-0 w-full h-full will-change-transform z-40 bg-black shadow-[0_-25px_60px_rgba(0,0,0,0.95)] overflow-hidden"
         >
-          <video
-            ref={launch2VideoRef}
-            src={LAUNCHES[1].videoSrc}
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="auto"
-            onLoadedData={() => playSafely(launch2VideoRef.current)}
-            className="absolute inset-0 w-full h-full object-cover object-center"
-            style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              opacity: 1,
-            }}
-          />
-          {/* Subtle bottom-only gradient */}
-          <div className={cn(
-            "absolute inset-0 pointer-events-none transition-colors duration-300",
-            isLight
-              ? "bg-gradient-to-t from-[#FBF9F6]/80 via-transparent to-transparent"
-              : "bg-gradient-to-t from-[#040810]/90 via-black/20 to-transparent"
-          )} />
-
-          {/* Overlay Content with safe pb for mobile nav */}
-          <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-10 md:p-14 lg:p-16 pb-20 sm:pb-12 md:pb-16 z-20 pointer-events-none">
-            <div className={cn(
-              "max-w-xl pointer-events-auto backdrop-blur-md p-5 sm:p-6 rounded-2xl border transition-all duration-300",
-              isLight
-                ? "bg-white/75 border-[#0B1325]/15 shadow-xl text-[#0B1325]"
-                : "bg-black/50 border-white/15 shadow-[0_8px_30px_rgba(0,0,0,0.8)] text-white"
-            )}>
-              <span className={cn(
-                "inline-block text-[10px] sm:text-xs font-mono tracking-[0.25em] uppercase mb-0.5 sm:mb-1 transition-colors",
-                isLight ? "text-[#6B6661] font-semibold" : "text-[#7DD3FC]"
-              )}>
-                {LAUNCHES[1].tag}
-              </span>
-              <h2 className={cn(
-                "font-display text-xl sm:text-4xl md:text-5xl lg:text-6xl font-light tracking-tight mb-0.5 sm:mb-1 transition-colors",
-                isLight ? "text-[#0B1325]" : "text-white"
-              )}>
-                {LAUNCHES[1].title}
-              </h2>
+          {LAUNCHES[1] ? (
+            <>
+              {LAUNCHES[1].videoSrc ? (
+                <video
+                  ref={launch2VideoRef}
+                  src={LAUNCHES[1].videoSrc}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="auto"
+                  onLoadedData={() => playSafely(launch2VideoRef.current)}
+                  className="absolute inset-0 w-full h-full object-cover object-center"
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    opacity: 1,
+                  }}
+                />
+              ) : LAUNCHES[1].fallbackSrc ? (
+                <img
+                  src={LAUNCHES[1].fallbackSrc}
+                  alt={LAUNCHES[1].title}
+                  className="absolute inset-0 w-full h-full object-cover object-center"
+                />
+              ) : null}
               <div className={cn(
-                "flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase mb-0.5 sm:mb-2 transition-colors",
-                isLight ? "text-[#6B6661]" : "text-[#94A3B8]"
-              )}>
-                <span>{LAUNCHES[1].location}</span>
-                <span>·</span>
-                <span>{LAUNCHES[1].type}</span>
-                <span>·</span>
-                <span>{LAUNCHES[1].beds}</span>
-              </div>
-              <div className="flex items-baseline gap-2 mb-2.5 sm:mb-4">
-                <span className={cn(
-                  "text-[9px] sm:text-[10px] uppercase tracking-[0.2em] transition-colors",
-                  isLight ? "text-[#6B6661]" : "text-[#94A3B8]"
-                )}>
-                  From
-                </span>
-                <span className={cn(
-                  "font-display text-base sm:text-2xl md:text-3xl tracking-wide transition-colors",
-                  isLight ? "text-[#0B1325] font-normal" : "text-white"
-                )}>
-                  {LAUNCHES[1].price}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={(e) => handleExploreLaunch(e, `${LAUNCHES[1].href}?from=launches`)}
-                disabled={navigatingHref?.startsWith(LAUNCHES[1].href)}
-                className={cn(
-                  "inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 cursor-pointer disabled:opacity-90",
+                "absolute inset-0 pointer-events-none transition-colors duration-300",
+                isLight
+                  ? "bg-gradient-to-t from-[#FBF9F6]/80 via-transparent to-transparent"
+                  : "bg-gradient-to-t from-[#040810]/90 via-black/20 to-transparent"
+              )} />
+              <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-10 md:p-14 lg:p-16 pb-20 sm:pb-12 md:pb-16 z-20 pointer-events-none">
+                <div className={cn(
+                  "max-w-xl pointer-events-auto backdrop-blur-md p-5 sm:p-6 rounded-2xl border transition-all duration-300",
                   isLight
-                    ? "bg-white text-[#0B1325] border border-[#0B1325]/20 hover:border-[#0B1325]/50 hover:bg-[#FDFCFB] shadow-md"
-                    : "bg-white text-black hover:bg-sky-200 border border-white shadow-[0_4px_25px_rgba(0,0,0,0.9)]"
-                )}
-              >
-                {navigatingHref?.startsWith(LAUNCHES[1].href) ? (
-                  <>
-                    <OrbitalLoader size="xs" className="w-3.5 h-3.5" />
-                    <span>Entering...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Explore Launch</span>
-                    <ArrowUpRight size={14} />
-                  </>
-                )}
-              </button>
+                    ? "bg-white/75 border-[#0B1325]/15 shadow-xl text-[#0B1325]"
+                    : "bg-black/50 border-white/15 shadow-[0_8px_30px_rgba(0,0,0,0.8)] text-white"
+                )}>
+                  <span className={cn(
+                    "inline-block text-[10px] sm:text-xs font-mono tracking-[0.25em] uppercase mb-0.5 sm:mb-1 transition-colors",
+                    isLight ? "text-[#6B6661] font-semibold" : "text-[#7DD3FC]"
+                  )}>
+                    {LAUNCHES[1].tag}
+                  </span>
+                  <h2 className={cn(
+                    "font-display text-xl sm:text-4xl md:text-5xl lg:text-6xl font-light tracking-tight mb-0.5 sm:mb-1 transition-colors",
+                    isLight ? "text-[#0B1325]" : "text-white"
+                  )}>
+                    {LAUNCHES[1].title}
+                  </h2>
+                  <div className={cn(
+                    "flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase mb-0.5 sm:mb-2 transition-colors",
+                    isLight ? "text-[#6B6661]" : "text-[#94A3B8]"
+                  )}>
+                    {[LAUNCHES[1].location, LAUNCHES[1].type, LAUNCHES[1].beds].filter(Boolean).map((tok, i) => (
+                      <React.Fragment key={i}>
+                        {i > 0 && <span>·</span>}
+                        <span>{tok}</span>
+                      </React.Fragment>
+                    ))}
+                  </div>
+                  {LAUNCHES[1].price && (
+                    <div className="flex items-baseline gap-2 mb-2.5 sm:mb-4">
+                      <span className={cn(
+                        "text-[9px] sm:text-[10px] uppercase tracking-[0.2em] transition-colors",
+                        isLight ? "text-[#6B6661]" : "text-[#94A3B8]"
+                      )}>
+                        From
+                      </span>
+                      <span className={cn(
+                        "font-display text-base sm:text-2xl md:text-3xl tracking-wide transition-colors",
+                        isLight ? "text-[#0B1325] font-normal" : "text-white"
+                      )}>
+                        {LAUNCHES[1].price}
+                      </span>
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={(e) => handleExploreLaunch(e, `${LAUNCHES[1].href}?from=launches`)}
+                    disabled={navigatingHref?.startsWith(LAUNCHES[1].href)}
+                    className={cn(
+                      "inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 cursor-pointer disabled:opacity-90",
+                      isLight
+                        ? "bg-white text-[#0B1325] border border-[#0B1325]/20 hover:border-[#0B1325]/50 hover:bg-[#FDFCFB] shadow-md"
+                        : "bg-white text-black hover:bg-sky-200 border border-white shadow-[0_4px_25px_rgba(0,0,0,0.9)]"
+                    )}
+                  >
+                    {navigatingHref?.startsWith(LAUNCHES[1].href) ? (
+                      <>
+                        <OrbitalLoader size="xs" className="w-3.5 h-3.5" />
+                        <span>Entering...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Explore Launch</span>
+                        <ArrowUpRight size={14} />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-[#040810] text-center px-6">
+              <div className="max-w-md space-y-2">
+                <span className="text-[10px] font-mono uppercase tracking-[0.24em] text-[#7DD3FC]">
+                  Featured Launch · 02
+                </span>
+                <p className="font-display text-2xl text-white/80 font-light">
+                  New Residences Unveiling Soon
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* ══════════════════════════════════════════════════════════════════
-            LAYER 4: LAUNCH 3 — THE PENINSULA RESERVE (Glides up from bottom)
+            LAYER 4: LAUNCH 3 (Glides up from bottom)
            ══════════════════════════════════════════════════════════════════ */}
         <div
           ref={layer4Ref}
           style={{ zIndex: 50 }}
           className="absolute inset-0 w-full h-full will-change-transform z-50 bg-black shadow-[0_-25px_60px_rgba(0,0,0,0.95)] overflow-hidden"
         >
-          <video
-            ref={launch3VideoRef}
-            src={LAUNCHES[2].videoSrc}
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="auto"
-            onLoadedData={() => playSafely(launch3VideoRef.current)}
-            className="absolute inset-0 w-full h-full object-cover object-center"
-            style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              opacity: 1,
-            }}
-          />
-          {/* Subtle bottom-only gradient */}
-          <div className={cn(
-            "absolute inset-0 pointer-events-none transition-colors duration-300",
-            isLight
-              ? "bg-gradient-to-t from-[#FBF9F6]/80 via-transparent to-transparent"
-              : "bg-gradient-to-t from-[#040810]/90 via-black/20 to-transparent"
-          )} />
-
-          {/* Overlay Content with safe pb for mobile nav */}
-          <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-10 md:p-14 lg:p-16 pb-20 sm:pb-12 md:pb-16 z-20 pointer-events-none">
-            <div className={cn(
-              "max-w-xl pointer-events-auto backdrop-blur-md p-5 sm:p-6 rounded-2xl border transition-all duration-300",
-              isLight
-                ? "bg-white/75 border-[#0B1325]/15 shadow-xl text-[#0B1325]"
-                : "bg-black/50 border-white/15 shadow-[0_8px_30px_rgba(0,0,0,0.8)] text-white"
-            )}>
-              <span className={cn(
-                "inline-block text-[10px] sm:text-xs font-mono tracking-[0.25em] uppercase mb-0.5 sm:mb-1 transition-colors",
-                isLight ? "text-[#6B6661] font-semibold" : "text-[#7DD3FC]"
-              )}>
-                {LAUNCHES[2].tag}
-              </span>
-              <h2 className={cn(
-                "font-display text-xl sm:text-4xl md:text-5xl lg:text-6xl font-light tracking-tight mb-0.5 sm:mb-1 transition-colors",
-                isLight ? "text-[#0B1325]" : "text-white"
-              )}>
-                {LAUNCHES[2].title}
-              </h2>
+          {LAUNCHES[2] ? (
+            <>
+              {LAUNCHES[2].videoSrc ? (
+                <video
+                  ref={launch3VideoRef}
+                  src={LAUNCHES[2].videoSrc}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="auto"
+                  onLoadedData={() => playSafely(launch3VideoRef.current)}
+                  className="absolute inset-0 w-full h-full object-cover object-center"
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    opacity: 1,
+                  }}
+                />
+              ) : LAUNCHES[2].fallbackSrc ? (
+                <img
+                  src={LAUNCHES[2].fallbackSrc}
+                  alt={LAUNCHES[2].title}
+                  className="absolute inset-0 w-full h-full object-cover object-center"
+                />
+              ) : null}
               <div className={cn(
-                "flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase mb-0.5 sm:mb-2 transition-colors",
-                isLight ? "text-[#6B6661]" : "text-[#94A3B8]"
-              )}>
-                <span>{LAUNCHES[2].location}</span>
-                <span>·</span>
-                <span>{LAUNCHES[2].type}</span>
-                <span>·</span>
-                <span>{LAUNCHES[2].beds}</span>
-              </div>
-              <div className="flex items-baseline gap-2 mb-2.5 sm:mb-4">
-                <span className={cn(
-                  "text-[9px] sm:text-[10px] uppercase tracking-[0.2em] transition-colors",
-                  isLight ? "text-[#6B6661]" : "text-[#94A3B8]"
-                )}>
-                  From
-                </span>
-                <span className={cn(
-                  "font-display text-base sm:text-2xl md:text-3xl tracking-wide transition-colors",
-                  isLight ? "text-[#0B1325] font-normal" : "text-white"
-                )}>
-                  {LAUNCHES[2].price}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={(e) => handleExploreLaunch(e, `${LAUNCHES[2].href}?from=launches`)}
-                disabled={navigatingHref?.startsWith(LAUNCHES[2].href)}
-                className={cn(
-                  "inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 cursor-pointer disabled:opacity-90",
+                "absolute inset-0 pointer-events-none transition-colors duration-300",
+                isLight
+                  ? "bg-gradient-to-t from-[#FBF9F6]/80 via-transparent to-transparent"
+                  : "bg-gradient-to-t from-[#040810]/90 via-black/20 to-transparent"
+              )} />
+              <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-10 md:p-14 lg:p-16 pb-20 sm:pb-12 md:pb-16 z-20 pointer-events-none">
+                <div className={cn(
+                  "max-w-xl pointer-events-auto backdrop-blur-md p-5 sm:p-6 rounded-2xl border transition-all duration-300",
                   isLight
-                    ? "bg-white text-[#0B1325] border border-[#0B1325]/20 hover:border-[#0B1325]/50 hover:bg-[#FDFCFB] shadow-md"
-                    : "bg-white text-black hover:bg-sky-200 border border-white shadow-[0_4px_25px_rgba(0,0,0,0.9)]"
-                )}
-              >
-                {navigatingHref?.startsWith(LAUNCHES[2].href) ? (
-                  <>
-                    <OrbitalLoader size="xs" className="w-3.5 h-3.5" />
-                    <span>Entering...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Explore Launch</span>
-                    <ArrowUpRight size={14} />
-                  </>
-                )}
-              </button>
+                    ? "bg-white/75 border-[#0B1325]/15 shadow-xl text-[#0B1325]"
+                    : "bg-black/50 border-white/15 shadow-[0_8px_30px_rgba(0,0,0,0.8)] text-white"
+                )}>
+                  <span className={cn(
+                    "inline-block text-[10px] sm:text-xs font-mono tracking-[0.25em] uppercase mb-0.5 sm:mb-1 transition-colors",
+                    isLight ? "text-[#6B6661] font-semibold" : "text-[#7DD3FC]"
+                  )}>
+                    {LAUNCHES[2].tag}
+                  </span>
+                  <h2 className={cn(
+                    "font-display text-xl sm:text-4xl md:text-5xl lg:text-6xl font-light tracking-tight mb-0.5 sm:mb-1 transition-colors",
+                    isLight ? "text-[#0B1325]" : "text-white"
+                  )}>
+                    {LAUNCHES[2].title}
+                  </h2>
+                  <div className={cn(
+                    "flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] sm:text-xs font-sans tracking-[0.18em] uppercase mb-0.5 sm:mb-2 transition-colors",
+                    isLight ? "text-[#6B6661]" : "text-[#94A3B8]"
+                  )}>
+                    {[LAUNCHES[2].location, LAUNCHES[2].type, LAUNCHES[2].beds].filter(Boolean).map((tok, i) => (
+                      <React.Fragment key={i}>
+                        {i > 0 && <span>·</span>}
+                        <span>{tok}</span>
+                      </React.Fragment>
+                    ))}
+                  </div>
+                  {LAUNCHES[2].price && (
+                    <div className="flex items-baseline gap-2 mb-2.5 sm:mb-4">
+                      <span className={cn(
+                        "text-[9px] sm:text-[10px] uppercase tracking-[0.2em] transition-colors",
+                        isLight ? "text-[#6B6661]" : "text-[#94A3B8]"
+                      )}>
+                        From
+                      </span>
+                      <span className={cn(
+                        "font-display text-base sm:text-2xl md:text-3xl tracking-wide transition-colors",
+                        isLight ? "text-[#0B1325] font-normal" : "text-white"
+                      )}>
+                        {LAUNCHES[2].price}
+                      </span>
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={(e) => handleExploreLaunch(e, `${LAUNCHES[2].href}?from=launches`)}
+                    disabled={navigatingHref?.startsWith(LAUNCHES[2].href)}
+                    className={cn(
+                      "inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 cursor-pointer disabled:opacity-90",
+                      isLight
+                        ? "bg-white text-[#0B1325] border border-[#0B1325]/20 hover:border-[#0B1325]/50 hover:bg-[#FDFCFB] shadow-md"
+                        : "bg-white text-black hover:bg-sky-200 border border-white shadow-[0_4px_25px_rgba(0,0,0,0.9)]"
+                    )}
+                  >
+                    {navigatingHref?.startsWith(LAUNCHES[2].href) ? (
+                      <>
+                        <OrbitalLoader size="xs" className="w-3.5 h-3.5" />
+                        <span>Entering...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Explore Launch</span>
+                        <ArrowUpRight size={14} />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-[#040810] text-center px-6">
+              <div className="max-w-md space-y-2">
+                <span className="text-[10px] font-mono uppercase tracking-[0.24em] text-[#7DD3FC]">
+                  Featured Launch · 03
+                </span>
+                <p className="font-display text-2xl text-white/80 font-light">
+                  New Residences Unveiling Soon
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* ══════════════════════════════════════════════════════════════════
@@ -1752,80 +1833,103 @@ export function LaunchesCinematicStack({
             </div>
           </div>
 
-          {/* 2. Centered Interactive 5-Country Carousel with Infinite Looping */}
-          <div className="relative w-full max-w-7xl mx-auto flex-1 min-h-0 flex items-center justify-center my-auto overflow-hidden select-none pointer-events-auto">
+          {/* 2. Centered Interactive Country Carousel with Infinite Looping */}
+          <div
+            onPointerDown={handleColPointerDown}
+            onPointerMove={handleColPointerMove}
+            onPointerUp={handleColPointerEnd}
+            onPointerCancel={handleColPointerEnd}
+            onPointerLeave={() => {
+              if (!hasDraggedColRef.current) {
+                isDraggingColRef.current = false
+              }
+            }}
+            style={{ touchAction: 'pan-y' }}
+            className="relative w-full max-w-7xl mx-auto flex-1 min-h-0 flex items-center justify-center my-auto overflow-hidden select-none pointer-events-auto cursor-grab active:cursor-grabbing"
+          >
             <div className="relative w-full h-[185px] sm:h-[260px] md:h-[320px] lg:h-[360px] flex items-center justify-center">
-              {COLLECTION_COUNTRIES.map((item, idx) => {
-                // Circular wrapped offset in [-2, 2] for smooth bidirectional infinite looping
-                let diff = (idx - activeColIndex) % totalItems
-                if (diff < -2) diff += totalItems
-                if (diff > 2) diff -= totalItems
+              {COLLECTION_COUNTRIES.length === 0 ? (
+                <div className="text-center px-6">
+                  <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#94A3B8]">
+                    No collections published yet
+                  </p>
+                </div>
+              ) : (
+                COLLECTION_COUNTRIES.map((item, idx) => {
+                  const computeWrappedDiff = (index: number, active: number) => {
+                    let d = ((index - active) % totalItems + totalItems) % totalItems
+                    if (d > totalItems / 2) d -= totalItems
+                    return d
+                  }
+                  const diff = computeWrappedDiff(idx, normalizedActiveColIndex)
+                  const prevDiff = computeWrappedDiff(idx, prevActiveColIndexRef.current)
+                  const isWrappingAround = Math.abs(diff - prevDiff) > Math.max(2, totalItems / 2)
 
-                const isActive = diff === 0
-                const isLeft = diff === -1
-                const isRight = diff === 1
+                  const isActive = diff === 0
+                  const spacing = isMobile ? 215 : 440
+                  const tx = diff * spacing
+                  const scale = isActive ? 1.0 : Math.abs(diff) === 1 ? 0.86 : 0.74
+                  const opacity = isActive ? 1.0 : Math.abs(diff) === 1 ? 0.50 : 0.20
+                  const zIndex = isActive ? 30 : 25 - Math.abs(diff)
 
-                // Responsive card dimensions
-                const cardWidth = isMobile ? 260 : 500
-                const cardHeight = isMobile ? 180 : 330
-                const spacing = isMobile ? 215 : 440
-                const tx = diff * spacing
-                const scale = isActive ? 1.0 : Math.abs(diff) === 1 ? 0.86 : 0.74
-                const opacity = isActive ? 1.0 : Math.abs(diff) === 1 ? 0.50 : 0.20
-                const zIndex = isActive ? 30 : 25 - Math.abs(diff)
-
-                return (
-                  <motion.div
-                    suppressHydrationWarning
-                    key={item.id}
-                    onClick={(e) => {
-                      if (isActive) {
-                        const rect = e.currentTarget.getBoundingClientRect()
-                        const clickX = e.clientX - rect.left
-                        if (clickX < rect.width * 0.35) {
-                          handlePrevCol()
-                        } else if (clickX > rect.width * 0.65) {
+                  return (
+                    <motion.div
+                      suppressHydrationWarning
+                      key={item.id}
+                      onClick={(e) => {
+                        if (hasDraggedColRef.current) return
+                        if (isActive) {
+                          const rect = e.currentTarget.getBoundingClientRect()
+                          const clickX = e.clientX - rect.left
+                          if (clickX < rect.width * 0.35) {
+                            handlePrevCol()
+                          } else if (clickX > rect.width * 0.65) {
+                            handleNextCol()
+                          }
+                        } else if (diff > 0) {
                           handleNextCol()
+                        } else {
+                          handlePrevCol()
                         }
-                      } else if (diff > 0) {
-                        handleNextCol()
-                      } else {
-                        handlePrevCol()
+                      }}
+                      initial={false}
+                      animate={{
+                        x: tx,
+                        scale: scale,
+                        opacity: opacity,
+                      }}
+                      transition={
+                        isWrappingAround
+                          ? { duration: 0 }
+                          : {
+                              duration: 0.45,
+                              ease: [0.22, 1, 0.36, 1],
+                            }
                       }
-                    }}
-                    drag={isActive ? 'x' : false}
-                    dragConstraints={{ left: 0, right: 0 }}
-                    dragElastic={0.25}
-                    onDragEnd={(_, info) => {
-                      if (info.offset.x < -40) handleNextCol()
-                      else if (info.offset.x > 40) handlePrevCol()
-                    }}
-                    animate={{
-                      x: tx,
-                      scale: scale,
-                      opacity: opacity,
-                    }}
-                    transition={{
-                      duration: 0.5,
-                      ease: [0.22, 1, 0.36, 1],
-                    }}
-                    style={{
-                      zIndex,
-                    }}
-                    className={cn(
-                      'absolute w-[260px] h-[180px] md:w-[500px] md:h-[330px] rounded-2xl overflow-hidden shadow-2xl transition-shadow cursor-pointer will-change-transform group',
-                      themeTokens.collection.carouselCard(isLight, isActive)
-                    )}
-                  >
-                    {/* Exact Country Image with Cover Fit & No Stretching */}
-                    <Image
-                      src={item.image}
-                      alt={`${item.countryName} Collection`}
-                      fill
-                      className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
-                      sizes="(max-width: 768px) 280px, 540px"
-                      priority={isActive}
-                    />
+                      style={{
+                        zIndex,
+                      }}
+                      className={cn(
+                        'absolute w-[260px] h-[180px] md:w-[500px] md:h-[330px] rounded-2xl overflow-hidden shadow-2xl transition-shadow cursor-pointer will-change-transform group',
+                        themeTokens.collection.carouselCard(isLight, isActive)
+                      )}
+                    >
+                      {item.image ? (
+                        <Image
+                          src={item.image}
+                          alt={`${item.displayName || item.countryName} Collection`}
+                          fill
+                          className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                          sizes="(max-width: 768px) 280px, 540px"
+                          priority={isActive}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-[#070E1C] flex items-center justify-center">
+                          <span className="font-display text-xl text-white/75">
+                            {item.displayName || item.countryName}
+                          </span>
+                        </div>
+                      )}
 
                     {/* Subtle Gradient Overlay for Clean Artwork Display */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent pointer-events-none" />
@@ -1859,12 +1963,13 @@ export function LaunchesCinematicStack({
                     </div>
                   </motion.div>
                 )
-              })}
+              }))}
             </div>
           </div>
 
           {/* 3. Bottom Controls Bar: Active Destination Title & Specs + Direct Explore Action */}
           <div className="w-full max-w-7xl mx-auto shrink-0 pointer-events-auto pt-1">
+            {activeColItem && (
             <div className="flex items-end justify-between gap-4">
               {/* Left: Active Country Details & Specs */}
               <div className="flex flex-col min-w-0 pr-2">
@@ -1911,6 +2016,7 @@ export function LaunchesCinematicStack({
                 )}
               </button>
             </div>
+            )}
 
             {/* Reference Bottom Horizontal Divider Rule */}
             <div className={cn("w-full h-px mt-2 sm:mt-3 transition-colors duration-300", themeTokens.collection.divider(isLight))} />
@@ -1995,39 +2101,43 @@ export function LaunchesCinematicStack({
               <div
                 role="link"
                 tabIndex={0}
-                onClick={(e) => handleServiceCardClick(e, '/services/luxury-villas', 'Luxury Villas')}
+                onClick={(e) => handleServiceCardClick(e, luxuryVillasCard.href, luxuryVillasCard.title)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
-                    handleServiceCardClick(e as unknown as React.MouseEvent, '/services/luxury-villas', 'Luxury Villas')
+                    handleServiceCardClick(e as unknown as React.MouseEvent, luxuryVillasCard.href, luxuryVillasCard.title)
                   }
                 }}
                 className={cn(
                   "relative h-28 sm:h-36 md:h-44 lg:h-52 rounded-xl sm:rounded-2xl overflow-hidden border transition-all duration-300 group shadow-xl cursor-pointer select-none",
-                  navigatingHref === '/services/luxury-villas'
+                  navigatingHref === luxuryVillasCard.href
                     ? "border-sky-400 ring-2 ring-sky-400/50 shadow-[0_0_30px_rgba(56,189,248,0.4)]"
                     : themeTokens.oneTeam.cardBorder(isLight)
                 )}
               >
-                <Image
-                  src="/images/laxuryVillaImage.png"
-                  alt="Luxury Villas"
-                  fill
-                  className={cn(
-                    "object-cover object-center transition-transform duration-700 group-hover:scale-105",
-                    navigatingHref === '/services/luxury-villas' && "scale-105 filter brightness-75"
-                  )}
-                  sizes="(max-width: 768px) 50vw, 30vw"
-                />
+                {luxuryVillasCard.image ? (
+                  <Image
+                    src={luxuryVillasCard.image}
+                    alt={luxuryVillasCard.title}
+                    fill
+                    className={cn(
+                      "object-cover object-center transition-transform duration-700 group-hover:scale-105",
+                      navigatingHref === luxuryVillasCard.href && "scale-105 filter brightness-75"
+                    )}
+                    sizes="(max-width: 768px) 50vw, 30vw"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-[#070E1C]" />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
                 <div className="absolute bottom-2 sm:bottom-3 left-2.5 sm:left-4 right-2.5 sm:right-4 z-10 flex items-end justify-between gap-2">
                   <div className="flex flex-col min-w-0 pr-1">
                     <span className="w-3.5 h-px bg-sky-400/60 block mb-1" />
                     <span className="font-serif text-xs sm:text-base md:text-lg font-light text-white group-hover:text-sky-200 transition-colors truncate">
-                      Luxury Villas
+                      {luxuryVillasCard.title}
                     </span>
                   </div>
                   <div className="shrink-0 pointer-events-none">
-                    {navigatingHref === '/services/luxury-villas' ? (
+                    {navigatingHref === luxuryVillasCard.href ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-400 text-black text-[9px] sm:text-[10px] font-mono uppercase tracking-wider font-semibold shadow-lg">
                         <OrbitalLoader size="xs" className="w-3 h-3 text-black" />
                         <span>Loading...</span>
@@ -2049,39 +2159,43 @@ export function LaunchesCinematicStack({
               <div
                 role="link"
                 tabIndex={0}
-                onClick={(e) => handleServiceCardClick(e, '/services/commercial-properties', 'Commercial Properties')}
+                onClick={(e) => handleServiceCardClick(e, commercialCard.href, commercialCard.title)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
-                    handleServiceCardClick(e as unknown as React.MouseEvent, '/services/commercial-properties', 'Commercial Properties')
+                    handleServiceCardClick(e as unknown as React.MouseEvent, commercialCard.href, commercialCard.title)
                   }
                 }}
                 className={cn(
                   "relative h-28 sm:h-36 md:h-44 lg:h-52 rounded-xl sm:rounded-2xl overflow-hidden border transition-all duration-300 group shadow-xl cursor-pointer select-none",
-                  navigatingHref === '/services/commercial-properties'
+                  navigatingHref === commercialCard.href
                     ? "border-sky-400 ring-2 ring-sky-400/50 shadow-[0_0_30px_rgba(56,189,248,0.4)]"
                     : themeTokens.oneTeam.cardBorder(isLight)
                 )}
               >
-                <Image
-                  src="/images/commercialimage.png"
-                  alt="Commercial Properties"
-                  fill
-                  className={cn(
-                    "object-cover object-center transition-transform duration-700 group-hover:scale-105",
-                    navigatingHref === '/services/commercial-properties' && "scale-105 filter brightness-75"
-                  )}
-                  sizes="(max-width: 768px) 50vw, 30vw"
-                />
+                {commercialCard.image ? (
+                  <Image
+                    src={commercialCard.image}
+                    alt={commercialCard.title}
+                    fill
+                    className={cn(
+                      "object-cover object-center transition-transform duration-700 group-hover:scale-105",
+                      navigatingHref === commercialCard.href && "scale-105 filter brightness-75"
+                    )}
+                    sizes="(max-width: 768px) 50vw, 30vw"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-[#070E1C]" />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
                 <div className="absolute bottom-2 sm:bottom-3 left-2.5 sm:left-4 right-2.5 sm:right-4 z-10 flex items-end justify-between gap-2">
                   <div className="flex flex-col min-w-0 pr-1">
                     <span className="w-3.5 h-px bg-sky-400/60 block mb-1" />
                     <span className="font-serif text-xs sm:text-base md:text-lg font-light text-white group-hover:text-sky-200 transition-colors truncate">
-                      Commercial Properties
+                      {commercialCard.title}
                     </span>
                   </div>
                   <div className="shrink-0 pointer-events-none">
-                    {navigatingHref === '/services/commercial-properties' ? (
+                    {navigatingHref === commercialCard.href ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-400 text-black text-[9px] sm:text-[10px] font-mono uppercase tracking-wider font-semibold shadow-lg">
                         <OrbitalLoader size="xs" className="w-3 h-3 text-black" />
                         <span>Loading...</span>
@@ -2108,23 +2222,27 @@ export function LaunchesCinematicStack({
                 themeTokens.oneTeam.videoContainer(isLight)
               )}
             >
-              <video
-                ref={oneTeamVideoRef}
-                src={encodeURI(homepageContent?.oneTeamVideoUrl || "/videos/one-team-end-to-end.mp4")}
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="auto"
-                onLoadedData={() => {
-                  setOneTeamVideoLoaded(true)
-                  playSafely(oneTeamVideoRef.current)
-                }}
-                className="w-full h-full object-cover object-center pointer-events-none select-none"
-                style={{ opacity: 1 }}
-              >
-                <source src={encodeURI(homepageContent?.oneTeamVideoUrl || "/videos/one-team-end-to-end.mp4")} type="video/mp4" />
-              </video>
+              {resolvedOneTeamVideoUrl ? (
+                <video
+                  ref={oneTeamVideoRef}
+                  src={encodeURI(resolvedOneTeamVideoUrl)}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="auto"
+                  onLoadedData={() => {
+                    setOneTeamVideoLoaded(true)
+                    playSafely(oneTeamVideoRef.current)
+                  }}
+                  className="w-full h-full object-cover object-center pointer-events-none select-none"
+                  style={{ opacity: 1 }}
+                >
+                  <source src={encodeURI(resolvedOneTeamVideoUrl)} type="video/mp4" />
+                </video>
+              ) : (
+                <div className="w-full h-full bg-[#070E1C]" />
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-[#040810]/80 via-transparent to-transparent pointer-events-none" />
 
               <div className="absolute bottom-2 sm:bottom-3.5 left-2.5 sm:left-4 z-10">
@@ -2146,39 +2264,43 @@ export function LaunchesCinematicStack({
               <div
                 role="link"
                 tabIndex={0}
-                onClick={(e) => handleServiceCardClick(e, '/services/sky-residences', 'Sky Residences')}
+                onClick={(e) => handleServiceCardClick(e, skyResidencesCard.href, skyResidencesCard.title)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
-                    handleServiceCardClick(e as unknown as React.MouseEvent, '/services/sky-residences', 'Sky Residences')
+                    handleServiceCardClick(e as unknown as React.MouseEvent, skyResidencesCard.href, skyResidencesCard.title)
                   }
                 }}
                 className={cn(
                   "relative h-28 sm:h-36 md:h-44 lg:h-52 rounded-xl sm:rounded-2xl overflow-hidden border transition-all duration-300 group shadow-xl cursor-pointer select-none",
-                  navigatingHref === '/services/sky-residences'
+                  navigatingHref === skyResidencesCard.href
                     ? "border-sky-400 ring-2 ring-sky-400/50 shadow-[0_0_30px_rgba(56,189,248,0.4)]"
                     : themeTokens.oneTeam.cardBorder(isLight)
                 )}
               >
-                <Image
-                  src="/images/skyResidenceImage.png"
-                  alt="Sky Residences"
-                  fill
-                  className={cn(
-                    "object-cover object-center transition-transform duration-700 group-hover:scale-105",
-                    navigatingHref === '/services/sky-residences' && "scale-105 filter brightness-75"
-                  )}
-                  sizes="(max-width: 768px) 50vw, 30vw"
-                />
+                {skyResidencesCard.image ? (
+                  <Image
+                    src={skyResidencesCard.image}
+                    alt={skyResidencesCard.title}
+                    fill
+                    className={cn(
+                      "object-cover object-center transition-transform duration-700 group-hover:scale-105",
+                      navigatingHref === skyResidencesCard.href && "scale-105 filter brightness-75"
+                    )}
+                    sizes="(max-width: 768px) 50vw, 30vw"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-[#070E1C]" />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
                 <div className="absolute bottom-2 sm:bottom-3 left-2.5 sm:left-4 right-2.5 sm:right-4 z-10 flex items-end justify-between gap-2">
                   <div className="flex flex-col min-w-0 pr-1">
                     <span className="w-3.5 h-px bg-sky-400/60 block mb-1" />
                     <span className="font-serif text-xs sm:text-base md:text-lg font-light text-white group-hover:text-sky-200 transition-colors truncate">
-                      Sky Residences
+                      {skyResidencesCard.title}
                     </span>
                   </div>
                   <div className="shrink-0 pointer-events-none">
-                    {navigatingHref === '/services/sky-residences' ? (
+                    {navigatingHref === skyResidencesCard.href ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-400 text-black text-[9px] sm:text-[10px] font-mono uppercase tracking-wider font-semibold shadow-lg">
                         <OrbitalLoader size="xs" className="w-3 h-3 text-black" />
                         <span>Loading...</span>
@@ -2200,39 +2322,43 @@ export function LaunchesCinematicStack({
               <div
                 role="link"
                 tabIndex={0}
-                onClick={(e) => handleServiceCardClick(e, '/services/waterfront-residences', 'Waterfront Residences')}
+                onClick={(e) => handleServiceCardClick(e, waterfrontCard.href, waterfrontCard.title)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
-                    handleServiceCardClick(e as unknown as React.MouseEvent, '/services/waterfront-residences', 'Waterfront Residences')
+                    handleServiceCardClick(e as unknown as React.MouseEvent, waterfrontCard.href, waterfrontCard.title)
                   }
                 }}
                 className={cn(
                   "relative h-28 sm:h-36 md:h-44 lg:h-52 rounded-xl sm:rounded-2xl overflow-hidden border transition-all duration-300 group shadow-xl cursor-pointer select-none",
-                  navigatingHref === '/services/waterfront-residences'
+                  navigatingHref === waterfrontCard.href
                     ? "border-sky-400 ring-2 ring-sky-400/50 shadow-[0_0_30px_rgba(56,189,248,0.4)]"
                     : themeTokens.oneTeam.cardBorder(isLight)
                 )}
               >
-                <Image
-                  src="/images/waterFrontResidenceImage.png"
-                  alt="Waterfront Residences"
-                  fill
-                  className={cn(
-                    "object-cover object-center transition-transform duration-700 group-hover:scale-105",
-                    navigatingHref === '/services/waterfront-residences' && "scale-105 filter brightness-75"
-                  )}
-                  sizes="(max-width: 768px) 50vw, 30vw"
-                />
+                {waterfrontCard.image ? (
+                  <Image
+                    src={waterfrontCard.image}
+                    alt={waterfrontCard.title}
+                    fill
+                    className={cn(
+                      "object-cover object-center transition-transform duration-700 group-hover:scale-105",
+                      navigatingHref === waterfrontCard.href && "scale-105 filter brightness-75"
+                    )}
+                    sizes="(max-width: 768px) 50vw, 30vw"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-[#070E1C]" />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
                 <div className="absolute bottom-2 sm:bottom-3 left-2.5 sm:left-4 right-2.5 sm:right-4 z-10 flex items-end justify-between gap-2">
                   <div className="flex flex-col min-w-0 pr-1">
                     <span className="w-3.5 h-px bg-sky-400/60 block mb-1" />
                     <span className="font-serif text-xs sm:text-base md:text-lg font-light text-white group-hover:text-sky-200 transition-colors truncate">
-                      Waterfront Residences
+                      {waterfrontCard.title}
                     </span>
                   </div>
                   <div className="shrink-0 pointer-events-none">
-                    {navigatingHref === '/services/waterfront-residences' ? (
+                    {navigatingHref === waterfrontCard.href ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-400 text-black text-[9px] sm:text-[10px] font-mono uppercase tracking-wider font-semibold shadow-lg">
                         <OrbitalLoader size="xs" className="w-3 h-3 text-black" />
                         <span>Loading...</span>
@@ -2289,29 +2415,40 @@ export function LaunchesCinematicStack({
 
           {/* 2. 3D Rotating Circular Carousel Stage using Framer Motion 3D Physics */}
           <div className="relative w-full flex-1 flex items-center justify-center pointer-events-auto my-auto overflow-visible">
-            <ThreeDPhotoCarousel
-              cards={roundCarouselCards}
-              showControls={true}
-              enableLightbox={false}
-              autoRotateSpeed={10}
-              heightClassName="h-[320px] sm:h-[460px]"
-              isLight={isLight}
-              renderItem={(item) => (
-                <div
-                  className={cn(
-                    "relative w-full h-[220px] sm:h-[390px] rounded-2xl overflow-hidden transition-all duration-300 group",
-                    themeTokens.spacesInTheRound.cardBorder(isLight)
-                  )}
-                  style={{
-                    backfaceVisibility: 'hidden',
-                    WebkitBackfaceVisibility: 'hidden',
-                  }}
-                >
-                  <img
-                    src={item.image}
-                    alt={item.title || 'Property'}
-                    className="w-full h-full object-cover object-center pointer-events-none transition-transform duration-700 ease-out group-hover:scale-105"
-                  />
+            {roundCarouselCards.length === 0 ? (
+              <div className="text-center px-6 py-12">
+                <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#94A3B8]">
+                  No residences currently assigned to Spaces in the Round
+                </p>
+              </div>
+            ) : (
+              <ThreeDPhotoCarousel
+                cards={roundCarouselCards}
+                showControls={true}
+                enableLightbox={false}
+                autoRotateSpeed={10}
+                heightClassName="h-[320px] sm:h-[460px]"
+                isLight={isLight}
+                renderItem={(item) => (
+                  <div
+                    className={cn(
+                      "relative w-full h-[220px] sm:h-[390px] rounded-2xl overflow-hidden transition-all duration-300 group",
+                      themeTokens.spacesInTheRound.cardBorder(isLight)
+                    )}
+                    style={{
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden',
+                    }}
+                  >
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt={item.title || 'Property'}
+                        className="w-full h-full object-cover object-center pointer-events-none transition-transform duration-700 ease-out group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-[#070E1C]" />
+                    )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent pointer-events-none" />
 
                   <div className="absolute inset-x-0 bottom-0 p-2 sm:p-4 flex items-center justify-between gap-1 sm:gap-2 z-20">
@@ -2362,7 +2499,8 @@ export function LaunchesCinematicStack({
                   </div>
                 </div>
               )}
-            />
+              />
+            )}
           </div>
         </div>
 
@@ -2381,32 +2519,36 @@ export function LaunchesCinematicStack({
           )}
           aria-label="Private Advisory"
         >
-          {/* Background Video: public/videos/gemini_generated_video_0e105bc8.mp4 */}
+          {/* Background Video */}
           <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
-            <video
-              ref={advisoryVideoRef}
-              src={homepageContent?.advisoryVideoUrl || "/videos/gemini_generated_video_0e105bc8.mp4"}
-              autoPlay
-              loop
-              muted
-              playsInline
-              preload="auto"
-              onLoadedData={() => {
-                setAdvisoryVideoLoaded(true)
-                playSafely(advisoryVideoRef.current)
-              }}
-              className="absolute inset-0 w-full h-full object-cover object-center"
-              style={{
-                position: 'absolute',
-                inset: 0,
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                opacity: 1,
-              }}
-            >
-              <source src={homepageContent?.advisoryVideoUrl || "/videos/gemini_generated_video_0e105bc8.mp4"} type="video/mp4" />
-            </video>
+            {homepageContent?.advisoryVideoUrl ? (
+              <video
+                ref={advisoryVideoRef}
+                src={encodeURI(homepageContent.advisoryVideoUrl)}
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
+                onLoadedData={() => {
+                  setAdvisoryVideoLoaded(true)
+                  playSafely(advisoryVideoRef.current)
+                }}
+                className="absolute inset-0 w-full h-full object-cover object-center"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  opacity: 1,
+                }}
+              >
+                <source src={encodeURI(homepageContent.advisoryVideoUrl)} type="video/mp4" />
+              </video>
+            ) : (
+              <div className="absolute inset-0 bg-[#040810]" />
+            )}
             {/* Subtle, crystal-clear dark overlay at ~12% opacity (preserving natural brightness and clarity) */}
             <div className={cn(
               "absolute inset-0 pointer-events-none transition-colors duration-500",

@@ -36,9 +36,18 @@ export async function POST(request: NextRequest) {
       heroDescription,
       image,
       videoUrl,
+      architecturalFocus,
+      deliverables,
       displayOrder,
       isPublished,
     } = body
+
+    if ([image, videoUrl].some((u) => typeof u === 'string' && u.trim().startsWith('/uploads/'))) {
+      return NextResponse.json(
+        { error: 'Local /uploads/ storage is disabled. Upload media to Cloudflare R2.' },
+        { status: 400 }
+      )
+    }
 
     if (!name || typeof name !== 'string' || !name.trim()) {
       return NextResponse.json({ error: 'Service name is required' }, { status: 400 })
@@ -54,6 +63,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `Service with slug "${cleanSlug}" already exists.` }, { status: 400 })
     }
 
+    const parsedFocus = Array.isArray(architecturalFocus)
+      ? architecturalFocus.map((s) => String(s).trim()).filter(Boolean)
+      : []
+
+    const parsedDeliverables = Array.isArray(deliverables)
+      ? deliverables
+          .filter((d: any) => d && (d.title || d.description))
+          .map((d: any) => ({
+            title: String(d.title || '').trim(),
+            description: String(d.description || '').trim(),
+          }))
+      : undefined
+
     const service = await db.serviceCategory.create({
       data: {
         name: name.trim(),
@@ -64,6 +86,8 @@ export async function POST(request: NextRequest) {
         heroDescription: heroDescription || null,
         image: image || null,
         videoUrl: videoUrl || null,
+        architecturalFocus: parsedFocus,
+        ...(parsedDeliverables !== undefined ? { deliverables: parsedDeliverables } : {}),
         displayOrder: displayOrder !== undefined && displayOrder !== '' ? parseInt(displayOrder, 10) : 0,
         isPublished: isPublished !== undefined ? Boolean(isPublished) : true,
       },

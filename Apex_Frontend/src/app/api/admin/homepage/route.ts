@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { requirePermission, PERMISSIONS } from '@/lib/rbac'
+import { logAdminActivity } from '@/lib/activityLog'
 
 export async function GET(request: NextRequest) {
   const auth = await requirePermission(request, PERMISSIONS.CONTENT_READ)
@@ -12,12 +13,12 @@ export async function GET(request: NextRequest) {
     if (!content) {
       content = await db.homepageContent.create({
         data: {
-          heroVideoUrl: '/videos/hero-unveil.mp4',
-          heroVideoThumb: '/images/hero-thumb.jpg',
-          unveilHeading: 'Elevating Global Horizons',
-          unveilSubtext: 'A curated portfolio of ultra-prime residences across the world’s most dynamic markets.',
-          oneTeamVideoUrl: '/videos/one-team.mp4',
-          advisoryVideoUrl: '/videos/advisory.mp4',
+          heroVideoUrl: null,
+          heroVideoThumb: null,
+          unveilHeading: null,
+          unveilSubtext: null,
+          oneTeamVideoUrl: null,
+          advisoryVideoUrl: null,
         },
       })
     }
@@ -79,11 +80,27 @@ export async function PATCH(request: NextRequest) {
 
     try {
       revalidatePath('/')
+      revalidatePath('/contact')
       revalidatePath('/admin/homepage-video')
       revalidatePath('/admin/homepage')
+      revalidatePath('/admin/one-team')
     } catch (revalidateErr) {
       console.warn('Revalidation warning:', revalidateErr)
     }
+
+    await logAdminActivity({
+      adminId: auth.id,
+      adminEmail: auth.email,
+      action: 'UPDATE',
+      entityType: 'HomepageContent',
+      entityId: content.id,
+      summary: 'Updated homepage media & copy configuration',
+      metadata: {
+        heroVideoUrl: content.heroVideoUrl,
+        oneTeamVideoUrl: content.oneTeamVideoUrl,
+        advisoryVideoUrl: content.advisoryVideoUrl,
+      },
+    })
 
     return NextResponse.json(content)
   } catch (error) {

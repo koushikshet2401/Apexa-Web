@@ -8,7 +8,15 @@ import {
 } from '@aws-sdk/client-s3'
 import { getR2BucketName, getR2Client, getR2PublicUrl, isR2Configured } from './r2'
 
-export const ALLOWED_MEDIA_FOLDERS = ['properties', 'countries', 'services', 'homepage', 'general'] as const
+export const ALLOWED_MEDIA_FOLDERS = [
+  'properties',
+  'countries',
+  'services',
+  'homepage',
+  'one-team',
+  'collection-media',
+  'general',
+] as const
 export type AllowedMediaFolder = (typeof ALLOWED_MEDIA_FOLDERS)[number]
 
 export const ALLOWED_MEDIA_ROLES = [
@@ -21,6 +29,13 @@ export const ALLOWED_MEDIA_ROLES = [
   'HOMEPAGE_THUMB',
   'COUNTRY_MEDIA',
   'SERVICE_MEDIA',
+  'ONE_TEAM_VILLA',
+  'ONE_TEAM_COMMERCIAL',
+  'ONE_TEAM_SKY',
+  'ONE_TEAM_WATERFRONT',
+  'ONE_TEAM_VIDEO',
+  'COLLECTION_COVER',
+  'COLLECTION_HERO_VIDEO',
   'GENERAL',
 ] as const
 export type MediaRoleType = (typeof ALLOWED_MEDIA_ROLES)[number]
@@ -301,10 +316,39 @@ export function buildR2ObjectKey(params: {
       HOMEPAGE_THUMB: 'homepage-thumb',
       COUNTRY_MEDIA: 'country',
       SERVICE_MEDIA: 'service',
+      ONE_TEAM_VILLA: 'luxury-villas',
+      ONE_TEAM_COMMERCIAL: 'commercial',
+      ONE_TEAM_SKY: 'sky-residences',
+      ONE_TEAM_WATERFRONT: 'waterfront-residences',
+      ONE_TEAM_VIDEO: 'middle-video',
+      COLLECTION_COVER: 'cover',
+      COLLECTION_HERO_VIDEO: 'hero-video',
       GENERAL: 'asset',
     }
     const prefix = rolePrefixMap[role] || 'asset'
     return `properties/${country}/${project}/${prefix}-${timestamp}-${uniqueSuffix}-${safeBase}${params.ext}`
+  }
+
+  if (folder === 'collection-media') {
+    const country = sanitizePathSegment(params.countrySlug, 'general')
+    const prefix = role === 'COLLECTION_COVER' ? 'cover' : role === 'COLLECTION_HERO_VIDEO' ? 'hero-video' : 'media'
+    return `collection-media/${country}/${prefix}-${timestamp}-${uniqueSuffix}-${safeBase}${params.ext}`
+  }
+
+  if (folder === 'one-team') {
+    const prefix =
+      role === 'ONE_TEAM_VILLA'
+        ? 'luxury-villas'
+        : role === 'ONE_TEAM_COMMERCIAL'
+          ? 'commercial'
+          : role === 'ONE_TEAM_SKY'
+            ? 'sky-residences'
+            : role === 'ONE_TEAM_WATERFRONT'
+              ? 'waterfront-residences'
+              : role === 'ONE_TEAM_VIDEO'
+                ? 'middle-video'
+                : 'media'
+    return `one-team/${prefix}-${timestamp}-${uniqueSuffix}-${safeBase}${params.ext}`
   }
 
   return `${folder}/${timestamp}-${uniqueSuffix}-${safeBase}${params.ext}`

@@ -57,8 +57,9 @@ interface PropertyDetailData {
   image?: string
   gallery?: string[]
   galleryItems?: Array<{ url: string; alt?: string; description?: string }>
-  mainVideoUrl?: string
-  mainVideoThumb?: string
+  mainVideoUrl?: string | null
+  mainVideoThumb?: string | null
+  isFeaturedLaunch?: boolean
   services?: any[]
 }
 
@@ -77,11 +78,7 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
   const section3Ref = useRef<HTMLElement>(null)
   const section4Ref = useRef<HTMLElement>(null)
 
-  // Check if this property is one of the 3 featured launches
-  const isFeaturedLaunch =
-    property.slug === 'the-meridian' ||
-    property.slug === 'aurelia-villa' ||
-    property.slug === 'the-peninsula-reserve'
+  const isFeaturedLaunch = Boolean(property.isFeaturedLaunch)
 
   // Context-aware origin detection for reverse routing
   const [originSection, setOriginSection] = useState<'launches' | 'spaces' | 'collection' | 'services' | null>(
@@ -129,89 +126,38 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
     targetBackLabel = 'Services'
   }
 
-  // 1. Video resolution
-  const videoSrc =
-    property.mainVideoUrl ||
-    (property.slug === 'aurelia-villa' || property.slug === 'horizon-pavilion'
-      ? '/videos/VID02.mp4'
-      : '/videos/luxury-palm-beach.mp4')
+  // 1. Video resolution (database media only, no hardcoded fallback)
+  const videoSrc = property.mainVideoUrl || null
+  const heroFallbackImage = property.mainVideoThumb || property.image || null
 
-  // 2. Prepare highlights with fallbacks if empty
-  const highlights =
-    property.highlights && property.highlights.length > 0
-      ? property.highlights
-      : [
-          'Expansive cantilevered sky garden terraces with automated irrigation',
-          'Private high-speed biometric elevator access directly to residence foyer',
-          'Horizon infinity pool suspended over the marina with panoramic horizon',
-          'Smart home climate, acoustic, and bespoke lighting automation',
-          'Full valet, 24/7 dedicated concierge, and private yacht berth options',
-        ]
+  // 2. Highlights from database only
+  const highlights = Array.isArray(property.highlights) ? property.highlights : []
 
-  // 3. Prepare images for CircularTestimonials
-  const rawImages = [
-    property.image,
-    ...(property.gallery || []),
-  ].filter(Boolean) as string[]
-
-  // Ensure at least 3 distinct images for the 3D circular presentation
-  const defaultLuxuryImages = [
-    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1600&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1600&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?q=80&w=1600&auto=format&fit=crop',
-  ]
-
-  const galleryPool =
-    rawImages.length >= 3
-      ? rawImages
-      : [...rawImages, ...defaultLuxuryImages].slice(0, Math.max(3, rawImages.length + 2))
-
-  const featureLabels = [
-    'Grand Horizon Living Salon',
-    'Bespoke Culinary & Dining Atelier',
-    'Private Primary Sanctuary & Terrace',
-    'Suspended Sky Pool & Lanai',
-    'Spa Wellness & Steam Suite',
-    'Executive Observatory & Library',
-  ]
+  // 3. Prepare images for CircularTestimonials from database media only
+  const rawImages = Array.from(
+    new Set([property.image, ...(property.gallery || [])].filter(Boolean) as string[])
+  )
 
   const customItems = property.galleryItems && property.galleryItems.length > 0 ? property.galleryItems : []
 
   const testimonialsData: Testimonial[] =
-    customItems.length >= 3
+    customItems.length > 0
       ? customItems.map((item, idx) => {
-          const label = item.alt?.trim() || featureLabels[idx % featureLabels.length]
-          const quote = item.description?.trim() || highlights[idx % highlights.length] || property.description || ''
+          const label = item.alt?.trim() || `${property.name} · Space 0${idx + 1}`
+          const quote = item.description?.trim() || highlights[idx] || property.shortDescription || property.description || ''
           return {
             src: encodeURI(item.url),
             name: label,
             designation: `${property.name} · Space 0${idx + 1}`,
-            quote:
-              quote.length > 20
-                ? quote
-                : `Crafted with custom bookmatched marble, floor-to-ceiling acoustic double glazing, and seamless indoor-outdoor architectural transitions overlooking ${property.city || 'the skyline'}.`,
+            quote,
           }
         })
-      : galleryPool.map((imgUrl, idx) => {
-          const matchedItem = customItems[idx]
-          const label = matchedItem?.alt?.trim() || featureLabels[idx % featureLabels.length]
-          const customDesc = matchedItem?.description?.trim()
-          const highlightDesc = highlights[idx % highlights.length] || property.description || ''
-          return {
-            src: encodeURI(imgUrl),
-            name: label,
-            designation: `${property.name} · Space 0${idx + 1}`,
-            quote:
-              customDesc && customDesc.length > 10
-                ? customDesc
-                : idx === 0 && property.shortDescription
-                ? property.shortDescription
-                : highlightDesc.length > 30
-                ? highlightDesc
-                : `Crafted with custom bookmatched marble, floor-to-ceiling acoustic double glazing, and seamless indoor-outdoor architectural transitions overlooking ${property.city || 'the skyline'}.`,
-          }
-        })
+      : rawImages.map((imgUrl, idx) => ({
+          src: encodeURI(imgUrl),
+          name: `${property.name} · Space 0${idx + 1}`,
+          designation: [property.city, property.country].filter(Boolean).join(', ') || property.name,
+          quote: highlights[idx] || property.shortDescription || property.description || '',
+        }))
 
   // 4. Form state for Section 4
   const [formName, setFormName] = useState('')
@@ -367,14 +313,14 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
     }
   }
 
-  // Format specifications line
-  const bedsStr = property.beds != null ? String(property.beds) : '3–4'
-  const bedsText = bedsStr.toLowerCase().includes('bed') ? bedsStr : `${bedsStr} Bedrooms`
-  const bathsStr = property.baths != null ? String(property.baths) : '4'
-  const bathsText = bathsStr.toLowerCase().includes('bath') ? bathsStr : `${bathsStr} Baths`
-  const areaText = property.area || '3,800 sq ft'
-  const specsLine = `${bedsText} · ${bathsText} · ${areaText}`
-  const priceDisplay = property.price || 'AED 8.2M'
+  // Format specifications line from available DB values only
+  const bedsStr = property.beds != null && String(property.beds).trim() !== '' ? String(property.beds).trim() : ''
+  const bedsText = bedsStr ? (bedsStr.toLowerCase().includes('bed') ? bedsStr : `${bedsStr} Bedrooms`) : ''
+  const bathsStr = property.baths != null && String(property.baths).trim() !== '' ? String(property.baths).trim() : ''
+  const bathsText = bathsStr ? (bathsStr.toLowerCase().includes('bath') ? bathsStr : `${bathsStr} Baths`) : ''
+  const areaText = property.area ? String(property.area).trim() : ''
+  const specsLine = [bedsText, bathsText, areaText].filter(Boolean).join(' · ')
+  const priceDisplay = property.price ? String(property.price).trim() : ''
 
   return (
     <div className={cn("relative selection:bg-[#7DD3FC]/20 selection:text-white transition-colors duration-300", themeTokens.propertyDetail.pageBg(isLight))}>
@@ -403,15 +349,26 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
             id="property-hero-video"
             className="absolute inset-0 w-full h-full z-10 overflow-hidden bg-black flex items-center justify-center"
           >
-            <video
-              src={videoSrc}
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="auto"
-              className="absolute inset-0 w-full h-full object-cover object-center"
-            />
+            {videoSrc ? (
+              <video
+                src={encodeURI(videoSrc)}
+                poster={heroFallbackImage || undefined}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+                className="absolute inset-0 w-full h-full object-cover object-center"
+              />
+            ) : heroFallbackImage ? (
+              <img
+                src={encodeURI(heroFallbackImage)}
+                alt={property.name}
+                className="absolute inset-0 w-full h-full object-cover object-center"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-[#040810]" />
+            )}
 
             {/* Cinematic gradient vignette */}
             <div className="absolute inset-0 bg-gradient-to-t from-[#040810]/80 via-black/30 to-black/50 pointer-events-none" />
@@ -585,32 +542,39 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
               </div>
 
               {/* Specs line */}
-              <p className={cn("font-mono text-xs sm:text-sm md:text-base font-medium tracking-wider mb-2 transition-colors duration-300", themeTokens.propertyDetail.specs(isLight))}>
-                {specsLine}
-              </p>
+              {specsLine && (
+                <p className={cn("font-mono text-xs sm:text-sm md:text-base font-medium tracking-wider mb-2 transition-colors duration-300", themeTokens.propertyDetail.specs(isLight))}>
+                  {specsLine}
+                </p>
+              )}
 
               {/* Price Display */}
-              <h2 className={cn("heading-display text-3xl sm:text-5xl md:text-6xl font-light tracking-tight mb-4 sm:mb-6 transition-colors duration-300", themeTokens.propertyDetail.price(isLight))}>
-                {priceDisplay}
-              </h2>
+              {priceDisplay && (
+                <h2 className={cn("heading-display text-3xl sm:text-5xl md:text-6xl font-light tracking-tight mb-4 sm:mb-6 transition-colors duration-300", themeTokens.propertyDetail.price(isLight))}>
+                  {priceDisplay}
+                </h2>
+              )}
 
               {/* Description paragraph */}
-              <p className={cn("font-sans text-xs sm:text-sm md:text-base font-light leading-relaxed max-w-2xl mx-auto mb-6 sm:mb-8 text-pretty transition-colors duration-300", themeTokens.propertyDetail.description(isLight))}>
-                {property.description ||
-                  'Seven cantilevered floors with private landscaped sky gardens on every level. With only twenty-four residences, each occupies an entire quadrant with 270-degree horizons over the skyline and water.'}
-              </p>
+              {(property.description || property.shortDescription) && (
+                <p className={cn("font-sans text-xs sm:text-sm md:text-base font-light leading-relaxed max-w-2xl mx-auto mb-6 sm:mb-8 text-pretty transition-colors duration-300", themeTokens.propertyDetail.description(isLight))}>
+                  {property.description || property.shortDescription}
+                </p>
+              )}
 
               {/* Highlights bullet points */}
-              <div className={cn("w-full max-w-2xl mx-auto pt-4 sm:pt-6 border-t transition-colors duration-300", isLight ? "border-[#0B1325]/10" : "border-white/10")}>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4 text-left">
-                  {highlights.map((h, i) => (
-                    <li key={i} className={cn("flex items-start gap-2.5 text-xs sm:text-[13px] font-light leading-snug transition-colors duration-300", themeTokens.propertyDetail.highlightItem(isLight))}>
-                      <span className={cn("w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 transition-all duration-300", themeTokens.propertyDetail.highlightDot(isLight))} />
-                      <span>{h}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {highlights.length > 0 && (
+                <div className={cn("w-full max-w-2xl mx-auto pt-4 sm:pt-6 border-t transition-colors duration-300", isLight ? "border-[#0B1325]/10" : "border-white/10")}>
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4 text-left">
+                    {highlights.map((h, i) => (
+                      <li key={i} className={cn("flex items-start gap-2.5 text-xs sm:text-[13px] font-light leading-snug transition-colors duration-300", themeTokens.propertyDetail.highlightItem(isLight))}>
+                        <span className={cn("w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 transition-all duration-300", themeTokens.propertyDetail.highlightDot(isLight))} />
+                        <span>{h}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </section>
 
@@ -655,24 +619,32 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
 
               {/* Circular 3D Interactive Testimonials / Features Carousel */}
               <div className="w-full">
-                <CircularTestimonials
-                  testimonials={testimonialsData}
-                  autoplay={true}
-                  colors={{
-                    name: isLight ? '#0B1325' : '#F8FAFC',
-                    designation: isLight ? '#6B6661' : '#7DD3FC',
-                    testimony: isLight ? '#6B6661' : '#CBD5E1',
-                    arrowBackground: isLight ? '#FFFFFF' : '#040810',
-                    arrowForeground: isLight ? '#0B1325' : '#F8FAFC',
-                    arrowHoverBackground: isLight ? '#F5F2EC' : '#38BDF8',
-                    arrowBorder: isLight ? 'rgba(11, 19, 37, 0.2)' : 'rgba(255, 255, 255, 0.15)',
-                  }}
-                  fontSizes={{
-                    name: '1.75rem',
-                    designation: '0.8rem',
-                    quote: '0.95rem',
-                  }}
-                />
+                {testimonialsData.length > 0 ? (
+                  <CircularTestimonials
+                    testimonials={testimonialsData}
+                    autoplay={testimonialsData.length > 1}
+                    colors={{
+                      name: isLight ? '#0B1325' : '#F8FAFC',
+                      designation: isLight ? '#6B6661' : '#7DD3FC',
+                      testimony: isLight ? '#6B6661' : '#CBD5E1',
+                      arrowBackground: isLight ? '#FFFFFF' : '#040810',
+                      arrowForeground: isLight ? '#0B1325' : '#F8FAFC',
+                      arrowHoverBackground: isLight ? '#F5F2EC' : '#38BDF8',
+                      arrowBorder: isLight ? 'rgba(11, 19, 37, 0.2)' : 'rgba(255, 255, 255, 0.15)',
+                    }}
+                    fontSizes={{
+                      name: '1.75rem',
+                      designation: '0.8rem',
+                      quote: '0.95rem',
+                    }}
+                  />
+                ) : (
+                  <div className="py-12 text-center">
+                    <p className={cn("font-mono text-xs uppercase tracking-[0.2em]", themeTokens.propertyDetail.label(isLight))}>
+                      Gallery media pending upload in Admin Panel
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </section>

@@ -42,9 +42,14 @@ export const PERMISSIONS = {
   MEDIA_UPLOAD: 'MEDIA:UPLOAD',
   MEDIA_DELETE: 'MEDIA:DELETE',
 
-  // Website Content (Homepage, Countries, Services)
+  // Website Content (Homepage, Countries, Services, One Team, Collection Media)
   CONTENT_READ: 'CONTENT:READ',
   CONTENT_UPDATE: 'CONTENT:UPDATE',
+  ONE_TEAM_READ: 'ONE_TEAM:READ',
+  ONE_TEAM_UPDATE: 'ONE_TEAM:UPDATE',
+  COLLECTION_MEDIA_READ: 'COLLECTION_MEDIA:READ',
+  COLLECTION_MEDIA_UPDATE: 'COLLECTION_MEDIA:UPDATE',
+  SERVICES_UPDATE: 'SERVICES:UPDATE',
 
   // Analytics
   ANALYTICS_READ: 'ANALYTICS:READ',
@@ -93,6 +98,8 @@ export const PROPOSED_DEFAULT_ROLES: Record<string, RoleDefinition> = {
       PERMISSIONS.MEDIA_UPLOAD,
       PERMISSIONS.MEDIA_DELETE,
       PERMISSIONS.CONTENT_READ,
+      PERMISSIONS.ONE_TEAM_READ,
+      PERMISSIONS.COLLECTION_MEDIA_READ,
     ],
     isSystem: false,
   },
@@ -107,6 +114,11 @@ export const PROPOSED_DEFAULT_ROLES: Record<string, RoleDefinition> = {
       PERMISSIONS.MEDIA_UPLOAD,
       PERMISSIONS.CONTENT_READ,
       PERMISSIONS.CONTENT_UPDATE,
+      PERMISSIONS.ONE_TEAM_READ,
+      PERMISSIONS.ONE_TEAM_UPDATE,
+      PERMISSIONS.COLLECTION_MEDIA_READ,
+      PERMISSIONS.COLLECTION_MEDIA_UPDATE,
+      PERMISSIONS.SERVICES_UPDATE,
     ],
     isSystem: false,
   },
@@ -496,6 +508,27 @@ export async function requirePermission(
   if (!hasPermission(auth, permission)) {
     return NextResponse.json(
       { error: `Forbidden: Insufficient permissions for [${permission}]` },
+      { status: 403 }
+    )
+  }
+
+  return auth
+}
+
+/**
+ * Server-side guard: Requires at least one of the specified permission keys.
+ */
+export async function requireAnyPermission(
+  request: Request,
+  permissions: PermissionKey[]
+): Promise<AdminSession | Response> {
+  const auth = await requireAdmin(request)
+  if (auth instanceof Response) return auth
+
+  const allowed = permissions.some((p) => hasPermission(auth, p))
+  if (!allowed) {
+    return NextResponse.json(
+      { error: `Forbidden: Insufficient permissions for [${permissions.join(' | ')}]` },
       { status: 403 }
     )
   }

@@ -23,6 +23,14 @@ export default function ServiceForm({ initialService }: ServiceFormProps) {
   const [heroDescription, setHeroDescription] = useState(initialService?.heroDescription || '')
   const [image, setImage] = useState(initialService?.image || '')
   const [videoUrl, setVideoUrl] = useState(initialService?.videoUrl || '')
+  const [architecturalFocusText, setArchitecturalFocusText] = useState(
+    Array.isArray(initialService?.architecturalFocus)
+      ? initialService.architecturalFocus.join('\n')
+      : ''
+  )
+  const [deliverables, setDeliverables] = useState<Array<{ title: string; description: string }>>(
+    Array.isArray(initialService?.deliverables) ? initialService.deliverables : []
+  )
   const [displayOrder, setDisplayOrder] = useState<number | string>(initialService?.displayOrder ?? 0)
   const [isPublished, setIsPublished] = useState(
     initialService?.isPublished !== undefined ? Boolean(initialService.isPublished) : true
@@ -59,6 +67,13 @@ export default function ServiceForm({ initialService }: ServiceFormProps) {
       heroDescription,
       image,
       videoUrl,
+      architecturalFocus: architecturalFocusText
+        .split('\n')
+        .map((line: string) => line.trim())
+        .filter(Boolean),
+      deliverables: deliverables
+        .map((d) => ({ title: d.title.trim(), description: d.description.trim() }))
+        .filter((d) => d.title || d.description),
       displayOrder: Number(displayOrder),
       isPublished,
     }
@@ -310,6 +325,84 @@ export default function ServiceForm({ initialService }: ServiceFormProps) {
                 <span className="text-xs font-medium text-white">Active in Services Pillar</span>
               </label>
             </div>
+          </div>
+        </div>
+
+        {/* Architectural Focus & Deliverables */}
+        <div className="bg-[#070E1C] border border-white/10 rounded-xl p-6 space-y-5">
+          <h2 className="text-xs font-mono uppercase tracking-wider text-[#7DD3FC]">
+            Editorial Architecture & Deliverables
+          </h2>
+
+          <div>
+            <label className="block text-xs font-mono text-gray-300 mb-1.5">
+              Architectural Focus Points (one per line)
+            </label>
+            <textarea
+              rows={4}
+              value={architecturalFocusText}
+              onChange={(e) => setArchitecturalFocusText(e.target.value)}
+              placeholder={'Bespoke Masterplanning\nInfinity Horizon Engineering\nPrivate Dock & Helipad Provision'}
+              className="w-full bg-[#040810] border border-white/10 rounded-lg p-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#7DD3FC]"
+            />
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-mono text-gray-300">
+                Service Deliverables
+              </label>
+              <button
+                type="button"
+                onClick={() => setDeliverables((prev) => [...prev, { title: '', description: '' }])}
+                className="px-3 py-1 rounded bg-[#0B1528] border border-white/15 text-[11px] font-mono text-[#7DD3FC] hover:text-white cursor-pointer"
+              >
+                + Add Deliverable
+              </button>
+            </div>
+
+            {deliverables.length === 0 ? (
+              <p className="text-[11px] text-gray-500 font-mono">
+                No deliverables configured yet. Click &ldquo;+ Add Deliverable&rdquo; to add structured items.
+              </p>
+            ) : (
+              <div className="space-y-2.5">
+                {deliverables.map((item, idx) => (
+                  <div key={idx} className="grid grid-cols-1 md:grid-cols-12 gap-2.5 bg-[#040810] p-3 rounded-lg border border-white/10">
+                    <input
+                      type="text"
+                      value={item.title}
+                      onChange={(e) =>
+                        setDeliverables((prev) =>
+                          prev.map((row, i) => (i === idx ? { ...row, title: e.target.value } : row))
+                        )
+                      }
+                      placeholder="Deliverable title"
+                      className="md:col-span-4 bg-[#070E1C] border border-white/10 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
+                    />
+                    <input
+                      type="text"
+                      value={item.description}
+                      onChange={(e) =>
+                        setDeliverables((prev) =>
+                          prev.map((row, i) => (i === idx ? { ...row, description: e.target.value } : row))
+                        )
+                      }
+                      placeholder="Brief deliverable description"
+                      className="md:col-span-7 bg-[#070E1C] border border-white/10 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-[#7DD3FC]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setDeliverables((prev) => prev.filter((_, i) => i !== idx))}
+                      className="md:col-span-1 px-2 py-2 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs flex items-center justify-center cursor-pointer"
+                      aria-label="Remove deliverable"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

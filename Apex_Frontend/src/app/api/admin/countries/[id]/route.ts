@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { requirePermission, PERMISSIONS } from '@/lib/rbac'
+import { logAdminActivity } from '@/lib/activityLog'
 
 export async function GET(
   request: NextRequest,
@@ -61,6 +63,13 @@ export async function PATCH(
       isPublished,
     } = body
 
+    if ([heroVideoUrl, heroVideoThumb, cardImage].some((u) => typeof u === 'string' && u.trim().startsWith('/uploads/'))) {
+      return NextResponse.json(
+        { error: 'Local /uploads/ storage is disabled. Upload media to Cloudflare R2.' },
+        { status: 400 }
+      )
+    }
+
     let newSlug = existing.slug
     if (slug && slug.trim() !== existing.slug) {
       newSlug = slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
@@ -90,6 +99,24 @@ export async function PATCH(
         }),
         ...(isPublished !== undefined && { isPublished: Boolean(isPublished) }),
       },
+    })
+
+    try {
+      revalidatePath('/')
+      revalidatePath(`/collection/${updated.slug}`)
+      revalidatePath('/admin/countries')
+      revalidatePath('/admin/collection-media')
+    } catch (revalidateErr) {
+      console.warn('Revalidation warning:', revalidateErr)
+    }
+
+    await logAdminActivity({
+      adminId: auth.id,
+      adminEmail: auth.email,
+      action: 'UPDATE',
+      entityType: 'Country',
+      entityId: updated.id,
+      summary: `Updated country "${updated.displayName}" (${updated.slug})`,
     })
 
     return NextResponse.json(updated)

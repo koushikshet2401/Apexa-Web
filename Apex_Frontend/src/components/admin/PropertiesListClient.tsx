@@ -441,13 +441,29 @@ export default function PropertiesListClient({
         </div>
 
         {activeTab === 'current' && (
-          <Link
-            href="/admin/properties/new"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#7DD3FC] hover:bg-[#7DD3FC]/90 text-[#040810] font-bold text-xs transition-all shadow-[0_0_15px_rgba(125,211,252,0.25)]"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Project</span>
-          </Link>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <Link
+              href="/admin/launches"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#070E1C] border border-white/15 hover:border-[#7DD3FC]/50 text-xs text-gray-200 hover:text-white transition-all"
+            >
+              <Flame className="w-3.5 h-3.5 text-[#7DD3FC]" />
+              <span>Top 3 Launches</span>
+            </Link>
+            <Link
+              href="/admin/space-in-round"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#070E1C] border border-white/15 hover:border-[#7DD3FC]/50 text-xs text-gray-200 hover:text-white transition-all"
+            >
+              <Orbit className="w-3.5 h-3.5 text-[#7DD3FC]" />
+              <span>Spaces in the Round</span>
+            </Link>
+            <Link
+              href="/admin/properties/new"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#7DD3FC] hover:bg-[#7DD3FC]/90 text-[#040810] font-bold text-xs transition-all shadow-[0_0_15px_rgba(125,211,252,0.25)]"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Project</span>
+            </Link>
+          </div>
         )}
       </div>
 

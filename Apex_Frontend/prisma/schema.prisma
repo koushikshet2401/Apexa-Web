@@ -101,30 +101,33 @@ model Country {
   heroVideoUrl   String?
   heroVideoThumb String?
   cardImage      String?
-  displayOrder   Int        @default(0)
-  isPublished    Boolean    @default(true)
-  properties     Property[]
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  displayOrder    Int              @default(0)
+  isPublished     Boolean          @default(true)
+  properties      Property[]
+  collectionMedia CollectionMedia?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
   @@index([isPublished, displayOrder])
 }
 
 model ServiceCategory {
-  id              String            @id @default(cuid())
-  slug            String            @unique
-  name            String
-  subtitle        String?
-  tagline         String?
-  description     String?
-  heroDescription String?
-  image           String?
-  videoUrl        String?
-  displayOrder    Int               @default(0)
-  isPublished     Boolean           @default(true)
-  properties      PropertyService[]
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id                 String            @id @default(cuid())
+  slug               String            @unique
+  name               String
+  subtitle           String?
+  tagline            String?
+  description        String?
+  heroDescription    String?
+  image              String?
+  videoUrl           String?
+  architecturalFocus String[]          @default([])
+  deliverables       Json?
+  displayOrder       Int               @default(0)
+  isPublished        Boolean           @default(true)
+  properties         PropertyService[]
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
 
   @@index([isPublished, displayOrder])
 }
@@ -240,25 +243,39 @@ enum MediaRole {
   HOMEPAGE_THUMB
   COUNTRY_MEDIA
   SERVICE_MEDIA
+  ONE_TEAM_VILLA
+  ONE_TEAM_COMMERCIAL
+  ONE_TEAM_SKY
+  ONE_TEAM_WATERFRONT
+  ONE_TEAM_VIDEO
+  COLLECTION_COVER
+  COLLECTION_HERO_VIDEO
   GENERAL
 }
 
 model MediaAsset {
-  id               String    @id @default(cuid())
-  propertyId       String?
-  property         Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
-  mediaType        String    // "IMAGE" | "VIDEO"
-  mediaRole        MediaRole @default(GENERAL)
-  originalFilename String
-  r2Key            String    @unique
-  publicUrl        String
-  mimeType         String
-  fileSize         Int
-  displayOrder     Int       @default(0)
-  description      String?
-  uploadedById     String?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id                      String            @id @default(cuid())
+  propertyId              String?
+  property                Property?         @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  mediaType               String            // "IMAGE" | "VIDEO"
+  mediaRole               MediaRole         @default(GENERAL)
+  originalFilename        String
+  r2Key                   String            @unique
+  publicUrl               String
+  mimeType                String
+  fileSize                Int
+  displayOrder            Int               @default(0)
+  description             String?
+  uploadedById            String?
+  oneTeamVillasRefs       OneTeamContent[]  @relation("OneTeamVillasMedia")
+  oneTeamCommercialRefs   OneTeamContent[]  @relation("OneTeamCommercialMedia")
+  oneTeamSkyRefs          OneTeamContent[]  @relation("OneTeamSkyMedia")
+  oneTeamWaterfrontRefs   OneTeamContent[]  @relation("OneTeamWaterfrontMedia")
+  oneTeamVideoRefs        OneTeamContent[]  @relation("OneTeamVideoMedia")
+  collectionCoverRefs     CollectionMedia[] @relation("CollectionCoverMedia")
+  collectionHeroVideoRefs CollectionMedia[] @relation("CollectionHeroVideoMedia")
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
 
   @@index([propertyId, mediaRole])
   @@index([r2Key])
@@ -496,4 +513,45 @@ model HomepageContent {
   oneTeamVideoUrl  String?
   advisoryVideoUrl String?
   updatedAt        DateTime @updatedAt
+}
+
+// ==========================================
+// MODULE L: ONE TEAM, END TO END & COLLECTION MEDIA CMS
+// ==========================================
+
+model OneTeamContent {
+  id                         String      @id @default(cuid())
+  luxuryVillasImageUrl       String?
+  luxuryVillasMediaAssetId   String?
+  luxuryVillasMediaAsset     MediaAsset? @relation("OneTeamVillasMedia", fields: [luxuryVillasMediaAssetId], references: [id], onDelete: SetNull)
+  commercialImageUrl         String?
+  commercialMediaAssetId     String?
+  commercialMediaAsset       MediaAsset? @relation("OneTeamCommercialMedia", fields: [commercialMediaAssetId], references: [id], onDelete: SetNull)
+  skyResidencesImageUrl      String?
+  skyResidencesMediaAssetId  String?
+  skyResidencesMediaAsset    MediaAsset? @relation("OneTeamSkyMedia", fields: [skyResidencesMediaAssetId], references: [id], onDelete: SetNull)
+  waterfrontImageUrl         String?
+  waterfrontMediaAssetId     String?
+  waterfrontMediaAsset       MediaAsset? @relation("OneTeamWaterfrontMedia", fields: [waterfrontMediaAssetId], references: [id], onDelete: SetNull)
+  centerVideoUrl             String?
+  centerVideoMediaAssetId    String?
+  centerVideoMediaAsset      MediaAsset? @relation("OneTeamVideoMedia", fields: [centerVideoMediaAssetId], references: [id], onDelete: SetNull)
+  updatedBy                  String?
+  createdAt                  DateTime    @default(now())
+  updatedAt                  DateTime    @updatedAt
+}
+
+model CollectionMedia {
+  id                    String      @id @default(cuid())
+  countryId             String      @unique
+  country               Country     @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  coverImageUrl         String?
+  coverImageMediaAssetId String?
+  coverImageMediaAsset  MediaAsset? @relation("CollectionCoverMedia", fields: [coverImageMediaAssetId], references: [id], onDelete: SetNull)
+  heroVideoUrl          String?
+  heroVideoMediaAssetId String?
+  heroVideoMediaAsset   MediaAsset? @relation("CollectionHeroVideoMedia", fields: [heroVideoMediaAssetId], references: [id], onDelete: SetNull)
+  updatedBy             String?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
 }

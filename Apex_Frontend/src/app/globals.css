@@ -536,7 +536,9 @@ nextjs-portal,
 /* Primary buttons (Add Project, Save, Publish) */
 .admin-portal .bg-\[\#7DD3FC\],
 .admin-portal .bg-\[\#A3B4C4\],
-.admin-portal .bg-\[\#CBD5E1\] {
+.admin-portal .bg-\[\#CBD5E1\],
+.admin-portal .bg-\[\#0B1320\],
+.admin-portal .bg-\[\#0B1320\] .text-white {
   background-color: #0B1320 !important;
   color: #FFFFFF !important;
 }

@@ -12,7 +12,7 @@ import Image from "next/image"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { ArrowLeft, ArrowRight, ArrowUpRight, CheckCircle2, Sparkles, Compass } from "lucide-react"
-import { ServiceItem } from "@/data/services"
+import type { ServiceItem } from "@/lib/services-cms"
 import { ScrollingProjectItem } from "@/components/ui/images-scrolling-animation"
 import { useTheme } from "@/components/providers/ThemeProvider"
 import { themeTokens } from "@/lib/theme"
@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils"
 
 interface ServiceDetailClientProps {
   service: ServiceItem
-  nextService: ServiceItem
+  nextService: ServiceItem | null
   properties: ScrollingProjectItem[]
 }
 
@@ -327,6 +327,11 @@ export function ServiceDetailClient({
               </div>
 
               {/* List of Focus Tenets: 2-column on mobile, vertical on desktop */}
+              {service.architecturalFocus.length === 0 ? (
+                <p className={cn("font-sans text-[11px] sm:text-xs font-light leading-relaxed py-2 transition-colors", themeTokens.serviceDetail.focusItemText(isLight))}>
+                  Architectural standards configured through the Admin Panel.
+                </p>
+              ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2 sm:gap-3">
                 {service.architecturalFocus.map((focus, i) => (
                   <div key={i} className="flex items-start gap-2">
@@ -339,6 +344,7 @@ export function ServiceDetailClient({
                   </div>
                 ))}
               </div>
+              )}
 
               {/* Micro footer guarantee */}
               <div className={cn("mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t flex items-center justify-between text-[9px] font-mono uppercase tracking-wider transition-colors", themeTokens.serviceDetail.focusDivider(isLight))}>
@@ -383,7 +389,25 @@ export function ServiceDetailClient({
 
           {/* Stacked Cards Stage: Centered in the remaining viewport */}
           <div className="relative flex-1 w-full max-w-4xl mx-auto flex items-center justify-center overflow-hidden my-auto">
-            {properties.map((project, idx) => {
+            {properties.length === 0 ? (
+              <div
+                className={cn(
+                  "rounded-2xl sm:rounded-3xl relative flex flex-col items-center justify-center text-center px-6 py-12 w-[88vw] max-w-[560px] transition-all duration-500",
+                  themeTokens.serviceDetail.propertyCard(isLight)
+                )}
+              >
+                <span className={cn("font-mono text-[10px] uppercase tracking-[0.28em] mb-2", themeTokens.serviceDetail.tag(isLight))}>
+                  {service.title}
+                </span>
+                <p className={cn("font-serif text-lg sm:text-xl font-light mb-2", themeTokens.serviceDetail.heading(isLight))}>
+                  No residences currently assigned
+                </p>
+                <p className={cn("font-sans text-xs max-w-sm leading-relaxed", themeTokens.serviceDetail.description(isLight))}>
+                  Assign published projects to this discipline in the Admin Panel to showcase them here.
+                </p>
+              </div>
+            ) : (
+            properties.map((project, idx) => {
               const CardWrapper = project.href ? Link : "div"
               const wrapperProps = project.href
                 ? { href: project.href, className: "block w-full h-full" }
@@ -406,11 +430,15 @@ export function ServiceDetailClient({
                   >
                     <CardWrapper {...(wrapperProps as any)}>
                       {/* Main Visual Image */}
-                      <img
-                        src={project.src || "/placeholder.svg"}
-                        alt={project.title}
-                        className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                      />
+                      {project.src ? (
+                        <img
+                          src={project.src}
+                          alt={project.title}
+                          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="h-full w-full bg-gradient-to-br from-[#0B162C] via-[#070E1C] to-[#02050B]" />
+                      )}
 
                       {/* Luxury Vignette Overlay */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-black/20 pointer-events-none" />
@@ -472,7 +500,8 @@ export function ServiceDetailClient({
                   </div>
                 </div>
               )
-            })}
+            })
+            )}
           </div>
 
           {/* Bottom Card Counter / Stack Hint */}
@@ -508,6 +537,11 @@ export function ServiceDetailClient({
           </div>
 
           {/* 4 Pillars Grid (Compact 2x2 on mobile, 4 columns on large screens) */}
+          {service.deliverables.length === 0 ? (
+            <div className="my-auto py-4 text-center text-xs opacity-60">
+              Deliverable pillars configured through the Admin Panel.
+            </div>
+          ) : (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3.5 my-auto py-1">
             {service.deliverables.slice(0, 4).map((item, index) => (
               <div
@@ -536,6 +570,7 @@ export function ServiceDetailClient({
               </div>
             ))}
           </div>
+          )}
 
           {/* Bottom Bar: All Services, Enquire Button & Next Service Navigation */}
           <div className={cn("shrink-0 pt-2.5 border-t flex items-center justify-between gap-2 sm:gap-3 transition-colors", isLight ? "border-[#0B1325]/10" : "border-white/10")}>
@@ -566,6 +601,7 @@ export function ServiceDetailClient({
               </Link>
 
               {/* Next Service Link */}
+              {nextService && (
               <Link
                 href={nextService.route}
                 className={cn(
@@ -578,6 +614,7 @@ export function ServiceDetailClient({
                   <ArrowRight size={10} />
                 </div>
               </Link>
+              )}
             </div>
           </div>
         </section>

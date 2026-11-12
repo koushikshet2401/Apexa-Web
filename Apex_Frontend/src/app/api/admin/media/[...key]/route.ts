@@ -8,7 +8,8 @@ import {
   MediaStorageError,
   verifyR2ObjectExists,
 } from '@/lib/mediaStorage'
-import { markMediaAssetDeleted } from '@/lib/mediaAssetStore'
+import { findMediaAssetReferences, markMediaAssetDeleted } from '@/lib/mediaAssetStore'
+import { logAdminActivity } from '@/lib/activityLog'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -87,8 +88,29 @@ export async function DELETE(
     const { key: keySegments } = await context.params
     const r2Key = decodeKeySegments(keySegments)
 
+    const activeReferences = await findMediaAssetReferences(r2Key)
+    if (activeReferences.length > 0) {
+      return NextResponse.json(
+        {
+          error: `Cannot delete R2 object while it is still referenced (${activeReferences.join(', ')}). Replace or remove the reference first.`,
+          references: activeReferences,
+          key: r2Key,
+        },
+        { status: 409 }
+      )
+    }
+
     await deleteR2Object(r2Key)
     await markMediaAssetDeleted(r2Key)
+
+    await logAdminActivity({
+      adminId: auth.id,
+      adminEmail: auth.email,
+      action: 'DELETE',
+      entityType: 'MediaAsset',
+      entityId: r2Key,
+      summary: `Deleted unreferenced R2 media object "${r2Key}"`,
+    })
 
     return NextResponse.json({
       ok: true,

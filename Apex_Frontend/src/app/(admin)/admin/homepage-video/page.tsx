@@ -10,10 +10,10 @@ export default async function AdminHomepageVideoPage() {
   if (!content) {
     content = await db.homepageContent.create({
       data: {
-        heroVideoUrl: '/videos/home-page.mp4',
-        heroVideoThumb: '/images/skyResidenceImage.png',
-        unveilHeading: 'PRIVATE ARCHITECTURE & ESTATES',
-        unveilSubtext: 'Bespoke residences sculpted to their terrain across the world’s most coveted territories.',
+        heroVideoUrl: null,
+        heroVideoThumb: null,
+        unveilHeading: null,
+        unveilSubtext: null,
       },
     })
   }

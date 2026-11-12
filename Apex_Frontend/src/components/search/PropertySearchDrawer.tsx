@@ -24,7 +24,7 @@ interface PropertySearchDrawerProps {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// 1. FIVE DESTINATIONS (Buttons Only)
+// 1. DESTINATIONS & SERVICES (Loaded dynamically from PostgreSQL)
 // ══════════════════════════════════════════════════════════════════
 interface DestinationItem {
   id: string
@@ -32,38 +32,17 @@ interface DestinationItem {
   shortLabel: string
 }
 
-const DESTINATIONS: DestinationItem[] = [
-  { id: 'dubai', label: 'Dubai / UAE', shortLabel: 'UAE' },
-  { id: 'australia', label: 'Australia', shortLabel: 'Aus' },
-  { id: 'malaysia', label: 'Malaysia', shortLabel: 'Malaysia' },
-  { id: 'georgia', label: 'Georgia', shortLabel: 'Georgia' },
-  { id: 'thailand', label: 'Thailand', shortLabel: 'Thailand' },
-]
-
-// ══════════════════════════════════════════════════════════════════
-// 2. FOUR SERVICES / CATEGORIES (Buttons Only)
-// ══════════════════════════════════════════════════════════════════
 interface ServiceOption {
   id: string
   label: string
   canonicalName: string
 }
 
-const SERVICES_OPTIONS: ServiceOption[] = [
-  { id: 'luxury-villa', label: 'Luxury Villa', canonicalName: 'Luxury Villas' },
-  { id: 'commercial-property', label: 'Commercial Property', canonicalName: 'Commercial Properties' },
-  { id: 'sky-residence', label: 'Sky Residence', canonicalName: 'Sky Residences' },
-  { id: 'waterfront', label: 'Waterfront', canonicalName: 'Waterfront Residences' },
-]
-
-// ══════════════════════════════════════════════════════════════════
-// 3. PROPERTY INVENTORY (Images only appear in Result section)
-// ══════════════════════════════════════════════════════════════════
 export interface SearchPropertyItem {
   id: string
   slug: string
   name: string
-  destinationId: 'dubai' | 'australia' | 'malaysia' | 'georgia' | 'thailand'
+  destinationId: string
   countryLabel: string
   location: string
   category: string
@@ -71,210 +50,6 @@ export interface SearchPropertyItem {
   image: string
   href: string
 }
-
-const ALL_PROPERTIES: SearchPropertyItem[] = [
-  // ── Dubai / UAE ──
-  {
-    id: 'the-meridian',
-    slug: 'the-meridian',
-    name: 'The Meridian',
-    destinationId: 'dubai',
-    countryLabel: 'Dubai / UAE',
-    location: 'Downtown Dubai',
-    category: 'Sky Residences',
-    price: 'AED 8.2M',
-    image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&q=80&auto=format&fit=crop',
-    href: '/collection/dubai/the-meridian',
-  },
-  {
-    id: 'aurelia-villa',
-    slug: 'aurelia-villa',
-    name: 'Aurelia Villa',
-    destinationId: 'dubai',
-    countryLabel: 'Dubai / UAE',
-    location: 'Emirates Hills, Dubai',
-    category: 'Luxury Villas',
-    price: 'AED 12.5M',
-    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80&auto=format&fit=crop',
-    href: '/collection/dubai/aurelia-villa',
-  },
-  {
-    id: 'verdant-house',
-    slug: 'verdant-house',
-    name: 'Verdant House',
-    destinationId: 'dubai',
-    countryLabel: 'Dubai / UAE',
-    location: 'Palm Jumeirah, Dubai',
-    category: 'Waterfront Residences',
-    price: 'AED 28.0M',
-    image: 'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?w=1200&q=80&auto=format&fit=crop',
-    href: '/collection/dubai/verdant-house',
-  },
-  {
-    id: 'marble-sanctuary',
-    slug: 'marble-sanctuary',
-    name: 'The Marble Sanctuary',
-    destinationId: 'dubai',
-    countryLabel: 'Dubai / UAE',
-    location: 'Jumeirah Bay Island',
-    category: 'Luxury Villas',
-    price: 'AED 16.5M',
-    image: 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=1200&q=80&auto=format&fit=crop',
-    href: '/collection/dubai/marble-sanctuary',
-  },
-
-  // ── Thailand ──
-  {
-    id: 'the-peninsula-reserve',
-    slug: 'the-peninsula-reserve',
-    name: 'The Peninsula Reserve',
-    destinationId: 'thailand',
-    countryLabel: 'Thailand',
-    location: 'Phuket Promontory',
-    category: 'Waterfront Residences',
-    price: 'THB 68M',
-    image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80&auto=format&fit=crop',
-    href: '/collection/thailand/the-peninsula-reserve',
-  },
-  {
-    id: 'andaman-villa',
-    slug: 'andaman-villa',
-    name: 'Andaman Cliffside Villa',
-    destinationId: 'thailand',
-    countryLabel: 'Thailand',
-    location: 'Phuket West Coast',
-    category: 'Luxury Villas',
-    price: 'THB 48M',
-    image: 'https://images.unsplash.com/photo-1615460549969-36fa19521a4f?w=1200&q=80&auto=format&fit=crop',
-    href: '/collection/thailand',
-  },
-  {
-    id: 'samui-estate',
-    slug: 'samui-estate',
-    name: 'Samui Beachfront Estate',
-    destinationId: 'thailand',
-    countryLabel: 'Thailand',
-    location: 'Koh Samui',
-    category: 'Waterfront Residences',
-    price: 'THB 58M',
-    image: 'https://images.unsplash.com/photo-1540541338287-41700207dee6?w=1200&q=80&auto=format&fit=crop',
-    href: '/collection/thailand',
-  },
-
-  // ── Malaysia ──
-  {
-    id: 'horizon-pavilion',
-    slug: 'horizon-pavilion',
-    name: 'Horizon Pavilion',
-    destinationId: 'malaysia',
-    countryLabel: 'Malaysia',
-    location: 'Kuala Lumpur City Centre',
-    category: 'Commercial Properties',
-    price: 'MYR 4.6M',
-    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80&auto=format&fit=crop',
-    href: '/collection/malaysia/horizon-pavilion',
-  },
-  {
-    id: 'the-lantern-house',
-    slug: 'the-lantern-house',
-    name: 'The Lantern House',
-    destinationId: 'malaysia',
-    countryLabel: 'Malaysia',
-    location: 'Penang Rainforest Coast',
-    category: 'Luxury Villas',
-    price: 'MYR 3.8M',
-    image: 'https://images.unsplash.com/photo-1512915922686-57c11dde9b6b?w=1200&q=80&auto=format&fit=crop',
-    href: '/collection/malaysia',
-  },
-  {
-    id: 'banyan-residence',
-    slug: 'banyan-residence',
-    name: 'Banyan Ocean Residence',
-    destinationId: 'malaysia',
-    countryLabel: 'Malaysia',
-    location: 'Langkawi Archipelago',
-    category: 'Waterfront Residences',
-    price: 'MYR 6.5M',
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80&auto=format&fit=crop',
-    href: '/collection/malaysia',
-  },
-
-  // ── Australia ──
-  {
-    id: 'ivory-residences',
-    slug: 'ivory-residences',
-    name: 'Ivory Residences',
-    destinationId: 'australia',
-    countryLabel: 'Australia',
-    location: 'Melbourne Harbour',
-    category: 'Sky Residences',
-    price: 'AUD 2.85M',
-    image: 'https://images.unsplash.com/photo-1523217582562-09d0def993a6?w=1200&q=80&auto=format&fit=crop',
-    href: '/collection/australia/ivory-residences',
-  },
-  {
-    id: 'point-piper-villa',
-    slug: 'point-piper-villa',
-    name: 'Point Piper Villa',
-    destinationId: 'australia',
-    countryLabel: 'Australia',
-    location: 'Sydney Harbour',
-    category: 'Waterfront Residences',
-    price: 'AUD 8.5M',
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80&auto=format&fit=crop',
-    href: '/collection/australia',
-  },
-  {
-    id: 'travertine-pavilion',
-    slug: 'travertine-pavilion',
-    name: 'The Travertine Pavilion',
-    destinationId: 'australia',
-    countryLabel: 'Australia',
-    location: 'Gold Coast Ocean Promenade',
-    category: 'Luxury Villas',
-    price: 'AUD 4.2M',
-    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80&auto=format&fit=crop',
-    href: '/collection/australia',
-  },
-
-  // ── Georgia ──
-  {
-    id: 'colchis-manor',
-    slug: 'colchis-manor',
-    name: 'Colchis Manor',
-    destinationId: 'georgia',
-    countryLabel: 'Georgia',
-    location: 'Old City, Tbilisi',
-    category: 'Luxury Villas',
-    price: '$1.85M',
-    image: 'https://images.unsplash.com/photo-1565008576549-57569a49371d?w=1200&q=80&auto=format&fit=crop',
-    href: '/collection/georgia',
-  },
-  {
-    id: 'batumi-heights',
-    slug: 'batumi-heights',
-    name: 'Batumi Heights Penthouse',
-    destinationId: 'georgia',
-    countryLabel: 'Georgia',
-    location: 'Black Sea Boulevard, Batumi',
-    category: 'Sky Residences',
-    price: '$1.4M',
-    image: 'https://images.unsplash.com/photo-1504615755583-2916b52192a3?w=1200&q=80&auto=format&fit=crop',
-    href: '/collection/georgia',
-  },
-  {
-    id: 'borjomi-chalet',
-    slug: 'borjomi-chalet',
-    name: 'Borjomi Alpine Chalet',
-    destinationId: 'georgia',
-    countryLabel: 'Georgia',
-    location: 'Borjomi Valley',
-    category: 'Luxury Villas',
-    price: '$2.1M',
-    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80&auto=format&fit=crop',
-    href: '/collection/georgia',
-  },
-]
 
 export function PropertySearchDrawer({ isOpen, onClose }: PropertySearchDrawerProps) {
   const router = useRouter()
@@ -290,19 +65,49 @@ export function PropertySearchDrawer({ isOpen, onClose }: PropertySearchDrawerPr
   // Has user performed search? (Images only show in results after search)
   const [hasSearched, setHasSearched] = useState(false)
   const [results, setResults] = useState<SearchPropertyItem[]>([])
-  const [liveProperties, setLiveProperties] = useState<SearchPropertyItem[]>(ALL_PROPERTIES)
+  const [destinations, setDestinations] = useState<DestinationItem[]>([])
+  const [serviceOptions, setServiceOptions] = useState<ServiceOption[]>([])
+  const [liveProperties, setLiveProperties] = useState<SearchPropertyItem[]>([])
 
-  // Fetch live published properties when search drawer is opened
+  // Fetch live published countries, services, and properties when search drawer is opened
   useEffect(() => {
-    if (isOpen) {
-      fetch('/api/public/properties')
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (Array.isArray(data) && data.length > 0) {
-            setLiveProperties(data)
-          }
-        })
-        .catch(() => {})
+    if (!isOpen) return
+
+    let cancelled = false
+    Promise.all([
+      fetch('/api/public/collection-countries').then((res) => (res.ok ? res.json() : [])).catch(() => []),
+      fetch('/api/public/services').then((res) => (res.ok ? res.json() : [])).catch(() => []),
+      fetch('/api/public/properties').then((res) => (res.ok ? res.json() : [])).catch(() => []),
+    ]).then(([countriesData, servicesData, propertiesData]) => {
+      if (cancelled) return
+
+      if (Array.isArray(countriesData)) {
+        setDestinations(
+          countriesData.map((c: { slug: string; name: string; displayName?: string }) => ({
+            id: c.slug,
+            label: c.displayName || c.name,
+            shortLabel: c.slug === 'dubai' ? 'UAE' : c.slug === 'australia' ? 'Aus' : c.name,
+          }))
+        )
+      }
+
+      if (Array.isArray(servicesData)) {
+        setServiceOptions(
+          servicesData.map((s: { slug: string; name: string }) => ({
+            id: s.slug,
+            label: s.name,
+            canonicalName: s.name,
+          }))
+        )
+      }
+
+      if (Array.isArray(propertiesData)) {
+        setLiveProperties(propertiesData)
+      }
+    })
+
+    return () => {
+      cancelled = true
     }
   }, [isOpen])
 
@@ -377,7 +182,7 @@ export function PropertySearchDrawer({ isOpen, onClose }: PropertySearchDrawerPr
 
       // 3. Service / Category Filter
       if (selectedService) {
-        const option = SERVICES_OPTIONS.find((s) => s.id === selectedService)
+        const option = serviceOptions.find((s) => s.id === selectedService)
         if (option && p.category !== option.canonicalName) {
           return false
         }
@@ -559,7 +364,7 @@ export function PropertySearchDrawer({ isOpen, onClose }: PropertySearchDrawerPr
 
               {/* Quick Country Links beside Search Bar */}
               <div className="flex flex-wrap items-center gap-3 sm:gap-4 font-sans text-xs sm:text-sm font-medium">
-                {DESTINATIONS.map((dest) => {
+                {destinations.map((dest) => {
                   const isSelected = selectedDestination === dest.id
                   return (
                     <button
@@ -598,7 +403,7 @@ export function PropertySearchDrawer({ isOpen, onClose }: PropertySearchDrawerPr
               </h2>
 
               <div className="flex flex-wrap gap-2.5 sm:gap-3">
-                {DESTINATIONS.map((dest) => {
+                {destinations.map((dest) => {
                   const isSelected = selectedDestination === dest.id
                   return (
                     <button
@@ -629,7 +434,7 @@ export function PropertySearchDrawer({ isOpen, onClose }: PropertySearchDrawerPr
               </h2>
 
               <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2.5 sm:gap-3">
-                {SERVICES_OPTIONS.map((srv) => {
+                {serviceOptions.map((srv) => {
                   const isSelected = selectedService === srv.id
                   return (
                     <button
@@ -739,14 +544,18 @@ export function PropertySearchDrawer({ isOpen, onClose }: PropertySearchDrawerPr
                           )}
                         >
                           {/* Property Image Frame */}
-                          <div className="relative aspect-[16/10] overflow-hidden">
-                            <Image
-                              src={prop.image}
-                              alt={prop.name}
-                              fill
-                              className="object-cover transition-transform duration-700 group-hover:scale-105"
-                              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                            />
+                          <div className="relative aspect-[16/10] overflow-hidden bg-[#070E1C]">
+                            {prop.image ? (
+                              <Image
+                                src={prop.image}
+                                alt={prop.name}
+                                fill
+                                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-[#0B162C] via-[#070E1C] to-[#02050B]" />
+                            )}
                             <div
                               className={cn(
                                 'absolute inset-0 pointer-events-none transition-colors',

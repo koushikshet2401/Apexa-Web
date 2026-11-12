@@ -47,14 +47,7 @@ export async function GET() {
       const isAcquired = Boolean(p.hasCompletedDeal || (p.deals && p.deals.length > 0))
       const firstService = p.services[0]?.service?.name
 
-      let category = 'Sky Residences'
-      if (firstService) {
-        category = firstService
-      } else if (p.type === 'commercial') {
-        category = 'Commercial Properties'
-      } else if (p.type === 'residential') {
-        category = 'Luxury Villas'
-      }
+      const category = firstService || (p.type === 'commercial' ? 'Commercial Properties' : p.type || '')
 
       return {
         id: p.id,
@@ -64,7 +57,7 @@ export async function GET() {
         countryLabel: p.country?.displayName || p.country?.name || countrySlug.toUpperCase(),
         location: p.locationLine || p.cityName || '',
         category,
-        price: isAcquired ? 'Acquired' : (p.price || 'Price on Application'),
+        price: isAcquired ? 'Acquired' : (p.price || ''),
         image: p.mainImage || p.images[0]?.url || '',
         href: `/collection/${countrySlug}/${p.slug}`,
         isAcquired,

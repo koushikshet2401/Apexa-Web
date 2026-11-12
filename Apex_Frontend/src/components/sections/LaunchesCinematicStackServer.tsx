@@ -1,22 +1,55 @@
 import { db } from '@/lib/db'
 import { reconcileFeaturedLaunches } from '@/lib/launchesQueue'
+import { isMissingCmsExtensionError } from '@/lib/mediaAssetStore'
 import {
   LaunchesCinematicStack,
   VideoLaunch,
   CollectionCountry,
+  OneTeamServiceItem,
+  OneTeamMediaProps,
 } from './LaunchesCinematicStack'
-import { PropertyItem, PERSPECTIVE_GALLERY_PROPERTIES } from '@/data/properties'
+import { PropertyItem } from '@/data/properties'
 
 export async function LaunchesCinematicStackServer() {
   let dbLaunches: any[] = []
   let dbCountries: any[] = []
   let dbSpaceProps: any[] = []
   let dbHomepageContent: any = null
+  let dbServices: any[] = []
+  let dbOneTeam: any = null
   const startTime = performance.now()
 
   try {
+    const fetchCountries = async () => {
+      try {
+        return await db.country.findMany({
+          where: { isPublished: true },
+          orderBy: { displayOrder: 'asc' },
+          include: { collectionMedia: true },
+        })
+      } catch (err) {
+        if (isMissingCmsExtensionError(err)) {
+          return await db.country.findMany({
+            where: { isPublished: true },
+            orderBy: { displayOrder: 'asc' },
+          })
+        }
+        throw err
+      }
+    }
+
+    const fetchOneTeam = async () => {
+      try {
+        return await db.oneTeamContent.findFirst({
+          orderBy: { createdAt: 'asc' },
+        })
+      } catch (err) {
+        if (isMissingCmsExtensionError(err)) return null
+        throw err
+      }
+    }
+
     const results = await Promise.all([
-      // 1. Fetch top 3 featured launches (strictly enforced canonical visibility)
       db.property.findMany({
         where: {
           isPublished: true,
@@ -41,13 +74,8 @@ export async function LaunchesCinematicStackServer() {
         },
       }),
 
-      // 2. Fetch collection countries
-      db.country.findMany({
-        where: { isPublished: true },
-        orderBy: { displayOrder: 'asc' },
-      }),
+      fetchCountries(),
 
-      // 3. Fetch space in round properties (strictly enforced canonical visibility)
       db.property.findMany({
         where: {
           isPublished: true,
@@ -62,8 +90,22 @@ export async function LaunchesCinematicStackServer() {
         },
       }),
 
-      // 4. Fetch homepage content
       db.homepageContent.findFirst(),
+
+      db.serviceCategory.findMany({
+        where: { isPublished: true },
+        orderBy: { displayOrder: 'asc' },
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          subtitle: true,
+          image: true,
+          videoUrl: true,
+        },
+      }),
+
+      fetchOneTeam(),
     ])
 
     const elapsed = Math.round(performance.now() - startTime)
@@ -71,8 +113,9 @@ export async function LaunchesCinematicStackServer() {
     dbCountries = results[1]
     dbSpaceProps = results[2]
     dbHomepageContent = results[3]
+    dbServices = results[4]
+    dbOneTeam = results[5]
 
-    // Self-healing: if featured launches are less than 3, reconcile queue to fulfill slots with last-in projects
     if (dbLaunches.length < 3) {
       await reconcileFeaturedLaunches()
       dbLaunches = await db.property.findMany({
@@ -100,12 +143,13 @@ export async function LaunchesCinematicStackServer() {
       })
     }
 
-    console.log(`[Database Timing] Homepage data fetched in ${elapsed}ms (Launches: ${dbLaunches?.length || 0}, Countries: ${dbCountries?.length || 0}, Spaces: ${dbSpaceProps?.length || 0})`)
+    console.log(
+      `[Database Timing] Homepage data fetched in ${elapsed}ms (Launches: ${dbLaunches?.length || 0}, Countries: ${dbCountries?.length || 0}, Spaces: ${dbSpaceProps?.length || 0}, Services: ${dbServices?.length || 0})`
+    )
   } catch (error) {
-    // Database connection offline or credentials not set; seamlessly fall back to static data
     const elapsed = Math.round(performance.now() - startTime)
     console.warn(
-      `[Database Timing] Homepage DB query failed after ${elapsed}ms, falling back to static data:`,
+      `[Database Timing] Homepage DB query failed after ${elapsed}ms:`,
       error instanceof Error ? error.message : error
     )
   }
@@ -117,34 +161,36 @@ export async function LaunchesCinematicStackServer() {
       number: `0${idx + 1}`,
       tag: `FEATURED LAUNCH · 0${idx + 1} OF 0${dbLaunches.length}`,
       title: p.name,
-      location: p.locationLine || p.cityName || 'INTERNATIONAL',
-      type: p.type || 'Signature Residence',
-      beds: p.beds || '3–5 Bedrooms',
-      price: p.price || 'Price on Application',
-      videoSrc: p.mainVideoUrl || '/videos/luxury-palm-beach.mp4',
+      location: p.locationLine || p.cityName || p.country?.displayName || '',
+      type: p.type || '',
+      beds: p.beds || '',
+      price: p.price || '',
+      videoSrc: p.mainVideoUrl || '',
+      fallbackSrc: p.mainImage || '',
       href: `/collection/${countrySlug}/${p.slug}`,
     }
   })
 
   const countries: CollectionCountry[] = dbCountries.map((c) => {
-    let countryKey: 'UAE' | 'Thailand' | 'Georgia' | 'Australia' | 'Malaysia' = 'UAE'
-    if (c.slug === 'thailand') countryKey = 'Thailand'
-    else if (c.slug === 'georgia') countryKey = 'Georgia'
-    else if (c.slug === 'australia') countryKey = 'Australia'
-    else if (c.slug === 'malaysia') countryKey = 'Malaysia'
-    else if (c.slug === 'dubai' || c.slug === 'uae') countryKey = 'UAE'
+    const countryKey =
+      c.slug === 'dubai' || c.slug === 'uae'
+        ? 'UAE'
+        : c.displayName || c.name || c.slug
+
+    const resolvedCover = c.collectionMedia?.coverImageUrl ?? c.cardImage ?? c.heroVideoThumb ?? ''
 
     return {
       id: c.id,
       countryCode: c.slug === 'dubai' ? 'AE' : c.slug.slice(0, 2).toUpperCase(),
       countryKey,
       countryName: c.name,
+      displayName: c.displayName || c.name,
       region: c.region,
       title: `${c.displayName || c.name} Portfolio`,
-      category: c.tagline ? c.tagline.toUpperCase() : 'WATERFRONT VILLAS & SKY RESIDENCES',
-      location: `${c.cities}, ${c.name}`.toUpperCase(),
-      specs: `${c.cities} · 3–6 BEDROOMS`,
-      image: c.cardImage || '/images/DuabiCoolection.png',
+      category: c.tagline ? c.tagline.toUpperCase() : '',
+      location: [c.cities, c.name].filter(Boolean).join(', ').toUpperCase(),
+      specs: c.cities || '',
+      image: resolvedCover,
       href: `/collection/${c.slug}`,
       cities: c.cities,
       description: c.description || '',
@@ -159,12 +205,12 @@ export async function LaunchesCinematicStackServer() {
       slug: p.slug,
       name: p.name,
       cardLabel: p.cardLabel || p.name.toUpperCase(),
-      category: p.type || 'Architectural Landmark',
-      country: p.country?.displayName || p.country?.name || (countrySlug ? countrySlug.toUpperCase() : ''),
+      category: p.type || '',
+      country: p.country?.displayName || p.country?.name || '',
       city: p.cityName || '',
       type: p.type || 'residential',
-      beds: p.beds ? (parseInt(p.beds) || p.beds) : 3,
-      baths: p.baths ? (parseInt(p.baths) || p.baths) : 3,
+      beds: p.beds || '',
+      baths: p.baths || '',
       area: p.area || '',
       price: p.price || '',
       tagline: p.tagline || '',
@@ -180,30 +226,36 @@ export async function LaunchesCinematicStackServer() {
     } as PropertyItem
   })
 
-  // Ensure Spaces in the Round maintains full 3D cylinder geometry (minimum 6 properties).
-  // Curated database properties take first priority, and remaining slots are seamlessly padded
-  // with default portfolio items (deduplicated by slug or name).
-  const combinedSpaceProperties: PropertyItem[] = [...spaceProperties]
-  if (combinedSpaceProperties.length < 6) {
-    const existingSlugs = new Set(combinedSpaceProperties.map((p) => p.slug || p.id))
-    const existingNames = new Set(combinedSpaceProperties.map((p) => p.name?.trim().toLowerCase()))
-    for (const def of PERSPECTIVE_GALLERY_PROPERTIES) {
-      const nameLower = def.name?.trim().toLowerCase()
-      if (!existingSlugs.has(def.slug) && !existingSlugs.has(def.id) && !existingNames.has(nameLower)) {
-        combinedSpaceProperties.push(def)
-        existingSlugs.add(def.slug || def.id)
-        if (nameLower) existingNames.add(nameLower)
-      }
-      if (combinedSpaceProperties.length >= 6) break
-    }
+  const services: OneTeamServiceItem[] = dbServices.map((s) => ({
+    id: s.id,
+    slug: s.slug,
+    name: s.name,
+    subtitle: s.subtitle,
+    image: s.image,
+    videoUrl: s.videoUrl,
+  }))
+
+  const luxuryVillasSvc = services.find((s) => s.slug === 'luxury-villas')
+  const commercialSvc = services.find((s) => s.slug === 'commercial-properties')
+  const skyResidencesSvc = services.find((s) => s.slug === 'sky-residences')
+  const waterfrontSvc = services.find((s) => s.slug === 'waterfront-residences')
+
+  const oneTeamContent: OneTeamMediaProps = {
+    luxuryVillasImageUrl: dbOneTeam?.luxuryVillasImageUrl ?? luxuryVillasSvc?.image ?? null,
+    commercialImageUrl: dbOneTeam?.commercialImageUrl ?? commercialSvc?.image ?? null,
+    skyResidencesImageUrl: dbOneTeam?.skyResidencesImageUrl ?? skyResidencesSvc?.image ?? null,
+    waterfrontImageUrl: dbOneTeam?.waterfrontImageUrl ?? waterfrontSvc?.image ?? null,
+    centerVideoUrl: dbOneTeam?.centerVideoUrl ?? dbHomepageContent?.oneTeamVideoUrl ?? null,
   }
 
   return (
     <LaunchesCinematicStack
-      launches={launches.length > 0 ? launches : undefined}
-      countries={countries.length > 0 ? countries : undefined}
-      spaceProperties={combinedSpaceProperties.length > 0 ? combinedSpaceProperties : undefined}
+      launches={launches}
+      countries={countries}
+      spaceProperties={spaceProperties}
       homepageContent={dbHomepageContent}
+      services={services}
+      oneTeamContent={oneTeamContent}
     />
   )
 }

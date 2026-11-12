@@ -20,6 +20,8 @@ import {
   ExternalLink,
   Shield,
   CheckCircle2,
+  Layers,
+  Globe,
 } from 'lucide-react'
 
 interface AdminProfile {
@@ -94,6 +96,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     { label: 'Soldout Project', href: '/admin/properties?tab=sold', icon: Award },
     { label: 'Deleted Project', href: '/admin/properties?tab=archived', icon: Archive },
     { label: 'Home Page Video', href: '/admin/homepage-video', icon: Film },
+    { label: 'One Team, End to End', href: '/admin/one-team', icon: Layers },
+    { label: 'Collection & Contact Video', href: '/admin/collection-media', icon: Globe },
     { label: 'Messages', href: '/admin/messages', icon: Mail },
     { label: 'Team Management', href: '/admin/users', icon: Users },
     { label: 'Account Management', href: '/admin/account', icon: UserCheck },
@@ -119,6 +123,12 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     }
     if (item.label === 'Home Page Video') {
       return pathname === '/admin/homepage-video' || pathname === '/admin/homepage'
+    }
+    if (item.label === 'One Team, End to End') {
+      return pathname === '/admin/one-team' || pathname.startsWith('/admin/services')
+    }
+    if (item.label === 'Collection & Contact Video') {
+      return pathname === '/admin/collection-media' || pathname.startsWith('/admin/countries')
     }
     if (item.label === 'Messages') {
       return pathname === '/admin/messages' || pathname.startsWith('/admin/enquiries')

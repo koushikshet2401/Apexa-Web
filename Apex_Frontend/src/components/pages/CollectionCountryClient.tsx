@@ -84,7 +84,7 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
   const section3Ref = useRef<HTMLElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
 
-  const videoSrc = country.heroVideoUrl ? encodeURI(country.heroVideoUrl) : '/videos/luxury-palm-beach.mp4'
+  const videoSrc = country.heroVideoUrl ? encodeURI(country.heroVideoUrl) : null
 
   // Form state for Section 3: Direct Confidential Inquiry
   const [formName, setFormName] = useState('')
@@ -294,7 +294,7 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
           name: formName.trim(),
           email: formEmail.trim(),
           phone: formPhone.trim().startsWith('+') ? formPhone.trim() : `+${formPhone.replace(/\D/g, '')}`,
-          service: 'Luxury Villas',
+          service: country.displayName || country.name || 'Collection Enquiry',
           message: formMessage.trim(),
           countryId: country.id,
           consent: true,
@@ -408,21 +408,33 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
                     themeTokens.collectionCountry.videoFrame(isLight)
                   )}
                 >
-                  <video
-                    ref={videoRef}
-                    src={videoSrc}
-                    poster={country.heroVideoThumb || country.cardImage || undefined}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    preload="auto"
-                    onLoadedData={() => {
-                      console.log('[Apex Lifecycle] Hero video loaded for:', country.slug)
-                      setVideoLoaded(true)
-                    }}
-                    className="w-full h-full object-cover object-center pointer-events-none"
-                  />
+                  {videoSrc ? (
+                    <video
+                      key={videoSrc}
+                      ref={videoRef}
+                      src={videoSrc}
+                      poster={country.heroVideoThumb || country.cardImage || undefined}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      preload="auto"
+                      onLoadedData={() => {
+                        console.log('[Apex Lifecycle] Hero video loaded for:', country.slug)
+                        setVideoLoaded(true)
+                      }}
+                      className="w-full h-full object-cover object-center pointer-events-none"
+                    />
+                  ) : (country.heroVideoThumb || country.cardImage) ? (
+                    <img
+                      src={encodeURI(country.heroVideoThumb || country.cardImage!)}
+                      alt={country.displayName || country.name}
+                      onLoad={() => setVideoLoaded(true)}
+                      className="w-full h-full object-cover object-center pointer-events-none"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-[#070E1C]" />
+                  )}
 
                   {/* Cinematic Vignette */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
@@ -485,7 +497,19 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
                 "relative flex-1 min-h-0 w-full max-w-5xl mx-auto my-2 sm:my-3 rounded-2xl sm:rounded-3xl overflow-hidden transition-colors duration-300",
                 themeTokens.collectionCountry.cardStageFrame(isLight)
               )}>
-                {projects.map((project, idx) => (
+                {projects.length === 0 ? (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-center px-6 py-12">
+                    <span className={cn("font-mono text-[10px] uppercase tracking-[0.24em] mb-2", themeTokens.collectionCountry.tag(isLight))}>
+                      {country.displayName || country.name}
+                    </span>
+                    <p className={cn("heading-display text-2xl sm:text-3xl font-light mb-2", themeTokens.collectionCountry.heading(isLight))}>
+                      No active residences currently published in this destination
+                    </p>
+                    <p className={cn("font-sans text-xs sm:text-sm max-w-md", themeTokens.collectionCountry.cardDesc(isLight))}>
+                      Scroll down to register confidential interest for upcoming private releases.
+                    </p>
+                  </div>
+                ) : projects.map((project, idx) => (
                   <div
                     key={project.id}
                     ref={(el) => {
@@ -498,11 +522,15 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
                   >
                     {/* Visual Half (Desktop: Left 54%, Mobile: Top 48%) */}
                     <div className="relative w-full md:w-[54%] h-[48%] md:h-full overflow-hidden bg-black shrink-0">
-                      <img
-                        src={encodeURI(project.image)}
-                        alt={project.title}
-                        className="w-full h-full object-cover"
-                      />
+                      {project.image ? (
+                        <img
+                          src={encodeURI(project.image)}
+                          alt={project.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-[#070E1C]" />
+                      )}
                       <div className={cn(
                         "absolute inset-0 opacity-90 pointer-events-none transition-colors duration-300",
                         isLight
@@ -563,11 +591,11 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
                         </div>
 
                         {/* Description */}
-                        <p className={cn("font-sans text-xs sm:text-sm font-light leading-relaxed mb-3 line-clamp-3 md:line-clamp-4 transition-colors", themeTokens.collectionCountry.cardDesc(isLight))}>
-                          {project.description ||
-                            project.shortDescription ||
-                            'An extraordinary private architectural sanctuary curated by Apex Pacific Holdings.'}
-                        </p>
+                        {(project.description || project.shortDescription) && (
+                          <p className={cn("font-sans text-xs sm:text-sm font-light leading-relaxed mb-3 line-clamp-3 md:line-clamp-4 transition-colors", themeTokens.collectionCountry.cardDesc(isLight))}>
+                            {project.description || project.shortDescription}
+                          </p>
+                        )}
 
                         {/* Highlights (visible on tablet/desktop) */}
                         {project.highlights && project.highlights.length > 0 && (
@@ -629,11 +657,15 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
 
                               {/* Modal Hero Image */}
                               <div className="relative w-full aspect-[16/9] max-h-[24vh] sm:max-h-[36vh] overflow-hidden bg-black shrink-0">
-                                <DialogImage
-                                  src={project.image}
-                                  alt={project.title}
-                                  className="h-full w-full object-cover"
-                                />
+                                {project.image ? (
+                                  <DialogImage
+                                    src={project.image}
+                                    alt={project.title}
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="h-full w-full bg-[#070E1C]" />
+                                )}
                                 <div className={cn(
                                   "absolute inset-0 pointer-events-none transition-colors",
                                   isLight ? "bg-gradient-to-t from-white via-transparent to-black/30" : "bg-gradient-to-t from-[#070E1C] via-transparent to-black/30"
@@ -666,11 +698,11 @@ export function CollectionCountryClient({ country, projects }: CollectionCountry
                                       exit: { opacity: 0, scale: 0.95, y: -20 },
                                     }}
                                   >
-                                    <p className="font-sans text-xs sm:text-sm text-white/85 font-light leading-relaxed mb-2 sm:mb-5 line-clamp-3 sm:line-clamp-none">
-                                      {project.description ||
-                                        project.shortDescription ||
-                                        'An extraordinary private architectural sanctuary curated by Apex Pacific Holdings.'}
-                                    </p>
+                                    {(project.description || project.shortDescription) && (
+                                      <p className="font-sans text-xs sm:text-sm text-white/85 font-light leading-relaxed mb-2 sm:mb-5 line-clamp-3 sm:line-clamp-none">
+                                        {project.description || project.shortDescription}
+                                      </p>
+                                    )}
 
                                     {project.highlights && project.highlights.length > 0 && (
                                       <div className="hidden sm:block mb-5 space-y-1.5">

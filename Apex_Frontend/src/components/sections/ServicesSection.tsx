@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { ArrowUpRight, ArrowLeft, ArrowRight } from 'lucide-react'
-import { SERVICES, ServiceItem } from '@/data/services'
+import type { ServiceItem } from '@/lib/services-cms'
 import { cn } from '@/lib/utils'
 
 // Architectural line emblems for each service category
@@ -42,7 +42,7 @@ function ServiceCardIcon({ type }: { type: ServiceItem['iconType'] }) {
   )
 }
 
-export function ServicesSection() {
+export function ServicesSection({ services = [] }: { services?: ServiceItem[] }) {
   const [isMobile, setIsMobile] = useState(false)
   const [mobileIndex, setMobileIndex] = useState(0)
 
@@ -53,13 +53,18 @@ export function ServicesSection() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
+  const safeIndex = services.length > 0 ? Math.min(mobileIndex, services.length - 1) : 0
+  const activeMobileService = services[safeIndex]
+
   const handlePrev = useCallback(() => {
-    setMobileIndex((prev) => (prev > 0 ? prev - 1 : SERVICES.length - 1))
-  }, [])
+    if (services.length === 0) return
+    setMobileIndex((prev) => (prev > 0 ? prev - 1 : services.length - 1))
+  }, [services.length])
 
   const handleNext = useCallback(() => {
-    setMobileIndex((prev) => (prev < SERVICES.length - 1 ? prev + 1 : 0))
-  }, [])
+    if (services.length === 0) return
+    setMobileIndex((prev) => (prev < services.length - 1 ? prev + 1 : 0))
+  }, [services.length])
 
   return (
     <section
@@ -113,8 +118,13 @@ export function ServicesSection() {
         {/* ════════════════════════════════════════════════════════════════
             DESKTOP LAYOUT (>= 768px): 3-Card Architectural Grid
            ════════════════════════════════════════════════════════════════ */}
+        {services.length === 0 ? (
+          <div className="rounded-2xl p-10 bg-[#070E1C] border border-white/10 text-center text-sm text-[#94A3B8]">
+            Practice disciplines are currently being updated in the Admin Panel.
+          </div>
+        ) : (
         <div className="hidden md:grid grid-cols-3 gap-6 lg:gap-8">
-          {SERVICES.map((service, i) => (
+          {services.map((service, i) => (
             <motion.div
               key={service.id}
               initial={{ opacity: 0, y: 24 }}
@@ -128,6 +138,7 @@ export function ServicesSection() {
                 aria-label={`Explore ${service.title}`}
               >
                 {/* Background Architectural Photo on Hover Reveal */}
+                {service.image && (
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-700 ease-out pointer-events-none">
                   <Image
                     src={service.image}
@@ -138,6 +149,7 @@ export function ServicesSection() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#070E1C] via-[#070E1C]/60 to-transparent" />
                 </div>
+                )}
 
                 {/* Top Bar: Service Number & Custom Emblem + Circular Arrow */}
                 <div className="relative z-10 flex items-start justify-between mb-8 pb-6 border-b border-white/10">
@@ -188,39 +200,41 @@ export function ServicesSection() {
             </motion.div>
           ))}
         </div>
+        )}
 
         {/* ════════════════════════════════════════════════════════════════
             MOBILE CAROUSEL (< 768px)
            ════════════════════════════════════════════════════════════════ */}
+        {activeMobileService && (
         <div className="md:hidden">
           <div className="relative">
             <AnimatePresence mode="wait">
               <motion.div
-                key={SERVICES[mobileIndex].id}
+                key={activeMobileService.id}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.35 }}
               >
                 <Link
-                  href={SERVICES[mobileIndex].route}
+                  href={activeMobileService.route}
                   className="block rounded-2xl p-7 bg-[#070E1C] border border-white/10"
                 >
                   <div className="flex items-center justify-between pb-4 mb-6 border-b border-white/10">
                     <span className="font-mono text-xs text-[#7DD3FC]">
-                      {SERVICES[mobileIndex].number}
+                      {activeMobileService.number}
                     </span>
-                    <ServiceCardIcon type={SERVICES[mobileIndex].iconType} />
+                    <ServiceCardIcon type={activeMobileService.iconType} />
                   </div>
 
                   <span className="font-mono text-[10px] uppercase tracking-widest text-[#94A3B8] block mb-1">
-                    {SERVICES[mobileIndex].subtitle}
+                    {activeMobileService.subtitle}
                   </span>
                   <h3 className="font-serif text-2xl text-white font-light mb-3">
-                    {SERVICES[mobileIndex].title}
+                    {activeMobileService.title}
                   </h3>
                   <p className="font-sans text-xs text-[#CBD5E1] font-light leading-relaxed mb-6">
-                    {SERVICES[mobileIndex].description}
+                    {activeMobileService.description}
                   </p>
 
                   <div className="flex items-center justify-between pt-4 border-t border-white/10 text-xs font-mono text-sky-400">
@@ -233,13 +247,13 @@ export function ServicesSection() {
 
             <div className="flex items-center justify-between mt-6">
               <div className="flex items-center gap-1.5">
-                {SERVICES.map((_, idx) => (
+                {services.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={() => setMobileIndex(idx)}
                     className={cn(
                       'h-1.5 rounded-full transition-all duration-300',
-                      mobileIndex === idx ? 'w-6 bg-sky-400' : 'w-2 bg-white/20'
+                      safeIndex === idx ? 'w-6 bg-sky-400' : 'w-2 bg-white/20'
                     )}
                   />
                 ))}
@@ -262,6 +276,7 @@ export function ServicesSection() {
             </div>
           </div>
         </div>
+        )}
       </div>
     </section>
   )

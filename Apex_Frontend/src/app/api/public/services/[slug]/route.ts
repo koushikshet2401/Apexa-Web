@@ -30,7 +30,7 @@ export async function GET(
 
     const publishedProperties = service.properties
       .map((ps) => ps.property)
-      .filter((p) => p && p.isPublished)
+      .filter((p) => p && p.isPublished && p.isPubliclyVisible && !p.isArchived)
       .map((p) => ({
         id: p.id,
         slug: p.slug,
@@ -42,7 +42,7 @@ export async function GET(
         country: p.country?.displayName || p.country?.name || '',
         countrySlug: p.country?.slug || 'dubai',
         image: p.mainImage || p.images[0]?.url || '',
-        href: `/properties/${p.country?.slug || 'dubai'}/${p.slug}`,
+        href: `/collection/${p.country?.slug || 'dubai'}/${p.slug}`,
       }))
 
     return NextResponse.json({

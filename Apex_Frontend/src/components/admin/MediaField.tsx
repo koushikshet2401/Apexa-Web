@@ -17,7 +17,7 @@ interface MediaFieldProps {
   value: string
   onChange: (url: string) => void
   accept?: 'image/*' | 'video/mp4' | string
-  folder?: 'properties' | 'countries' | 'services' | 'homepage' | 'general'
+  folder?: 'properties' | 'countries' | 'services' | 'homepage' | 'one-team' | 'collection-media' | 'general'
   countrySlug?: string
   projectSlug?: string
   mediaRole?:
@@ -27,6 +27,13 @@ interface MediaFieldProps {
     | 'SPACE_ROUND'
     | 'HOMEPAGE_VIDEO'
     | 'HOMEPAGE_POSTER'
+    | 'COUNTRY_MEDIA'
+    | 'SERVICE_MEDIA'
+    | 'ONE_TEAM_VILLA'
+    | 'ONE_TEAM_COMMERCIAL'
+    | 'ONE_TEAM_VIDEO'
+    | 'COLLECTION_COVER'
+    | 'COLLECTION_HERO_VIDEO'
     | 'OTHER'
   placeholder?: string
 }
