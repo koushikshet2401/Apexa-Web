@@ -9,6 +9,7 @@ import {
   Building2,
   Award,
   Archive,
+  Film,
   Mail,
   Users,
   UserCheck,
@@ -92,6 +93,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     { label: 'Current Project', href: '/admin/properties?tab=current', icon: Building2 },
     { label: 'Soldout Project', href: '/admin/properties?tab=sold', icon: Award },
     { label: 'Deleted Project', href: '/admin/properties?tab=archived', icon: Archive },
+    { label: 'Home Page Video', href: '/admin/homepage-video', icon: Film },
     { label: 'Messages', href: '/admin/messages', icon: Mail },
     { label: 'Team Management', href: '/admin/users', icon: Users },
     { label: 'Account Management', href: '/admin/account', icon: UserCheck },
@@ -114,6 +116,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     }
     if (item.label === 'Deleted Project') {
       return pathname === '/admin/properties' && currentTab === 'archived'
+    }
+    if (item.label === 'Home Page Video') {
+      return pathname === '/admin/homepage-video' || pathname === '/admin/homepage'
     }
     if (item.label === 'Messages') {
       return pathname === '/admin/messages' || pathname.startsWith('/admin/enquiries')

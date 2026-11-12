@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { requirePermission, PERMISSIONS } from '@/lib/rbac'
 
@@ -66,6 +67,14 @@ export async function PATCH(request: NextRequest) {
           ...(advisoryVideoUrl !== undefined && { advisoryVideoUrl: advisoryVideoUrl || null }),
         },
       })
+    }
+
+    try {
+      revalidatePath('/')
+      revalidatePath('/admin/homepage-video')
+      revalidatePath('/admin/homepage')
+    } catch (revalidateErr) {
+      console.warn('Revalidation warning:', revalidateErr)
     }
 
     return NextResponse.json(content)

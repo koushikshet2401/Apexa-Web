@@ -56,12 +56,63 @@ export async function GET(request: NextRequest) {
       ORDER BY total_amount DESC
     `
 
+    // Authoritative 5 Destinations and their native operational currencies
+    const AUTHORITATIVE_5_DESTINATIONS = [
+      { slug: 'thailand', displayName: 'Thailand', currency: 'THB' },
+      { slug: 'dubai', displayName: 'Dubai / UAE', currency: 'AED' },
+      { slug: 'georgia', displayName: 'Georgia', currency: 'GEL' },
+      { slug: 'australia', displayName: 'Australia', currency: 'AUD' },
+      { slug: 'malaysia', displayName: 'Malaysia', currency: 'MYR' },
+    ]
+
+    // Fetch all active priced properties with country relation to group accurately
+    const allValuedProperties = await db.property.findMany({
+      where: {
+        askingPriceNumeric: { not: null },
+        isPOA: false,
+      },
+      select: {
+        askingCurrency: true,
+        askingPriceNumeric: true,
+        hasCompletedDeal: true,
+        country: {
+          select: {
+            slug: true,
+            displayName: true,
+          },
+        },
+      },
+    })
+
+    const byCountry = AUTHORITATIVE_5_DESTINATIONS.map((dest) => {
+      const countryProps = allValuedProperties.filter(
+        (p) => p.country?.slug?.toLowerCase() === dest.slug.toLowerCase()
+      )
+      // Properties matching this destination's currency
+      const matchedCurrencyProps = countryProps.filter(
+        (p) => p.askingCurrency?.toUpperCase() === dest.currency.toUpperCase()
+      )
+      const sum = matchedCurrencyProps.reduce(
+        (acc, p) => acc + (p.askingPriceNumeric ? Number(p.askingPriceNumeric) : 0),
+        0
+      )
+
+      return {
+        slug: dest.slug,
+        displayName: dest.displayName,
+        currency: dest.currency,
+        totalAmount: sum > 0 ? sum.toFixed(2) : '0.00',
+        propertyCount: matchedCurrencyProps.length,
+      }
+    })
+
     const totalPortfolioValuation = {
       byCurrency: metric1Raw.map((row) => ({
         currency: row.currency,
         totalAmount: row.total_amount ? Number(row.total_amount).toFixed(2) : '0.00',
         propertyCount: Number(row.property_count),
       })),
+      byCountry,
       scopeDescription: 'Includes Published, Draft, Sold, and Recoverably Archived projects' as const,
     }
 

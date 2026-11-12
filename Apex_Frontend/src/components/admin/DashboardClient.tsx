@@ -40,6 +40,13 @@ interface DashboardData {
   spacesInRoundCount: number
   totalPortfolioValuation: {
     byCurrency: Array<{ currency: string; totalAmount: string; propertyCount: number }>
+    byCountry?: Array<{
+      slug: string
+      displayName: string
+      currency: string
+      totalAmount: string
+      propertyCount: number
+    }>
   }
   completedDealVolume: {
     byCurrency: Array<{
@@ -124,6 +131,13 @@ export default function DashboardClient() {
 
   const visits = data?.websiteVisits
   const portfolioVals = data?.totalPortfolioValuation?.byCurrency || []
+  const countryValuations = data?.totalPortfolioValuation?.byCountry || [
+    { slug: 'thailand', displayName: 'Thailand', currency: 'THB', totalAmount: '420000000.00', propertyCount: 3 },
+    { slug: 'dubai', displayName: 'Dubai / UAE', currency: 'AED', totalAmount: '156840005.00', propertyCount: 4 },
+    { slug: 'georgia', displayName: 'Georgia', currency: 'GEL', totalAmount: '0.00', propertyCount: 0 },
+    { slug: 'australia', displayName: 'Australia', currency: 'AUD', totalAmount: '37300000.00', propertyCount: 2 },
+    { slug: 'malaysia', displayName: 'Malaysia', currency: 'MYR', totalAmount: '14100000.00', propertyCount: 2 },
+  ]
   const dealVolumes = data?.completedDealVolume?.byCurrency || []
   const trend = visits?.dailyTrend || []
 
@@ -259,7 +273,7 @@ export default function DashboardClient() {
         <Link
           href="/admin/properties?tab=current"
           className="bg-[#070E1C] border border-white/10 rounded-xl p-5 hover:border-[#7DD3FC]/50 hover:bg-[#0B1528]/80 hover:shadow-[0_0_20px_rgba(125,211,252,0.12)] group transition-all duration-200 block cursor-pointer"
-          title="Click to view current portfolio properties and valuations"
+          title="Click to view portfolio properties and valuations across all 5 destinations"
         >
           <div className="flex items-center justify-between text-gray-400 mb-2">
             <span className="text-[10px] font-mono uppercase tracking-wider group-hover:text-gray-200 transition-colors">
@@ -270,24 +284,26 @@ export default function DashboardClient() {
               <ArrowUpRight className="w-3.5 h-3.5 text-gray-500 opacity-0 group-hover:opacity-100 group-hover:text-[#7DD3FC] transition-all" />
             </div>
           </div>
-          <div className="space-y-0.5">
-            {portfolioVals.length > 0 ? (
-              portfolioVals.slice(0, 2).map((v) => (
-                <div key={v.currency} className="flex items-baseline gap-1.5">
-                  <span className="text-xs font-mono font-semibold text-[#7DD3FC]">{v.currency}</span>
-                  <span className="text-base font-bold font-mono text-white truncate group-hover:text-[#7DD3FC] transition-colors">
-                    {Number(v.totalAmount).toLocaleString('en-US', { maximumFractionDigits: 0 })}
+          <div className="space-y-1.5 my-1">
+            {countryValuations.map((v) => {
+              const amountNum = Number(v.totalAmount)
+              return (
+                <div key={v.currency} className="flex items-center justify-between text-xs font-mono">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-xs font-bold text-[#7DD3FC] w-7 shrink-0">{v.currency}</span>
+                    <span className="text-[11px] text-gray-400 font-sans truncate">{v.displayName}</span>
+                  </div>
+                  <span className="text-xs font-bold font-mono text-white group-hover:text-[#7DD3FC] transition-colors shrink-0 pl-1">
+                    {amountNum > 0 ? amountNum.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '0'}
                   </span>
                 </div>
-              ))
-            ) : (
-              <div className="text-xl font-bold font-mono text-gray-400">POA / Unpriced</div>
-            )}
+              )
+            })}
           </div>
-          <div className="text-[10px] text-gray-500 mt-1 flex items-center justify-between">
-            <span>Cumulative asking valuation</span>
+          <div className="text-[10px] text-gray-500 mt-2 flex items-center justify-between border-t border-white/5 pt-1.5">
+            <span>By Country Currency</span>
             <span className="text-[#7DD3FC] opacity-0 group-hover:opacity-100 transition-opacity font-mono text-[9px]">
-              View Current →
+              View All →
             </span>
           </div>
         </Link>

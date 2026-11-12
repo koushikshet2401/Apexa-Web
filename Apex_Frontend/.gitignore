@@ -32,6 +32,7 @@ coverage/
 # Redundant Root Media Staging Folders (Static assets served from /public)
 /images/
 /videos/
+public/uploads/
 
 # Logs & Debugging
 npm-debug.log*
