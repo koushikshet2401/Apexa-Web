@@ -5,6 +5,7 @@ import { logAdminActivity } from '@/lib/activityLog'
 import { reconcileFeaturedLaunches } from '@/lib/launchesQueue'
 import { hasForbiddenFinancialFields } from '@/lib/projectValidation'
 import { syncProjectMediaAssets } from '@/lib/mediaAssetStore'
+import { revalidatePropertyCms } from '@/lib/revalidate'
 import { Prisma } from '@prisma/client'
 
 /**
@@ -61,6 +62,7 @@ export async function PATCH(
     const { id } = await params
     const existing = await db.property.findUnique({
       where: { id },
+      include: { country: { select: { slug: true } } },
     })
 
     if (!existing) {
@@ -307,6 +309,14 @@ export async function PATCH(
       },
     })
 
+    revalidatePropertyCms({
+      slug: updated.slug,
+      previousSlug: existing.slug,
+      countrySlug: updated.country?.slug,
+      previousCountrySlug: existing.country?.slug,
+      serviceSlugs: updated.services.map((ps) => ps.service?.slug).filter(Boolean) as string[],
+    })
+
     return NextResponse.json(updated)
   } catch (error) {
     console.error('Error updating project:', error)
@@ -327,7 +337,10 @@ export async function DELETE(
 
   try {
     const { id } = await params
-    const project = await db.property.findUnique({ where: { id } })
+    const project = await db.property.findUnique({
+      where: { id },
+      include: { country: { select: { slug: true } } },
+    })
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
@@ -376,6 +389,11 @@ export async function DELETE(
         reason,
         archivedAt: archived.archivedAt?.toISOString(),
       },
+    })
+
+    revalidatePropertyCms({
+      slug: archived.slug,
+      countrySlug: project.country?.slug,
     })
 
     return NextResponse.json({

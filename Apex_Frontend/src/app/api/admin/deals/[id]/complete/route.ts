@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requirePermission, PERMISSIONS } from '@/lib/rbac'
 import { closeDealTransaction } from '@/../prisma/deal_service'
+import { revalidatePropertyCms } from '@/lib/revalidate'
 
 /**
  * POST /api/admin/deals/[id]/complete
@@ -34,10 +35,15 @@ export async function POST(
       )
     }
 
-    // Fetch deal to get propertyId
+    // Fetch deal to get propertyId & slug for cache revalidation
     const deal = await db.deal.findUnique({
       where: { id },
-      select: { id: true, propertyId: true, status: true },
+      select: {
+        id: true,
+        propertyId: true,
+        status: true,
+        property: { select: { slug: true, country: { select: { slug: true } } } },
+      },
     })
 
     if (!deal) {
@@ -53,6 +59,11 @@ export async function POST(
       currency,
       keepPubliclyVisible,
       notes,
+    })
+
+    revalidatePropertyCms({
+      slug: deal.property?.slug,
+      countrySlug: deal.property?.country?.slug,
     })
 
     return NextResponse.json({

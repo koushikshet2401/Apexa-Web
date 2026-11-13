@@ -88,20 +88,40 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   const currentTab = searchParams ? searchParams.get('tab') : null
 
-  // EXACTLY NINE MAIN SIDEBAR ITEMS
+  // EXACTLY NINE MAIN APPROVED SIDEBAR ITEMS
   const NAV_ITEMS = [
     { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { label: 'Add Project', href: '/admin/properties/new', icon: PlusCircle, badge: 'New' },
     { label: 'Current Project', href: '/admin/properties?tab=current', icon: Building2 },
     { label: 'Soldout Project', href: '/admin/properties?tab=sold', icon: Award },
     { label: 'Deleted Project', href: '/admin/properties?tab=archived', icon: Archive },
-    { label: 'Home Page Video', href: '/admin/homepage-video', icon: Film },
-    { label: 'One Team, End to End', href: '/admin/one-team', icon: Layers },
-    { label: 'Collection & Contact Video', href: '/admin/collection-media', icon: Globe },
     { label: 'Messages', href: '/admin/messages', icon: Mail },
     { label: 'Team Management', href: '/admin/users', icon: Users },
     { label: 'Account Management', href: '/admin/account', icon: UserCheck },
     { label: 'Settings', href: '/admin/settings', icon: Settings },
+  ]
+
+  const isCmsSubpage =
+    pathname === '/admin/settings' ||
+    pathname.startsWith('/admin/homepage') ||
+    pathname.startsWith('/admin/one-team') ||
+    pathname.startsWith('/admin/collection-media') ||
+    pathname.startsWith('/admin/countries') ||
+    pathname.startsWith('/admin/services') ||
+    pathname.startsWith('/admin/launches') ||
+    pathname.startsWith('/admin/space-in-round') ||
+    pathname.startsWith('/admin/media')
+
+  const CMS_SUB_TABS = [
+    { label: 'Settings Hub', href: '/admin/settings' },
+    { label: 'Homepage Video & Copy', href: '/admin/homepage-video' },
+    { label: 'One Team', href: '/admin/one-team' },
+    { label: 'Collection Media', href: '/admin/collection-media' },
+    { label: 'Countries', href: '/admin/countries' },
+    { label: 'Services', href: '/admin/services' },
+    { label: 'Launches', href: '/admin/launches' },
+    { label: 'Spaces in Round', href: '/admin/space-in-round' },
+    { label: 'Media Library', href: '/admin/media' },
   ]
 
   const isNavItemActive = (item: typeof NAV_ITEMS[0]) => {
@@ -121,15 +141,6 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     if (item.label === 'Deleted Project') {
       return pathname === '/admin/properties' && currentTab === 'archived'
     }
-    if (item.label === 'Home Page Video') {
-      return pathname === '/admin/homepage-video' || pathname === '/admin/homepage'
-    }
-    if (item.label === 'One Team, End to End') {
-      return pathname === '/admin/one-team' || pathname.startsWith('/admin/services')
-    }
-    if (item.label === 'Collection & Contact Video') {
-      return pathname === '/admin/collection-media' || pathname.startsWith('/admin/countries')
-    }
     if (item.label === 'Messages') {
       return pathname === '/admin/messages' || pathname.startsWith('/admin/enquiries')
     }
@@ -140,7 +151,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       return pathname === '/admin/account'
     }
     if (item.label === 'Settings') {
-      return pathname === '/admin/settings'
+      return pathname === '/admin/settings' || isCmsSubpage
     }
     return false
   }
@@ -290,6 +301,38 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
       {/* Main Content Area */}
       <main className="flex-1 min-w-0 flex flex-col min-h-screen">
+        {isCmsSubpage && (
+          <div className="w-full bg-[#8FA0B2]/95 border-b border-black/10 px-4 md:px-8 py-2.5 backdrop-blur-md sticky top-0 z-30 shadow-sm">
+            <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 overflow-x-auto scrollbar-none py-0.5">
+              <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-[#0B1320] shrink-0 flex items-center gap-1.5 mr-2">
+                <Settings className="w-3.5 h-3.5 text-[#0E2A47]" />
+                CMS Configuration
+              </span>
+              <div className="flex items-center gap-1.5 shrink-0">
+                {CMS_SUB_TABS.map((tab) => {
+                  const isActive =
+                    tab.href === '/admin/settings'
+                      ? pathname === '/admin/settings'
+                      : pathname.startsWith(tab.href) ||
+                        (tab.href === '/admin/homepage-video' && pathname === '/admin/homepage')
+                  return (
+                    <Link
+                      key={tab.label}
+                      href={tab.href}
+                      className={`px-3 py-1.5 rounded-md text-[11px] font-medium font-mono tracking-tight transition-all shrink-0 ${
+                        isActive
+                          ? 'bg-white text-[#0B1320] font-bold shadow-sm border border-black/15'
+                          : 'text-[#1E293B] hover:text-[#0B1320] hover:bg-white/40'
+                      }`}
+                    >
+                      {tab.label}
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
         <div className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto">
           {children}
         </div>

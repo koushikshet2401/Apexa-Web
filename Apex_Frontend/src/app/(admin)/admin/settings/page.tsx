@@ -1,7 +1,90 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Settings, Globe, Bell, Shield, Database, Save, CheckCircle2 } from 'lucide-react'
+import Link from 'next/link'
+import {
+  Settings,
+  Globe,
+  Bell,
+  Shield,
+  Database,
+  Save,
+  CheckCircle2,
+  Film,
+  Layers,
+  Building2,
+  Sparkles,
+  Orbit,
+  FolderOpen,
+  ChevronRight,
+  FileText,
+} from 'lucide-react'
+
+const CMS_SECTIONS = [
+  {
+    title: 'Homepage Video & Media',
+    description: 'Manage the master homepage background video, poster frame, and player behavior.',
+    href: '/admin/homepage-video',
+    icon: Film,
+    badge: 'Hero Video',
+  },
+  {
+    title: 'Homepage Section Copy',
+    description: 'Edit Unveil, Collection, Spaces in Round, and Private Advisory headings and descriptions.',
+    href: '/admin/homepage',
+    icon: FileText,
+    badge: 'Editorial Copy',
+  },
+  {
+    title: 'One Team, End to End',
+    description: 'Configure the 4 architectural category cards, center video reel, and section copy.',
+    href: '/admin/one-team',
+    icon: Layers,
+    badge: 'One Team CMS',
+  },
+  {
+    title: 'Country Collections Media',
+    description: 'Manage independent hero videos and cover artwork for UAE, Thailand, Malaysia, Australia, and Georgia.',
+    href: '/admin/collection-media',
+    icon: Globe,
+    badge: 'Destinations',
+  },
+  {
+    title: 'Countries Directory',
+    description: 'Edit country tags, descriptions, regional classifications, and display ordering.',
+    href: '/admin/countries',
+    icon: Building2,
+    badge: '5 Countries',
+  },
+  {
+    title: 'Advisory Services',
+    description: 'Manage Luxury Villas, Commercial, Sky Residences, and Waterfront services and deliverables.',
+    href: '/admin/services',
+    icon: Shield,
+    badge: '4 Services',
+  },
+  {
+    title: 'Featured Launches Stack',
+    description: 'Curate properties for the pinned cinematic scroll stack and arrange display order.',
+    href: '/admin/launches',
+    icon: Sparkles,
+    badge: 'Cinematic Stack',
+  },
+  {
+    title: 'Spaces in the Round',
+    description: 'Curate the 3D rotating carousel cards, assign properties, and set display order.',
+    href: '/admin/space-in-round',
+    icon: Orbit,
+    badge: '3D Carousel',
+  },
+  {
+    title: 'Cloudflare R2 Media Library',
+    description: 'Browse, inspect, upload, and organize all property images, videos, and layouts in Cloudflare R2.',
+    href: '/admin/media',
+    icon: FolderOpen,
+    badge: 'R2 Storage',
+  },
+]
 
 export default function AdminSettingsPage() {
   const [platformName, setPlatformName] = useState('Apex Pacific Holdings')
@@ -34,6 +117,57 @@ export default function AdminSettingsPage() {
           <span>Settings successfully updated.</span>
         </div>
       )}
+
+      {/* Website CMS & Content Management Quick Hub */}
+      <div className="bg-[#070E1C] border border-white/10 rounded-xl p-6 space-y-4 shadow-sm">
+        <div className="flex items-center justify-between pb-3 border-b border-white/10">
+          <div className="flex items-center gap-2">
+            <Globe className="w-4 h-4 text-[#7DD3FC]" />
+            <h2 className="text-sm font-semibold text-white">Website CMS &amp; Content Management</h2>
+          </div>
+          <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">
+            All Content Database-Driven
+          </span>
+        </div>
+
+        <p className="text-xs text-gray-300 leading-relaxed">
+          Manage all public website content, hero videos, editorial text, country collections, services, launches, and media without editing code or database records.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-1">
+          {CMS_SECTIONS.map((section) => {
+            const Icon = section.icon
+            return (
+              <Link
+                key={section.title}
+                href={section.href}
+                className="group p-4 rounded-xl bg-[#040810] border border-white/10 hover:border-[#7DD3FC]/50 hover:bg-white/[0.03] transition-all flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[#7DD3FC] group-hover:bg-[#7DD3FC]/15 group-hover:border-[#7DD3FC]/30 transition-all">
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-white/5 text-gray-300 border border-white/10 uppercase tracking-wider">
+                      {section.badge}
+                    </span>
+                  </div>
+                  <h3 className="text-xs font-semibold text-white group-hover:text-[#7DD3FC] transition-colors mb-1">
+                    {section.title}
+                  </h3>
+                  <p className="text-[11px] text-gray-400 leading-relaxed">
+                    {section.description}
+                  </p>
+                </div>
+                <div className="pt-3 mt-3 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-[#7DD3FC] group-hover:translate-x-0.5 transition-transform">
+                  <span>Manage Content</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      </div>
 
       <form onSubmit={handleSave} className="space-y-6">
         {/* Brand & Platform */}

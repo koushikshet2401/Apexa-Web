@@ -18,7 +18,27 @@ import { useTheme } from '@/components/providers/ThemeProvider'
 import { themeTokens } from '@/lib/theme'
 import { cn } from '@/lib/utils'
 
-export function ContactForm({ serviceOptions }: { serviceOptions?: string[] }) {
+export interface ContactCmsData {
+  contactEyebrow?: string | null
+  contactHeading?: string | null
+  contactDescription?: string | null
+  contactPhone?: string | null
+  contactEmail?: string | null
+  contactOfficeAddress?: string | null
+  contactWhatsappNumber?: string | null
+  contactFormHeading?: string | null
+  contactFormSubtext?: string | null
+  contactSuccessHeading?: string | null
+  contactSuccessSubtext?: string | null
+}
+
+export function ContactForm({
+  serviceOptions,
+  contactCms,
+}: {
+  serviceOptions?: string[]
+  contactCms?: ContactCmsData | null
+}) {
   const { isLight } = useTheme()
   const searchParams = useSearchParams()
   const prefillPropertyId = searchParams.get('propertyId') || ''
@@ -194,16 +214,16 @@ export function ContactForm({ serviceOptions }: { serviceOptions?: string[] }) {
         <div className="flex items-center justify-center gap-3 mb-3">
           <span className={cn("w-8 h-px transition-colors", themeTokens.contact.tagLine(isLight))} />
           <span className={cn("font-mono text-xs tracking-[0.25em] uppercase font-medium transition-colors", themeTokens.contact.tag(isLight))}>
-            Private Enquiries &amp; Advisory
+            {contactCms?.contactEyebrow || 'Private Enquiries & Advisory'}
           </span>
           <span className={cn("w-8 h-px transition-colors", themeTokens.contact.tagLine(isLight))} />
         </div>
 
         <h1 className={cn("heading-display text-3xl sm:text-5xl font-light mb-3 transition-colors", themeTokens.contact.heading(isLight))}>
-          Connect With Our Desk
+          {contactCms?.contactHeading || 'Connect With Our Desk'}
         </h1>
         <p className={cn("font-sans text-xs sm:text-sm font-light leading-relaxed transition-colors", themeTokens.contact.subheading(isLight))}>
-          Please enter your requirements below. Our advisory office will review your enquiry confidentially and respond with a curated dossier.
+          {contactCms?.contactDescription || 'Please enter your requirements below. Our advisory office will review your enquiry confidentially and respond with a curated dossier.'}
         </p>
       </div>
 
@@ -225,11 +245,11 @@ export function ContactForm({ serviceOptions }: { serviceOptions?: string[] }) {
               </div>
 
               <h2 className={cn("heading-display text-2xl sm:text-3xl mb-3 transition-colors", themeTokens.contact.heading(isLight))}>
-                Enquiry Received
+                {contactCms?.contactSuccessHeading || 'Enquiry Received'}
               </h2>
 
               <p className={cn("font-light text-sm sm:text-base mb-6 leading-relaxed transition-colors", themeTokens.contact.subheading(isLight))}>
-                Thank you for registering your interest with Apex Pacific Holdings. Our partners will review your requirements and follow up confidentially.
+                {contactCms?.contactSuccessSubtext || 'Thank you for registering your interest with Apex Pacific Holdings. Our partners will review your requirements and follow up confidentially.'}
               </p>
 
               {submissionId && (
@@ -506,6 +526,66 @@ export function ContactForm({ serviceOptions }: { serviceOptions?: string[] }) {
             </form>
           )}
         </div>
+
+        {/* Global Advisory Channels Strip (Configured via CMS) */}
+        {(contactCms?.contactPhone || contactCms?.contactEmail || contactCms?.contactWhatsappNumber || contactCms?.contactOfficeAddress) && (
+          <div className={cn(
+            "mt-8 p-6 rounded-2xl border backdrop-blur-xl transition-colors duration-300 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-center sm:text-left",
+            themeTokens.contact.formCard(isLight)
+          )}>
+            {contactCms?.contactPhone && (
+              <div>
+                <span className={cn("block text-[10px] font-mono tracking-wider uppercase mb-1 opacity-60", isLight ? "text-[#0B1325]" : "text-white")}>
+                  Telephone Advisory
+                </span>
+                <a
+                  href={`tel:${contactCms.contactPhone.replace(/\s+/g, '')}`}
+                  className={cn("text-xs font-mono font-medium hover:underline transition-colors", isLight ? "text-[#0B1325]" : "text-[#7DD3FC]")}
+                >
+                  {contactCms.contactPhone}
+                </a>
+              </div>
+            )}
+            {contactCms?.contactEmail && (
+              <div>
+                <span className={cn("block text-[10px] font-mono tracking-wider uppercase mb-1 opacity-60", isLight ? "text-[#0B1325]" : "text-white")}>
+                  Official Concierge
+                </span>
+                <a
+                  href={`mailto:${contactCms.contactEmail}`}
+                  className={cn("text-xs font-mono font-medium hover:underline transition-colors break-all", isLight ? "text-[#0B1325]" : "text-[#7DD3FC]")}
+                >
+                  {contactCms.contactEmail}
+                </a>
+              </div>
+            )}
+            {contactCms?.contactWhatsappNumber && (
+              <div>
+                <span className={cn("block text-[10px] font-mono tracking-wider uppercase mb-1 opacity-60", isLight ? "text-[#0B1325]" : "text-white")}>
+                  WhatsApp Concierge
+                </span>
+                <a
+                  href={`https://wa.me/${contactCms.contactWhatsappNumber.replace(/\D/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn("text-xs font-mono font-medium hover:underline transition-colors", isLight ? "text-[#0B1325]" : "text-[#7DD3FC]")}
+                >
+                  {contactCms.contactWhatsappNumber}
+                </a>
+              </div>
+            )}
+            {contactCms?.contactOfficeAddress && (
+              <div>
+                <span className={cn("block text-[10px] font-mono tracking-wider uppercase mb-1 opacity-60", isLight ? "text-[#0B1325]" : "text-white")}>
+                  Headquarters
+                </span>
+                <p className={cn("text-xs font-light leading-snug", isLight ? "text-[#0B1325]/80" : "text-white/80")}>
+                  {contactCms.contactOfficeAddress}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

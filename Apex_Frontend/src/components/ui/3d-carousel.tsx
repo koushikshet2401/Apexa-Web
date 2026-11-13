@@ -63,21 +63,6 @@ export interface CarouselCardItem {
   country?: string
 }
 
-const defaultStockImages = [
-  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&q=80&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1540541338287-41700207dee6?w=1200&q=80&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1615460549969-36fa19521a4f?w=1200&q=80&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1563911302283-d2bc129e7570?w=1200&q=80&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1565008576549-57569a49371d?w=1200&q=80&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1504615755583-2916b52192a3?w=1200&q=80&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1523217582562-09d0def993a6?w=1200&q=80&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=80&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=1200&q=80&auto=format&fit=crop",
-]
-
 const duration = 0.15
 const transition = { duration, ease: [0.32, 0.72, 0, 1] as const }
 const transitionOverlay = { duration: 0.5, ease: [0.32, 0.72, 0, 1] as const }
@@ -348,7 +333,7 @@ function ThreeDPhotoCarousel({
       }
       return customCards
     }
-    return defaultStockImages
+    return []
   }, [customCards])
 
   const handleClick = (imgUrl: string, index: number, item?: CarouselCardItem) => {
@@ -377,6 +362,22 @@ function ThreeDPhotoCarousel({
   const handleNext = () => {
     const angleStep = 360 / Math.max(cards.length, 1)
     rotateRef.current?.(angleStep)
+  }
+
+  if (cards.length === 0) {
+    return (
+      <div className={cn("relative w-full flex flex-col items-center justify-center py-12 px-4 text-center", heightClassName, className)}>
+        <p className={cn("font-mono text-xs uppercase tracking-[0.24em] mb-2 opacity-60", activeIsLight ? "text-[#0B1320]" : "text-white")}>
+          SPACES IN THE ROUND
+        </p>
+        <p className={cn("font-serif text-lg sm:text-xl font-light opacity-80", activeIsLight ? "text-[#0B1320]" : "text-white")}>
+          No residences currently assigned to Spaces in the Round
+        </p>
+        <p className={cn("font-sans text-xs mt-1 max-w-sm font-light opacity-50", activeIsLight ? "text-[#0B1320]" : "text-white")}>
+          Curate properties in the Admin Panel to display them in this circular perspective gallery.
+        </p>
+      </div>
+    )
   }
 
   return (

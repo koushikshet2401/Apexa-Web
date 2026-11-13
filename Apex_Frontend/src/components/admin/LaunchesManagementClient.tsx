@@ -12,6 +12,7 @@ import {
   X,
   ExternalLink,
   Building2,
+  Edit,
 } from 'lucide-react'
 
 interface LaunchProperty {
@@ -267,6 +268,13 @@ export default function LaunchesManagementClient({
                           title="Preview Listing"
                         >
                           <ExternalLink className="w-4 h-4" />
+                        </Link>
+                        <Link
+                          href={`/admin/properties/${l.id}`}
+                          className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-white/[0.04] inline-flex items-center"
+                          title="Edit Launch Details & Media"
+                        >
+                          <Edit className="w-4 h-4" />
                         </Link>
                       </td>
                     </tr>

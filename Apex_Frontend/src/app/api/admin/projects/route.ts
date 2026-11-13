@@ -5,6 +5,7 @@ import { logAdminActivity } from '@/lib/activityLog'
 import { reconcileFeaturedLaunches } from '@/lib/launchesQueue'
 import { validateAndNormalizePricing } from '@/lib/projectValidation'
 import { syncProjectMediaAssets } from '@/lib/mediaAssetStore'
+import { revalidatePropertyCms } from '@/lib/revalidate'
 import { Prisma } from '@prisma/client'
 
 /**
@@ -296,6 +297,12 @@ export async function POST(request: NextRequest) {
         askingCurrency: pricing.askingCurrency,
         isPOA: pricing.isPOA,
       },
+    })
+
+    revalidatePropertyCms({
+      slug: project.slug,
+      countrySlug: project.country?.slug,
+      serviceSlugs: project.services.map((ps) => ps.service?.slug).filter(Boolean) as string[],
     })
 
     return NextResponse.json(project, { status: 201 })

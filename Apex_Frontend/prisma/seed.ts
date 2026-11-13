@@ -4,6 +4,9 @@ import bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
 async function main() {
+  if (process.env.ALLOW_DESTRUCTIVE_SEED !== 'true') {
+    throw new Error('SAFETY ABORT: Destructive seed is disabled to protect production and customer data. Use prisma/seed_safe.ts instead.')
+  }
   console.log('--- Clearing existing data ---')
   await prisma.enquiry.deleteMany()
   await prisma.propertyService.deleteMany()

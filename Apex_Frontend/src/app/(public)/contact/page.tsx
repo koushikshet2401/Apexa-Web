@@ -16,9 +16,10 @@ export const metadata: Metadata = {
 
 export default async function ContactPage() {
   let advisoryVideoUrl: string | null = null
-  const [homepage, services] = await Promise.all([
-    db.homepageContent.findFirst({ select: { advisoryVideoUrl: true } }).catch(() => null),
+  const [homepage, services, countries] = await Promise.all([
+    db.homepageContent.findFirst().catch(() => null),
     fetchPublishedServicesFromDb().catch(() => []),
+    db.country.findMany({ where: { isPublished: true }, orderBy: { displayOrder: 'asc' } }).catch(() => []),
   ])
   advisoryVideoUrl = homepage?.advisoryVideoUrl || null
 
@@ -26,7 +27,11 @@ export default async function ContactPage() {
 
   return (
     <>
-      <Navigation />
+      <Navigation
+        initialServices={services.map((s) => ({ id: s.id, slug: s.slug, name: s.title }))}
+        initialCountries={countries.map((c) => ({ id: c.id, slug: c.slug, name: c.name, displayName: c.displayName }))}
+        whatsappNumber={homepage?.contactWhatsappNumber || null}
+      />
       <main className="min-h-screen bg-[#FBF9F6] text-[#0B1325] dark:bg-[#040810] dark:text-[#F8FAFC] pt-32 pb-24 relative overflow-hidden">
         {/* Background Video (Admin-managed via Homepage Content advisoryVideoUrl) */}
         <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
@@ -46,11 +51,14 @@ export default async function ContactPage() {
 
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-8">
           <Suspense fallback={<div className="text-center py-20 text-xs font-mono text-sky-400">Loading advisory portal...</div>}>
-            <ContactForm serviceOptions={serviceOptions} />
+            <ContactForm serviceOptions={serviceOptions} contactCms={homepage} />
           </Suspense>
         </div>
       </main>
-      <Footer />
+      <Footer
+        initialServices={services.map((s) => ({ id: s.id, slug: s.slug, name: s.title }))}
+        initialCountries={countries.map((c) => ({ id: c.id, slug: c.slug, name: c.name, displayName: c.displayName }))}
+      />
     </>
   )
 }

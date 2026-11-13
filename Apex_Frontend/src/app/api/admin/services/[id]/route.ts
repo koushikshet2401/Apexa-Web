@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { revalidatePath } from 'next/cache'
 import { Prisma } from '@prisma/client'
 import { db } from '@/lib/db'
 import { requireAnyPermission, requirePermission, PERMISSIONS } from '@/lib/rbac'
 import { logAdminActivity } from '@/lib/activityLog'
+import { revalidateOneTeamAndServices } from '@/lib/revalidate'
 
 export async function GET(
   request: NextRequest,
@@ -121,15 +121,7 @@ export async function PATCH(
       },
     })
 
-    try {
-      revalidatePath('/')
-      revalidatePath('/services')
-      revalidatePath(`/services/${updated.slug}`)
-      revalidatePath('/admin/services')
-      revalidatePath('/admin/one-team')
-    } catch (revalidateErr) {
-      console.warn('Revalidation warning:', revalidateErr)
-    }
+    revalidateOneTeamAndServices([existing.slug, updated.slug])
 
     await logAdminActivity({
       adminId: auth.id,
@@ -164,6 +156,7 @@ export async function DELETE(
     // Cascade delete propertyServices association
     await db.propertyService.deleteMany({ where: { serviceId: id } })
     await db.serviceCategory.delete({ where: { id } })
+    revalidateOneTeamAndServices([existing.slug])
 
     return NextResponse.json({ ok: true, message: 'Service deleted' })
   } catch (error) {

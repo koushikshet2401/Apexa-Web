@@ -191,6 +191,8 @@ export default function MediaField({
             <div className="flex-1 overflow-y-auto py-4">
               <MediaLibraryClient
                 isModal={true}
+                initialFolder={folder || 'all'}
+                acceptFilter={isVideo ? 'video' : 'image'}
                 onSelect={(url) => {
                   onChange(url)
                   setShowLibraryModal(false)

@@ -14,7 +14,9 @@ import {
   Layers,
   Loader2,
   Edit,
+  FolderOpen,
 } from 'lucide-react'
+import MediaLibraryModal from './MediaLibraryModal'
 
 interface ServiceSummary {
   id: string
@@ -27,6 +29,11 @@ interface ServiceSummary {
 
 export interface OneTeamInitialData {
   id?: string | null
+  sectionEyebrow?: string | null
+  sectionHeading?: string | null
+  sectionDescription?: string | null
+  bannerLabel?: string | null
+  bannerHeading?: string | null
   luxuryVillasImageUrl: string | null
   commercialImageUrl: string | null
   skyResidencesImageUrl?: string | null
@@ -55,6 +62,7 @@ interface ImageSlotCardProps {
   mediaRole: Exclude<OneTeamImageRole, 'ONE_TEAM_VIDEO'>
   uploadingSlot: UploadSlot | null
   onUpload: (file: File, slot: UploadSlot, role: OneTeamImageRole) => void
+  onPickFromLibrary: () => void
   onRemove: () => void
   emptyLabel: string
 }
@@ -68,6 +76,7 @@ function OneTeamImageCard({
   mediaRole,
   uploadingSlot,
   onUpload,
+  onPickFromLibrary,
   onRemove,
   emptyLabel,
 }: ImageSlotCardProps) {
@@ -133,6 +142,16 @@ function OneTeamImageCard({
           <span>{isUploading ? 'Uploading to R2...' : url ? 'Replace Image' : 'Upload Image'}</span>
         </button>
 
+        <button
+          type="button"
+          onClick={onPickFromLibrary}
+          disabled={isUploading}
+          className="px-3.5 py-2 rounded-lg bg-[#0B1528] hover:bg-[#11203B] border border-white/15 text-gray-200 text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+        >
+          <FolderOpen className="w-3.5 h-3.5 text-[#7DD3FC]" />
+          <span>From Library</span>
+        </button>
+
         {url && (
           <button
             type="button"
@@ -154,12 +173,23 @@ export default function OneTeamAdminClient({
   initialData: OneTeamInitialData
 }) {
   const [savedState, setSavedState] = useState({
+    sectionEyebrow: initialData.sectionEyebrow || '',
+    sectionHeading: initialData.sectionHeading || '',
+    sectionDescription: initialData.sectionDescription || '',
+    bannerLabel: initialData.bannerLabel || '',
+    bannerHeading: initialData.bannerHeading || '',
     luxuryVillasImageUrl: initialData.luxuryVillasImageUrl || '',
     commercialImageUrl: initialData.commercialImageUrl || '',
     skyResidencesImageUrl: initialData.skyResidencesImageUrl || '',
     waterfrontImageUrl: initialData.waterfrontImageUrl || '',
     centerVideoUrl: initialData.centerVideoUrl || '',
   })
+
+  const [sectionEyebrow, setSectionEyebrow] = useState(savedState.sectionEyebrow)
+  const [sectionHeading, setSectionHeading] = useState(savedState.sectionHeading)
+  const [sectionDescription, setSectionDescription] = useState(savedState.sectionDescription)
+  const [bannerLabel, setBannerLabel] = useState(savedState.bannerLabel)
+  const [bannerHeading, setBannerHeading] = useState(savedState.bannerHeading)
 
   const [luxuryVillasImageUrl, setLuxuryVillasImageUrl] = useState(savedState.luxuryVillasImageUrl)
   const [commercialImageUrl, setCommercialImageUrl] = useState(savedState.commercialImageUrl)
@@ -170,15 +200,35 @@ export default function OneTeamAdminClient({
   const [uploadingSlot, setUploadingSlot] = useState<UploadSlot | null>(null)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [librarySlot, setLibrarySlot] = useState<UploadSlot | null>(null)
 
   const videoInputRef = useRef<HTMLInputElement>(null)
 
   const hasChanges =
+    sectionEyebrow !== savedState.sectionEyebrow ||
+    sectionHeading !== savedState.sectionHeading ||
+    sectionDescription !== savedState.sectionDescription ||
+    bannerLabel !== savedState.bannerLabel ||
+    bannerHeading !== savedState.bannerHeading ||
     luxuryVillasImageUrl !== savedState.luxuryVillasImageUrl ||
     commercialImageUrl !== savedState.commercialImageUrl ||
     skyResidencesImageUrl !== savedState.skyResidencesImageUrl ||
     waterfrontImageUrl !== savedState.waterfrontImageUrl ||
     centerVideoUrl !== savedState.centerVideoUrl
+
+  const handleDiscard = () => {
+    setSectionEyebrow(savedState.sectionEyebrow)
+    setSectionHeading(savedState.sectionHeading)
+    setSectionDescription(savedState.sectionDescription)
+    setBannerLabel(savedState.bannerLabel)
+    setBannerHeading(savedState.bannerHeading)
+    setLuxuryVillasImageUrl(savedState.luxuryVillasImageUrl)
+    setCommercialImageUrl(savedState.commercialImageUrl)
+    setSkyResidencesImageUrl(savedState.skyResidencesImageUrl)
+    setWaterfrontImageUrl(savedState.waterfrontImageUrl)
+    setCenterVideoUrl(savedState.centerVideoUrl)
+    setToast(null)
+  }
 
   const uploadToR2 = async (
     file: File,
@@ -232,6 +282,11 @@ export default function OneTeamAdminClient({
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          sectionEyebrow: sectionEyebrow.trim() || null,
+          sectionHeading: sectionHeading.trim() || null,
+          sectionDescription: sectionDescription.trim() || null,
+          bannerLabel: bannerLabel.trim() || null,
+          bannerHeading: bannerHeading.trim() || null,
           luxuryVillasImageUrl: (luxuryVillasImageUrl || '').trim() || null,
           commercialImageUrl: (commercialImageUrl || '').trim() || null,
           skyResidencesImageUrl: (skyResidencesImageUrl || '').trim() || null,
@@ -247,6 +302,11 @@ export default function OneTeamAdminClient({
       }
 
       const nextState = {
+        sectionEyebrow: data.sectionEyebrow || '',
+        sectionHeading: data.sectionHeading || '',
+        sectionDescription: data.sectionDescription || '',
+        bannerLabel: data.bannerLabel || '',
+        bannerHeading: data.bannerHeading || '',
         luxuryVillasImageUrl: data.luxuryVillasImageUrl || '',
         commercialImageUrl: data.commercialImageUrl || '',
         skyResidencesImageUrl: data.skyResidencesImageUrl || '',
@@ -254,12 +314,17 @@ export default function OneTeamAdminClient({
         centerVideoUrl: data.centerVideoUrl || '',
       }
       setSavedState(nextState)
+      setSectionEyebrow(nextState.sectionEyebrow)
+      setSectionHeading(nextState.sectionHeading)
+      setSectionDescription(nextState.sectionDescription)
+      setBannerLabel(nextState.bannerLabel)
+      setBannerHeading(nextState.bannerHeading)
       setLuxuryVillasImageUrl(nextState.luxuryVillasImageUrl)
       setCommercialImageUrl(nextState.commercialImageUrl)
       setSkyResidencesImageUrl(nextState.skyResidencesImageUrl)
       setWaterfrontImageUrl(nextState.waterfrontImageUrl)
       setCenterVideoUrl(nextState.centerVideoUrl)
-      setToast({ type: 'success', message: 'One Team, End to End media saved and published!' })
+      setToast({ type: 'success', message: 'One Team, End to End editorial copy & media saved and published!' })
     } catch {
       setToast({ type: 'error', message: 'Network error while saving One Team changes.' })
     } finally {
@@ -279,7 +344,7 @@ export default function OneTeamAdminClient({
             One Team, End to End
           </h1>
           <p className="text-xs text-[#0B1320]/75 mt-1">
-            Manage all 4 architectural service showcase cards (Luxury Villas, Commercial Properties, Sky Residences, Waterfront Residences) and the center video stored in Cloudflare R2.
+            Manage section copy, the 4 architectural service showcase cards, and the center video stored in Cloudflare R2.
           </p>
         </div>
 
@@ -292,6 +357,17 @@ export default function OneTeamAdminClient({
             <ExternalLink className="w-3.5 h-3.5" />
             <span>View Public Section</span>
           </Link>
+
+          {hasChanges && (
+            <button
+              type="button"
+              onClick={handleDiscard}
+              disabled={saving}
+              className="px-4 py-2 rounded-lg bg-black/10 hover:bg-black/20 text-[#0B1320] text-xs font-medium transition-all cursor-pointer"
+            >
+              Discard Changes
+            </button>
+          )}
 
           <button
             type="button"
@@ -331,6 +407,90 @@ export default function OneTeamAdminClient({
         </div>
       )}
 
+      {/* Section Editorial Content */}
+      <div className="bg-[#0B1528] border border-white/10 rounded-2xl p-6 text-white space-y-6 shadow-sm">
+        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+          <div className="flex items-center gap-2.5">
+            <Edit className="w-4 h-4 text-[#7DD3FC]" />
+            <h2 className="text-sm font-semibold tracking-wide text-white uppercase font-mono">
+              Section Editorial Content &amp; Headlines
+            </h2>
+          </div>
+          <span className="text-[11px] font-mono text-gray-400">PostgreSQL CMS Backed</span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label className="block text-xs font-mono uppercase tracking-wider text-gray-300 mb-2">
+              Section Eyebrow Label
+            </label>
+            <input
+              type="text"
+              value={sectionEyebrow}
+              onChange={(e) => setSectionEyebrow(e.target.value)}
+              placeholder="e.g. WHAT WE DO"
+              className="w-full px-3.5 py-2.5 rounded-lg bg-black/30 border border-white/15 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#7DD3FC] transition-colors"
+            />
+            <p className="text-[11px] text-gray-400 mt-1">Appears above the main headline with dual accent lines.</p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-mono uppercase tracking-wider text-gray-300 mb-2">
+              Section Main Heading
+            </label>
+            <input
+              type="text"
+              value={sectionHeading}
+              onChange={(e) => setSectionHeading(e.target.value)}
+              placeholder="e.g. One team, end to end"
+              className="w-full px-3.5 py-2.5 rounded-lg bg-black/30 border border-white/15 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#7DD3FC] transition-colors"
+            />
+            <p className="text-[11px] text-gray-400 mt-1">Main section heading rendered with approved accent styling.</p>
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-xs font-mono uppercase tracking-wider text-gray-300 mb-2">
+              Section Description
+            </label>
+            <textarea
+              rows={2}
+              value={sectionDescription}
+              onChange={(e) => setSectionDescription(e.target.value)}
+              placeholder="e.g. Architectural discipline descriptions..."
+              className="w-full px-3.5 py-2.5 rounded-lg bg-black/30 border border-white/15 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#7DD3FC] transition-colors resize-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-mono uppercase tracking-wider text-gray-300 mb-2">
+              Sticky Banner Label
+            </label>
+            <input
+              type="text"
+              value={bannerLabel}
+              onChange={(e) => setBannerLabel(e.target.value)}
+              placeholder="e.g. APEX PACIFIC HOLDINGS"
+              className="w-full px-3.5 py-2.5 rounded-lg bg-black/30 border border-white/15 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#7DD3FC] transition-colors"
+            />
+            <p className="text-[11px] text-gray-400 mt-1">Top badge inside the center floating card banner.</p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-mono uppercase tracking-wider text-gray-300 mb-2">
+              Sticky Banner Heading
+            </label>
+            <input
+              type="text"
+              value={bannerHeading}
+              onChange={(e) => setBannerHeading(e.target.value)}
+              placeholder="e.g. One team, end to end"
+              className="w-full px-3.5 py-2.5 rounded-lg bg-black/30 border border-white/15 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#7DD3FC] transition-colors"
+            />
+            <p className="text-[11px] text-gray-400 mt-1">Primary title inside the center floating card banner.</p>
+          </div>
+        </div>
+      </div>
+
       {/* Top Row Cards (Sections A & B) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <OneTeamImageCard
@@ -342,6 +502,7 @@ export default function OneTeamAdminClient({
           mediaRole="ONE_TEAM_VILLA"
           uploadingSlot={uploadingSlot}
           onUpload={uploadToR2}
+          onPickFromLibrary={() => setLibrarySlot('villas')}
           onRemove={() => setLuxuryVillasImageUrl('')}
           emptyLabel="No Luxury Villas image set"
         />
@@ -355,6 +516,7 @@ export default function OneTeamAdminClient({
           mediaRole="ONE_TEAM_COMMERCIAL"
           uploadingSlot={uploadingSlot}
           onUpload={uploadToR2}
+          onPickFromLibrary={() => setLibrarySlot('commercial')}
           onRemove={() => setCommercialImageUrl('')}
           emptyLabel="No Commercial Properties image set"
         />
@@ -435,6 +597,16 @@ export default function OneTeamAdminClient({
               </span>
             </button>
 
+            <button
+              type="button"
+              onClick={() => setLibrarySlot('video')}
+              disabled={uploadingSlot === 'video'}
+              className="px-3.5 py-2 rounded-lg bg-[#0B1528] hover:bg-[#11203B] border border-white/15 text-gray-200 text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+            >
+              <FolderOpen className="w-3.5 h-3.5 text-[#7DD3FC]" />
+              <span>From Library</span>
+            </button>
+
             {centerVideoUrl && (
               <button
                 type="button"
@@ -460,6 +632,7 @@ export default function OneTeamAdminClient({
           mediaRole="ONE_TEAM_SKY"
           uploadingSlot={uploadingSlot}
           onUpload={uploadToR2}
+          onPickFromLibrary={() => setLibrarySlot('sky')}
           onRemove={() => setSkyResidencesImageUrl('')}
           emptyLabel="No Sky Residences image set"
         />
@@ -473,6 +646,7 @@ export default function OneTeamAdminClient({
           mediaRole="ONE_TEAM_WATERFRONT"
           uploadingSlot={uploadingSlot}
           onUpload={uploadToR2}
+          onPickFromLibrary={() => setLibrarySlot('waterfront')}
           onRemove={() => setWaterfrontImageUrl('')}
           emptyLabel="No Waterfront Residences image set"
         />
@@ -531,6 +705,26 @@ export default function OneTeamAdminClient({
           </div>
         </div>
       )}
+
+      <MediaLibraryModal
+        open={librarySlot !== null}
+        title={
+          librarySlot === 'video'
+            ? 'Choose Center Video from Library'
+            : 'Choose One Team Card Image from Library'
+        }
+        initialFolder="one-team"
+        acceptFilter={librarySlot === 'video' ? 'video' : 'image'}
+        onSelect={(url) => {
+          if (librarySlot === 'villas') setLuxuryVillasImageUrl(url)
+          if (librarySlot === 'commercial') setCommercialImageUrl(url)
+          if (librarySlot === 'sky') setSkyResidencesImageUrl(url)
+          if (librarySlot === 'waterfront') setWaterfrontImageUrl(url)
+          if (librarySlot === 'video') setCenterVideoUrl(url)
+          setLibrarySlot(null)
+        }}
+        onClose={() => setLibrarySlot(null)}
+      />
     </div>
   )
 }

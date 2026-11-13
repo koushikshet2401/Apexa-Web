@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { requirePermission, PERMISSIONS } from '@/lib/rbac'
 import { logAdminActivity } from '@/lib/activityLog'
+import { revalidateCollectionAndCountries } from '@/lib/revalidate'
 
 export async function GET(
   request: NextRequest,
@@ -101,14 +101,25 @@ export async function PATCH(
       },
     })
 
-    try {
-      revalidatePath('/')
-      revalidatePath(`/collection/${updated.slug}`)
-      revalidatePath('/admin/countries')
-      revalidatePath('/admin/collection-media')
-    } catch (revalidateErr) {
-      console.warn('Revalidation warning:', revalidateErr)
+    if (cardImage !== undefined || heroVideoUrl !== undefined || heroVideoThumb !== undefined) {
+      const nextCover = cardImage !== undefined ? (cardImage || null) : (heroVideoThumb !== undefined ? (heroVideoThumb || null) : undefined)
+      await db.collectionMedia.upsert({
+        where: { countryId: id },
+        create: {
+          countryId: id,
+          coverImageUrl: nextCover ?? null,
+          heroVideoUrl: heroVideoUrl || null,
+          updatedBy: auth.email,
+        },
+        update: {
+          ...(nextCover !== undefined && { coverImageUrl: nextCover }),
+          ...(heroVideoUrl !== undefined && { heroVideoUrl: heroVideoUrl || null }),
+          updatedBy: auth.email,
+        },
+      })
     }
+
+    revalidateCollectionAndCountries([existing.slug, updated.slug])
 
     await logAdminActivity({
       adminId: auth.id,
@@ -146,7 +157,8 @@ export async function DELETE(
       )
     }
 
-    await db.country.delete({ where: { id } })
+    const deleted = await db.country.delete({ where: { id } })
+    revalidateCollectionAndCountries([deleted.slug])
     return NextResponse.json({ ok: true, message: 'Country deleted' })
   } catch (error) {
     console.error('Error deleting country:', error)

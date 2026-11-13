@@ -23,8 +23,10 @@ import {
   Check,
   MapPin,
   ExternalLink,
+  FolderOpen,
 } from 'lucide-react'
 import MediaField from './MediaField'
+import MediaLibraryModal from './MediaLibraryModal'
 import { SUPPORTED_CURRENCY_CODES } from '@/config/currencies'
 
 interface CountryOption {
@@ -70,6 +72,62 @@ const DEFAULT_GALLERY_SLOTS: GalleryImageItem[] = [
   { url: '', alt: 'Private Courtyard & Pool', description: 'Sun-drenched outdoor lap pool and landscaped terrace', order: 3 },
   { url: '', alt: 'Architectural Wellness Suite', description: 'Private spa, sauna, and wellness pavilion', order: 4 },
 ]
+
+function hydrateGallerySlots(images?: any[]): GalleryImageItem[] {
+  if (!Array.isArray(images) || images.length === 0) {
+    return DEFAULT_GALLERY_SLOTS.map((slot) => ({ ...slot }))
+  }
+
+  const maxOrder = images.reduce((max, img, idx) => {
+    const pos = typeof img?.order === 'number' && Number.isInteger(img.order) && img.order >= 0 ? img.order : idx
+    return Math.max(max, pos)
+  }, -1)
+
+  const slotCount = Math.max(5, maxOrder + 1, images.length)
+  const slots: Array<GalleryImageItem | null> = Array(slotCount).fill(null)
+  const overflow: any[] = []
+
+  // Preserve sparse order positions so cleared/missing gallery slots stay in-place
+  for (const img of images) {
+    const pos = img?.order
+    if (typeof pos === 'number' && Number.isInteger(pos) && pos >= 0 && pos < slotCount && !slots[pos]) {
+      slots[pos] = {
+        id: img.id,
+        url: img.url || '',
+        alt: img.alt || img.description || `Space 0${pos + 1}`,
+        description: img.description || '',
+        order: pos,
+      }
+    } else {
+      overflow.push(img)
+    }
+  }
+
+  let cursor = 0
+  for (const img of overflow) {
+    while (cursor < slotCount && slots[cursor]) cursor++
+    if (cursor < slotCount) {
+      slots[cursor] = {
+        id: img.id,
+        url: img.url || '',
+        alt: img.alt || img.description || `Space 0${cursor + 1}`,
+        description: img.description || '',
+        order: cursor,
+      }
+    }
+  }
+
+  return slots.map((slot, idx) => {
+    if (slot) return slot
+    const fallback = DEFAULT_GALLERY_SLOTS[idx]
+    return {
+      url: '',
+      alt: fallback?.alt || `Architectural Feature 0${idx + 1}`,
+      description: fallback?.description || '',
+      order: idx,
+    }
+  })
+}
 
 export default function PropertyForm({
   initialProperty,
@@ -191,28 +249,9 @@ export default function PropertyForm({
   const [mainVideoUrl, setMainVideoUrl] = useState(initialProperty?.mainVideoUrl || '')
 
   // Multiple Gallery Images with Individual Descriptions (At least 5 slots)
-  const [galleryImages, setGalleryImages] = useState<GalleryImageItem[]>(() => {
-    if (initialProperty?.images && initialProperty.images.length > 0) {
-      const existing = initialProperty.images.map((img: any, idx: number) => ({
-        id: img.id,
-        url: img.url || '',
-        alt: img.alt || img.description || `Space 0${idx + 1}`,
-        description: img.description || '',
-        order: img.order ?? idx,
-      }))
-      const padded = [...existing]
-      while (padded.length < 5) {
-        padded.push({
-          url: '',
-          alt: `Architectural Feature 0${padded.length + 1}`,
-          description: '',
-          order: padded.length,
-        })
-      }
-      return padded
-    }
-    return DEFAULT_GALLERY_SLOTS
-  })
+  const [galleryImages, setGalleryImages] = useState<GalleryImageItem[]>(() =>
+    hydrateGallerySlots(initialProperty?.images)
+  )
 
   // 4. Curation Flags
   const [isFeaturedLaunch, setIsFeaturedLaunch] = useState<boolean>(
@@ -232,6 +271,7 @@ export default function PropertyForm({
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [uploadingSlot, setUploadingSlot] = useState<number | null>(null)
+  const [librarySlotIdx, setLibrarySlotIdx] = useState<number | null>(null)
 
   // Auto-generate slug from name if creating
   const handleNameChange = (val: string) => {
@@ -385,7 +425,13 @@ export default function PropertyForm({
       return
     }
 
-    if (!isPOA && (!askingPriceNumeric || parseFloat(askingPriceNumeric) <= 0)) {
+    const parsedNumericInput = askingPriceNumeric.trim() ? parseFloat(askingPriceNumeric) : null
+    const hasValidPrice =
+      isPOA ||
+      (parsedNumericInput !== null && parsedNumericInput > 0) ||
+      (isEditing && Boolean(customPrice.trim()))
+
+    if (!hasValidPrice) {
       setToast({
         type: 'error',
         message: 'Please provide an Asking Price or enable Price on Application (POA).',
@@ -397,14 +443,15 @@ export default function PropertyForm({
       setSaving(true)
       setToast(null)
 
-      // Filter gallery images that have actual URLs
+      // Filter gallery images that have actual URLs while preserving each slot's sparse order
       const validGalleryImages = galleryImages
-        .filter((img) => img.url && img.url.trim())
-        .map((img, idx) => ({
+        .map((img, slotIdx) => ({ img, slotIdx }))
+        .filter(({ img }) => Boolean(img.url && img.url.trim()))
+        .map(({ img, slotIdx }) => ({
           url: img.url.trim(),
-          alt: img.alt?.trim() || img.description?.trim() || `Space 0${idx + 1}`,
+          alt: img.alt?.trim() || img.description?.trim() || `Space 0${slotIdx + 1}`,
           description: img.description?.trim() || '',
-          order: idx,
+          order: slotIdx,
         }))
 
       // Cleaned 6 highlights
@@ -505,18 +552,21 @@ export default function PropertyForm({
           throw new Error(errData.error || 'Failed to update project details')
         }
 
-        // 2. Update price if changed
+        // 2. Update price if explicitly changed (preserve legacy formatted-only prices during media edits)
         const currentInitialNum =
           initialProperty.askingPriceNumeric !== null && initialProperty.askingPriceNumeric !== undefined
             ? Number(initialProperty.askingPriceNumeric)
             : null
         const currentInitialCur = initialProperty.askingCurrency || null
         const currentInitialPOA = Boolean(initialProperty.isPOA)
+        const nextNumericVal =
+          !isPOA && askingPriceNumeric.trim() ? parseFloat(askingPriceNumeric) : null
+        const nextCurrencyVal = !isPOA && nextNumericVal !== null ? askingCurrency : null
 
         const pricingChanged =
           currentInitialPOA !== isPOA ||
-          currentInitialCur !== (isPOA ? null : askingCurrency) ||
-          currentInitialNum !== (isPOA ? null : parseFloat(askingPriceNumeric))
+          currentInitialNum !== nextNumericVal ||
+          (currentInitialNum !== null && currentInitialCur !== nextCurrencyVal)
 
         if (pricingChanged) {
           await fetch(`/api/admin/properties/${initialProperty.id}/price`, {
@@ -525,8 +575,8 @@ export default function PropertyForm({
             body: JSON.stringify({
               reason: 'Administrative price update via project edit form',
               isPOA,
-              askingPriceNumeric: !isPOA && askingPriceNumeric ? parseFloat(askingPriceNumeric) : null,
-              askingCurrency: !isPOA ? askingCurrency : null,
+              askingPriceNumeric: nextNumericVal,
+              askingCurrency: nextCurrencyVal,
             }),
           })
         }
@@ -1109,7 +1159,7 @@ export default function PropertyForm({
                           alt={slot.alt || 'Gallery image'}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            ;(e.currentTarget as any).src = '/images/placeholder.jpg'
+                            ;(e.currentTarget as HTMLElement).style.display = 'none'
                           }}
                         />
                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/box:opacity-100 flex items-center justify-center gap-2 transition-opacity">
@@ -1123,6 +1173,7 @@ export default function PropertyForm({
                                 if (e.target.files && e.target.files[0]) {
                                   handleGalleryFileUpload(idx, e.target.files[0])
                                 }
+                                e.currentTarget.value = ''
                               }}
                             />
                           </label>
@@ -1148,21 +1199,31 @@ export default function PropertyForm({
                             if (e.target.files && e.target.files[0]) {
                               handleGalleryFileUpload(idx, e.target.files[0])
                             }
+                            e.currentTarget.value = ''
                           }}
                         />
                       </label>
                     )}
                   </div>
 
-                  {/* Manual URL Input fallback */}
-                  <div className="mt-2">
+                  {/* Manual URL Input + From Library button */}
+                  <div className="mt-2 flex items-center gap-1.5">
                     <input
                       type="text"
                       value={slot.url}
                       onChange={(e) => handleSlotChange(idx, 'url', e.target.value)}
-                      placeholder="/images/... or https://..."
-                      className="w-full bg-[#070E1C] border border-white/10 rounded px-2.5 py-1 text-[10px] text-white font-mono focus:outline-none focus:border-[#7DD3FC]"
+                      placeholder="https://... or R2 URL"
+                      className="flex-1 min-w-0 bg-[#070E1C] border border-white/10 rounded px-2.5 py-1 text-[10px] text-white font-mono focus:outline-none focus:border-[#7DD3FC]"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setLibrarySlotIdx(idx)}
+                      className="px-2 py-1 rounded bg-[#0B1528] hover:bg-[#11203B] border border-white/15 text-[10px] font-mono text-[#7DD3FC] flex items-center gap-1 shrink-0 cursor-pointer"
+                      title="Choose from Media Library"
+                    >
+                      <FolderOpen className="w-3 h-3" />
+                      <span>Library</span>
+                    </button>
                   </div>
                 </div>
 
@@ -1366,6 +1427,20 @@ export default function PropertyForm({
           </button>
         </div>
       </div>
+
+      <MediaLibraryModal
+        open={librarySlotIdx !== null}
+        title={`Choose Media for: Space 0${(librarySlotIdx ?? 0) + 1}`}
+        initialFolder="properties"
+        acceptFilter="image"
+        onSelect={(url) => {
+          if (librarySlotIdx !== null) {
+            handleSlotChange(librarySlotIdx, 'url', url)
+          }
+          setLibrarySlotIdx(null)
+        }}
+        onClose={() => setLibrarySlotIdx(null)}
+      />
     </div>
   )
 }

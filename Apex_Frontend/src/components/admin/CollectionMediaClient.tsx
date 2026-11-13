@@ -14,7 +14,9 @@ import {
   AlertCircle,
   Loader2,
   Edit,
+  FolderOpen,
 } from 'lucide-react'
+import MediaLibraryModal from './MediaLibraryModal'
 
 export interface CollectionCountryMediaItem {
   countryId: string
@@ -71,6 +73,11 @@ export default function CollectionMediaClient({
   const [uploadingKey, setUploadingKey] = useState<string | null>(null)
   const [savingCountryId, setSavingCountryId] = useState<string | null>(null)
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [libraryTarget, setLibraryTarget] = useState<
+    | { kind: 'advisory' }
+    | { kind: 'country'; countryId: string; displayName: string; field: 'cover' | 'video' }
+    | null
+  >(null)
 
   const coverInputs = useRef<Record<string, HTMLInputElement | null>>({})
   const videoInputs = useRef<Record<string, HTMLInputElement | null>>({})
@@ -419,6 +426,16 @@ export default function CollectionMediaClient({
                 </span>
               </button>
 
+              <button
+                type="button"
+                onClick={() => setLibraryTarget({ kind: 'advisory' })}
+                disabled={uploadingAdvisoryVideo}
+                className="px-3.5 py-2 rounded-lg bg-[#0B1528] hover:bg-[#11203B] border border-white/15 text-xs text-gray-200 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+              >
+                <FolderOpen className="w-3.5 h-3.5 text-[#7DD3FC]" />
+                <span>From Library</span>
+              </button>
+
               {advisoryVideoUrl && (
                 <button
                   type="button"
@@ -571,6 +588,23 @@ export default function CollectionMediaClient({
                       </span>
                     </button>
 
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setLibraryTarget({
+                          kind: 'country',
+                          countryId: country.countryId,
+                          displayName: country.displayName,
+                          field: 'cover',
+                        })
+                      }
+                      disabled={isUploadingCover}
+                      className="px-3.5 py-2 rounded-lg bg-[#0B1528] hover:bg-[#11203B] border border-white/15 text-xs text-gray-200 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      <FolderOpen className="w-3.5 h-3.5 text-[#7DD3FC]" />
+                      <span>From Library</span>
+                    </button>
+
                     {state.coverImageUrl && (
                       <button
                         type="button"
@@ -655,6 +689,23 @@ export default function CollectionMediaClient({
                       </span>
                     </button>
 
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setLibraryTarget({
+                          kind: 'country',
+                          countryId: country.countryId,
+                          displayName: country.displayName,
+                          field: 'video',
+                        })
+                      }
+                      disabled={isUploadingVideo}
+                      className="px-3.5 py-2 rounded-lg bg-[#0B1528] hover:bg-[#11203B] border border-white/15 text-xs text-gray-200 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      <FolderOpen className="w-3.5 h-3.5 text-[#7DD3FC]" />
+                      <span>From Library</span>
+                    </button>
+
                     {state.heroVideoUrl && (
                       <button
                         type="button"
@@ -672,6 +723,39 @@ export default function CollectionMediaClient({
           )
         })}
       </div>
+
+      <MediaLibraryModal
+        open={libraryTarget !== null}
+        title={
+          libraryTarget?.kind === 'advisory'
+            ? 'Choose Speak With Us / Contact Video from Library'
+            : libraryTarget
+              ? `Choose ${libraryTarget.displayName} ${libraryTarget.field === 'cover' ? 'Cover Image' : 'Hero Video'} from Library`
+              : 'Choose Media from Library'
+        }
+        initialFolder={libraryTarget?.kind === 'advisory' ? 'homepage' : 'collection-media'}
+        acceptFilter={
+          libraryTarget?.kind === 'country' && libraryTarget.field === 'cover'
+            ? 'image'
+            : 'video'
+        }
+        onSelect={(url) => {
+          if (libraryTarget?.kind === 'advisory') {
+            setAdvisoryVideoUrl(url)
+          } else if (libraryTarget?.kind === 'country') {
+            const { countryId, field } = libraryTarget
+            setDrafts((prev) => ({
+              ...prev,
+              [countryId]: {
+                ...prev[countryId],
+                ...(field === 'cover' ? { coverImageUrl: url } : { heroVideoUrl: url }),
+              },
+            }))
+          }
+          setLibraryTarget(null)
+        }}
+        onClose={() => setLibraryTarget(null)}
+      />
     </div>
   )
 }

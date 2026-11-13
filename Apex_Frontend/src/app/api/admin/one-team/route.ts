@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { revalidatePath } from 'next/cache'
 import { MediaRole } from '@prisma/client'
 import { db } from '@/lib/db'
 import { PERMISSIONS, requireAnyPermission } from '@/lib/rbac'
 import { logAdminActivity } from '@/lib/activityLog'
 import { isMissingCmsExtensionError, resolveOrUpsertR2AssetId } from '@/lib/mediaAssetStore'
+import { revalidateOneTeamAndServices } from '@/lib/revalidate'
 
 export const dynamic = 'force-dynamic'
 
@@ -65,6 +65,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       id: oneTeam?.id || null,
+      sectionEyebrow: oneTeam?.sectionEyebrow ?? null,
+      sectionHeading: oneTeam?.sectionHeading ?? null,
+      sectionDescription: oneTeam?.sectionDescription ?? null,
+      bannerLabel: oneTeam?.bannerLabel ?? null,
+      bannerHeading: oneTeam?.bannerHeading ?? null,
       luxuryVillasImageUrl: oneTeam?.luxuryVillasImageUrl ?? luxuryVillasService?.image ?? null,
       luxuryVillasMediaAssetId: oneTeam?.luxuryVillasMediaAssetId ?? null,
       commercialImageUrl: oneTeam?.commercialImageUrl ?? commercialService?.image ?? null,
@@ -92,6 +97,11 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const body = await request.json()
+    const sectionEyebrow = sanitizeMediaUrl(body.sectionEyebrow)
+    const sectionHeading = sanitizeMediaUrl(body.sectionHeading)
+    const sectionDescription = sanitizeMediaUrl(body.sectionDescription)
+    const bannerLabel = sanitizeMediaUrl(body.bannerLabel)
+    const bannerHeading = sanitizeMediaUrl(body.bannerHeading)
     const luxuryVillasImageUrl = sanitizeMediaUrl(body.luxuryVillasImageUrl)
     const commercialImageUrl = sanitizeMediaUrl(body.commercialImageUrl)
     const skyResidencesImageUrl = sanitizeMediaUrl(body.skyResidencesImageUrl)
@@ -202,10 +212,26 @@ export async function PATCH(request: NextRequest) {
           }),
         ])
 
+        const nextSectionEyebrow =
+          sectionEyebrow !== undefined ? sectionEyebrow : (existing?.sectionEyebrow ?? null)
+        const nextSectionHeading =
+          sectionHeading !== undefined ? sectionHeading : (existing?.sectionHeading ?? null)
+        const nextSectionDescription =
+          sectionDescription !== undefined ? sectionDescription : (existing?.sectionDescription ?? null)
+        const nextBannerLabel =
+          bannerLabel !== undefined ? bannerLabel : (existing?.bannerLabel ?? null)
+        const nextBannerHeading =
+          bannerHeading !== undefined ? bannerHeading : (existing?.bannerHeading ?? null)
+
         const record = existing
           ? await tx.oneTeamContent.update({
               where: { id: existing.id },
               data: {
+                sectionEyebrow: nextSectionEyebrow,
+                sectionHeading: nextSectionHeading,
+                sectionDescription: nextSectionDescription,
+                bannerLabel: nextBannerLabel,
+                bannerHeading: nextBannerHeading,
                 luxuryVillasImageUrl: nextVillasUrl,
                 luxuryVillasMediaAssetId: villasAssetId,
                 commercialImageUrl: nextCommercialUrl,
@@ -221,6 +247,11 @@ export async function PATCH(request: NextRequest) {
             })
           : await tx.oneTeamContent.create({
               data: {
+                sectionEyebrow: nextSectionEyebrow,
+                sectionHeading: nextSectionHeading,
+                sectionDescription: nextSectionDescription,
+                bannerLabel: nextBannerLabel,
+                bannerHeading: nextBannerHeading,
                 luxuryVillasImageUrl: nextVillasUrl,
                 luxuryVillasMediaAssetId: villasAssetId,
                 commercialImageUrl: nextCommercialUrl,
@@ -248,6 +279,11 @@ export async function PATCH(request: NextRequest) {
       })
       updated = {
         id: 'legacy-sync',
+        sectionEyebrow: sectionEyebrow ?? null,
+        sectionHeading: sectionHeading ?? null,
+        sectionDescription: sectionDescription ?? null,
+        bannerLabel: bannerLabel ?? null,
+        bannerHeading: bannerHeading ?? null,
         luxuryVillasImageUrl: luxuryVillasImageUrl ?? null,
         commercialImageUrl: commercialImageUrl ?? null,
         skyResidencesImageUrl: skyResidencesImageUrl ?? null,
@@ -256,17 +292,7 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    try {
-      revalidatePath('/')
-      revalidatePath('/services')
-      revalidatePath('/services/luxury-villas')
-      revalidatePath('/services/commercial-properties')
-      revalidatePath('/services/sky-residences')
-      revalidatePath('/services/waterfront-residences')
-      revalidatePath('/admin/one-team')
-    } catch (revalidateErr) {
-      console.warn('Revalidation warning:', revalidateErr)
-    }
+    revalidateOneTeamAndServices()
 
     await logAdminActivity({
       adminId: auth.id,

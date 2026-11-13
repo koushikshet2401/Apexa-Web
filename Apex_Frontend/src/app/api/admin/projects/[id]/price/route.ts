@@ -6,6 +6,7 @@ import {
   hasForbiddenDescriptiveFields,
   validateAndNormalizePricing,
 } from '@/lib/projectValidation'
+import { revalidatePropertyCms } from '@/lib/revalidate'
 import { Prisma } from '@prisma/client'
 
 /**
@@ -106,6 +107,8 @@ export async function PATCH(
         select: {
           id: true,
           name: true,
+          slug: true,
+          country: { select: { slug: true } },
           askingPriceNumeric: true,
           askingCurrency: true,
           isPOA: true,
@@ -141,6 +144,11 @@ export async function PATCH(
       })
 
       return updated
+    })
+
+    revalidatePropertyCms({
+      slug: result.slug,
+      countrySlug: result.country?.slug,
     })
 
     return NextResponse.json(result)

@@ -505,14 +505,35 @@ model EnquiryReply {
 // ==========================================
 
 model HomepageContent {
-  id               String   @id @default(cuid())
-  heroVideoUrl     String?
-  heroVideoThumb   String?
-  unveilHeading    String?
-  unveilSubtext    String?
-  oneTeamVideoUrl  String?
-  advisoryVideoUrl String?
-  updatedAt        DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  heroVideoUrl          String?
+  heroVideoThumb        String?
+  unveilLabel           String?
+  unveilHeading         String?
+  unveilSubtext         String?
+  oneTeamVideoUrl       String?
+  advisoryVideoUrl      String?
+  collectionEyebrow     String?
+  collectionHeading     String?
+  collectionDescription String?
+  spacesHeading         String?
+  spacesDescription     String?
+  advisoryEyebrow       String?
+  advisoryHeading       String?
+  advisoryDescription   String?
+  advisoryFooterNote    String?
+  contactEyebrow        String?
+  contactHeading        String?
+  contactDescription    String?
+  contactPhone          String?
+  contactEmail          String?
+  contactOfficeAddress  String?
+  contactWhatsappNumber String?
+  contactFormHeading    String?
+  contactFormSubtext    String?
+  contactSuccessHeading String?
+  contactSuccessSubtext String?
+  updatedAt             DateTime @updatedAt
 }
 
 // ==========================================
@@ -521,6 +542,11 @@ model HomepageContent {
 
 model OneTeamContent {
   id                         String      @id @default(cuid())
+  sectionEyebrow             String?
+  sectionHeading             String?
+  sectionDescription         String?
+  bannerLabel                String?
+  bannerHeading              String?
   luxuryVillasImageUrl       String?
   luxuryVillasMediaAssetId   String?
   luxuryVillasMediaAsset     MediaAsset? @relation("OneTeamVillasMedia", fields: [luxuryVillasMediaAssetId], references: [id], onDelete: SetNull)

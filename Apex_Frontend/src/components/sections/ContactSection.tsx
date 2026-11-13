@@ -38,13 +38,22 @@ export function ContactSection({ isOpen, onClose }: ContactSectionProps) {
 
   const [advisoryVideoUrl, setAdvisoryVideoUrl] = useState<string | null>(null)
   const [servicesList, setServicesList] = useState<string[]>(['General Enquiry'])
+  const [cmsData, setCmsData] = useState<{
+    contactEyebrow?: string | null
+    contactHeading?: string | null
+    contactDescription?: string | null
+    contactFormHeading?: string | null
+    contactFormSubtext?: string | null
+    contactSuccessHeading?: string | null
+    contactSuccessSubtext?: string | null
+  } | null>(null)
 
   // Ensure modal closes on route change
   useEffect(() => {
     setIsModalOpen(false)
   }, [pathname])
 
-  // Load dynamic advisory video & published service pillars when dialog opens
+  // Load dynamic advisory video, published service pillars & CMS copy when dialog opens
   useEffect(() => {
     if (!activeOpen) return
     let cancelled = false
@@ -53,6 +62,15 @@ export function ContactSection({ isOpen, onClose }: ContactSectionProps) {
       .then((data) => {
         if (cancelled || !data) return
         setAdvisoryVideoUrl(data.advisoryVideoUrl || null)
+        setCmsData({
+          contactEyebrow: data.contactEyebrow,
+          contactHeading: data.contactHeading,
+          contactDescription: data.contactDescription,
+          contactFormHeading: data.contactFormHeading,
+          contactFormSubtext: data.contactFormSubtext,
+          contactSuccessHeading: data.contactSuccessHeading,
+          contactSuccessSubtext: data.contactSuccessSubtext,
+        })
         if (Array.isArray(data.services) && data.services.length > 0) {
           const names = [...data.services.map((s: { name: string }) => s.name).filter(Boolean), 'General Enquiry']
           setServicesList(names)
@@ -391,16 +409,16 @@ export function ContactSection({ isOpen, onClose }: ContactSectionProps) {
                 <div className="flex items-center justify-center gap-3 mb-2.5">
                   <span className="w-8 h-px bg-sky-400/60" />
                   <span className="font-mono text-xs tracking-[0.25em] text-[#7DD3FC] uppercase font-medium">
-                    Private Enquiries
+                    {cmsData?.contactEyebrow || 'Private Enquiries'}
                   </span>
                   <span className="w-8 h-px bg-sky-400/60" />
                 </div>
 
                 <h2 className="heading-display text-2xl sm:text-3xl md:text-4xl text-white font-light mb-2">
-                  Register Your Interest
+                  {cmsData?.contactHeading || cmsData?.contactFormHeading || 'Register Your Interest'}
                 </h2>
                 <p className="font-sans text-xs sm:text-sm text-[#94A3B8] font-light leading-relaxed">
-                  Please enter your requirements below. Our advisory team will review your enquiry confidentially and respond with a curated dossier.
+                  {cmsData?.contactDescription || cmsData?.contactFormSubtext || 'Please enter your requirements below. Our advisory team will review your enquiry confidentially and respond with a curated dossier.'}
                 </p>
               </div>
 
@@ -425,11 +443,11 @@ export function ContactSection({ isOpen, onClose }: ContactSectionProps) {
                       </div>
 
                       <h3 className="heading-display text-2xl sm:text-3xl text-white mb-3">
-                        Enquiry Received
+                        {cmsData?.contactSuccessHeading || 'Enquiry Received'}
                       </h3>
 
                       <p className="text-[#94A3B8] font-light text-sm sm:text-base mb-6 leading-relaxed">
-                        Thank you for registering your interest with Apex Pacific Holdings. Our team will review your requirements and follow up with a bespoke presentation.
+                        {cmsData?.contactSuccessSubtext || 'Thank you for registering your interest with Apex Pacific Holdings. Our team will review your requirements and follow up with a bespoke presentation.'}
                       </p>
 
                       {submissionId && (

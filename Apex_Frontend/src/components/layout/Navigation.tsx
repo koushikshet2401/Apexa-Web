@@ -27,7 +27,26 @@ const primaryNavLinks = [
   { label: 'About Apex', href: '/#about', id: 'about' },
 ]
 
-export function Navigation({ hasHero }: { hasHero?: boolean }) {
+export interface NavItemSummary {
+  id: string
+  slug: string
+  name: string
+  displayName?: string | null
+}
+
+export interface NavigationProps {
+  hasHero?: boolean
+  initialServices?: NavItemSummary[]
+  initialCountries?: NavItemSummary[]
+  whatsappNumber?: string | null
+}
+
+export function Navigation({
+  hasHero,
+  initialServices,
+  initialCountries,
+  whatsappNumber,
+}: NavigationProps = {}) {
   const pathname = usePathname()
   const router = useRouter()
   const { theme, resolvedTheme } = useTheme()
@@ -36,7 +55,49 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
   const [scrolled, setScrolled] = useState(false)
   const [showBottomNav, setShowBottomNav] = useState(false)
   const [activeBottomNav, setActiveBottomNav] = useState('home')
+  const [services, setServices] = useState<NavItemSummary[]>(initialServices || [])
+  const [countries, setCountries] = useState<NavItemSummary[]>(initialCountries || [])
+  const [waNumber, setWaNumber] = useState<string | null>(whatsappNumber || null)
   const closeRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (initialServices && initialServices.length > 0) setServices(initialServices)
+    if (initialCountries && initialCountries.length > 0) setCountries(initialCountries)
+    if (whatsappNumber !== undefined) setWaNumber(whatsappNumber)
+  }, [initialServices, initialCountries, whatsappNumber])
+
+  useEffect(() => {
+    if ((!initialServices || initialServices.length === 0) || (!initialCountries || initialCountries.length === 0)) {
+      fetch('/api/public/homepage')
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (!data) return
+          if (data.services && (!initialServices || initialServices.length === 0)) {
+            setServices(data.services.map((s: any) => ({ id: s.id, slug: s.slug, name: s.name })))
+          }
+          if (data.countries && (!initialCountries || initialCountries.length === 0)) {
+            setCountries(data.countries.map((c: any) => ({ id: c.id, slug: c.slug, name: c.name, displayName: c.displayName })))
+          }
+          if (data.contactWhatsappNumber && !whatsappNumber) {
+            setWaNumber(data.contactWhatsappNumber)
+          }
+        })
+        .catch(() => {})
+    }
+  }, [initialServices, initialCountries, whatsappNumber])
+
+  const displayServices = services.length > 0 ? services : [
+    { id: '1', slug: 'luxury-villas', name: 'Luxury Villas' },
+    { id: '2', slug: 'sky-residences', name: 'Sky Residences' },
+    { id: '3', slug: 'commercial-properties', name: 'Commercial Properties' },
+  ]
+
+  const cleanWhatsAppDigits = (waNumber || '').replace(/[^0-9]/g, '')
+  const whatsappHref = cleanWhatsAppDigits ? `https://wa.me/${cleanWhatsAppDigits}` : 'https://wa.me/'
+
+  const countryStripText = countries.length > 0
+    ? countries.map((c) => (c.displayName || c.name).toUpperCase()).join(' · ')
+    : 'UAE · THAILAND · MALAYSIA · AUSTRALIA · GEORGIA'
 
   const isLight = mounted && (theme === 'light' || resolvedTheme === 'light')
 
@@ -549,21 +610,18 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
                   }`}>
                     Residences
                   </Link>
-                  <Link href="/services/luxury-villas" onClick={closeMenu} className={`transition-colors cursor-pointer ${
-                    isLight ? 'hover:text-[#0B1325]' : 'hover:text-sky-300'
-                  }`}>
-                    Luxury Villas
-                  </Link>
-                  <Link href="/services/sky-residences" onClick={closeMenu} className={`transition-colors cursor-pointer ${
-                    isLight ? 'hover:text-[#0B1325]' : 'hover:text-sky-300'
-                  }`}>
-                    Sky Residences
-                  </Link>
-                  <Link href="/services/commercial-properties" onClick={closeMenu} className={`transition-colors cursor-pointer ${
-                    isLight ? 'hover:text-[#0B1325]' : 'hover:text-sky-300'
-                  }`}>
-                    Commercial Properties
-                  </Link>
+                  {displayServices.map((svc) => (
+                    <Link
+                      key={svc.id || svc.slug}
+                      href={`/services/${svc.slug}`}
+                      onClick={closeMenu}
+                      className={`transition-colors cursor-pointer ${
+                        isLight ? 'hover:text-[#0B1325]' : 'hover:text-sky-300'
+                      }`}
+                    >
+                      {svc.name}
+                    </Link>
+                  ))}
                 </div>
               </div>
 
@@ -620,7 +678,7 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
                   }`}>
                     Get in touch
                   </button>
-                  <a href="https://wa.me/" target="_blank" rel="noopener noreferrer" onClick={closeMenu} className={`transition-colors cursor-pointer ${
+                  <a href={whatsappHref} target="_blank" rel="noopener noreferrer" onClick={closeMenu} className={`transition-colors cursor-pointer ${
                     isLight ? 'hover:text-[#0B1325]' : 'hover:text-sky-300'
                   }`}>
                     WhatsApp Advisory
@@ -677,7 +735,7 @@ export function Navigation({ hasHero }: { hasHero?: boolean }) {
                 ? 'border-[#0B1325]/10 text-[#6B6661]'
                 : 'border-white/[0.06] text-[#64748B]'
             }`}>
-              <span>UAE · THAILAND · MALAYSIA · AUSTRALIA · GEORGIA</span>
+              <span>{countryStripText}</span>
               <span>CONFIDENTIAL ADVISORY</span>
             </div>
           </div>

@@ -10,6 +10,7 @@ import {
   Sparkles,
   X,
   ExternalLink,
+  Edit,
 } from 'lucide-react'
 
 interface SpaceProperty {
@@ -237,6 +238,13 @@ export default function SpaceInRoundClient({
                           title="Preview Listing"
                         >
                           <ExternalLink className="w-4 h-4" />
+                        </Link>
+                        <Link
+                          href={`/admin/properties/${item.id}`}
+                          className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-white/[0.04] inline-flex items-center"
+                          title="Edit Property Media & Text"
+                        >
+                          <Edit className="w-4 h-4" />
                         </Link>
                       </td>
                     </tr>

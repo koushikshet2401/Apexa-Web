@@ -16,45 +16,6 @@ export interface ScrollingProjectItem {
   beds?: string
 }
 
-const DEFAULT_PROJECTS: ScrollingProjectItem[] = [
-  {
-    title: "The Meridian",
-    src: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop",
-    type: "Signature Sky Residence",
-    city: "Dubai",
-    price: "AED 8.2M",
-    beds: "3–4 Bedrooms",
-    href: "/collection/dubai/the-meridian",
-  },
-  {
-    title: "Aurelia Villa",
-    src: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1600&auto=format&fit=crop",
-    type: "Contemporary Estate",
-    city: "Dubai",
-    price: "₹ 12.5 Cr",
-    beds: "5 Bedrooms",
-    href: "/collection/dubai/aurelia-villa",
-  },
-  {
-    title: "The Peninsula Reserve",
-    src: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1600&auto=format&fit=crop",
-    type: "Waterfront Sanctuary",
-    city: "Thailand",
-    price: "THB 68M",
-    beds: "4–6 Bedrooms",
-    href: "/collection/thailand/the-peninsula-reserve",
-  },
-  {
-    title: "Verdant House",
-    src: "https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?q=80&w=1600&auto=format&fit=crop",
-    type: "Biophilic Villa",
-    city: "Dubai",
-    price: "₹ 28.0 Cr",
-    beds: "6 Bedrooms",
-    href: "/collection/dubai/verdant-house",
-  },
-]
-
 const StickyCard_001 = ({
   i,
   title,
@@ -168,12 +129,22 @@ export function ImagesScrollingAnimation({
   className?: string
 }) {
   const container = useRef<HTMLDivElement>(null)
-  const projectsList = items && items.length > 0 ? items : DEFAULT_PROJECTS
+  const projectsList = items || []
 
   const { scrollYProgress } = useScroll({
     target: container,
     offset: ["start start", "end end"],
   })
+
+  if (projectsList.length === 0) {
+    return (
+      <div className={`relative w-full py-20 flex flex-col items-center justify-center text-center px-4 ${className || ""}`}>
+        <p className="font-mono text-xs uppercase tracking-[0.22em] text-[#94A3B8]">
+          Curated portfolio residences in progress
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div

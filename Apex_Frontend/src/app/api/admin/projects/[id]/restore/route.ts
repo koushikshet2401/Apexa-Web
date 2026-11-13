@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requirePermission, PERMISSIONS } from '@/lib/rbac'
 import { logAdminActivity } from '@/lib/activityLog'
+import { revalidatePropertyCms } from '@/lib/revalidate'
 
 /**
  * POST /api/admin/projects/[id]/restore
@@ -16,7 +17,10 @@ export async function POST(
 
   try {
     const { id } = await params
-    const project = await db.property.findUnique({ where: { id } })
+    const project = await db.property.findUnique({
+      where: { id },
+      include: { country: { select: { slug: true } } },
+    })
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
@@ -51,6 +55,11 @@ export async function POST(
         isPublished: true,
         isArchived: false,
       },
+    })
+
+    revalidatePropertyCms({
+      slug: restored.slug,
+      countrySlug: project.country?.slug,
     })
 
     return NextResponse.json({

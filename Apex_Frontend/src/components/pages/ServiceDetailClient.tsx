@@ -229,8 +229,31 @@ export function ServiceDetailClient({
             isLight ? "bg-[#FBF9F6]" : "bg-[#040810]"
           )}
         >
+          {/* Ambient Service Video (from CMS) */}
+          {service.videoUrl && (
+            <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden z-0">
+              <video
+                src={service.videoUrl}
+                poster={service.image || undefined}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover opacity-20 filter contrast-105"
+              />
+              <div
+                className={cn(
+                  "absolute inset-0",
+                  isLight
+                    ? "bg-gradient-to-t from-[#FBF9F6] via-[#FBF9F6]/85 to-[#FBF9F6]/70"
+                    : "bg-gradient-to-t from-[#040810] via-[#040810]/85 to-[#040810]/70"
+                )}
+              />
+            </div>
+          )}
+
           {/* Top Bar: Back to Services Navigation */}
-          <div className="shrink-0 mb-1.5 sm:mb-4">
+          <div className="shrink-0 mb-1.5 sm:mb-4 relative z-10">
             <button
               onClick={handleBackToServices}
               className={cn(
@@ -244,7 +267,7 @@ export function ServiceDetailClient({
           </div>
 
           {/* Hero Editorial Grid: Fits 100% inside single screen */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-4 sm:gap-6 lg:gap-12 items-center my-auto flex-1 max-h-[calc(100dvh-140px)]">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-4 sm:gap-6 lg:gap-12 items-center my-auto flex-1 max-h-[calc(100dvh-140px)] relative z-10">
             {/* Left Column: Title, Subtitle, Description & Actions */}
             <div className="flex flex-col justify-center">
               <div className="flex items-center gap-2.5 mb-1.5 sm:mb-3">
@@ -355,7 +378,7 @@ export function ServiceDetailClient({
           </div>
 
           {/* Bottom Scroll Prompt */}
-          <div className={cn("shrink-0 flex items-center justify-center gap-2 pt-1 text-[9px] sm:text-[10px] font-mono uppercase tracking-widest transition-colors", themeTokens.serviceDetail.scrollPrompt(isLight))}>
+          <div className={cn("shrink-0 flex items-center justify-center gap-2 pt-1 text-[9px] sm:text-[10px] font-mono uppercase tracking-widest transition-colors relative z-10", themeTokens.serviceDetail.scrollPrompt(isLight))}>
             <span>Scroll to explore signature residences</span>
             <span className="animate-bounce">↓</span>
           </div>

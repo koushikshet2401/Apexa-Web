@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requirePermission, PERMISSIONS } from '@/lib/rbac'
+import { revalidateOneTeamAndServices } from '@/lib/revalidate'
 
 export async function GET(request: NextRequest) {
   const auth = await requirePermission(request, PERMISSIONS.CONTENT_READ)
@@ -92,6 +93,8 @@ export async function POST(request: NextRequest) {
         isPublished: isPublished !== undefined ? Boolean(isPublished) : true,
       },
     })
+
+    revalidateOneTeamAndServices([service.slug])
 
     return NextResponse.json(service, { status: 201 })
   } catch (error) {

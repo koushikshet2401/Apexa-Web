@@ -1,0 +1,712 @@
+[
+  {
+    "key": "collection-media/australia/cover.png",
+    "size": 3364100,
+    "lastModified": "2026-11-12T10:22:34.977Z"
+  },
+  {
+    "key": "collection-media/australia/hero-thumb.png",
+    "size": 238594,
+    "lastModified": "2026-11-12T10:22:57.117Z"
+  },
+  {
+    "key": "collection-media/australia/hero-video.mp4",
+    "size": 20132712,
+    "lastModified": "2026-11-12T10:23:02.690Z"
+  },
+  {
+    "key": "collection-media/dubai/cover-1794477266491-72e0c84f-images.jpg",
+    "size": 57423,
+    "lastModified": "2026-11-12T09:54:26.476Z"
+  },
+  {
+    "key": "collection-media/dubai/hero-video.mp4",
+    "size": 20132712,
+    "lastModified": "2026-11-12T10:22:08.019Z"
+  },
+  {
+    "key": "collection-media/georgia/cover.png",
+    "size": 3343080,
+    "lastModified": "2026-11-12T10:23:05.942Z"
+  },
+  {
+    "key": "collection-media/georgia/hero-thumb.png",
+    "size": 166618,
+    "lastModified": "2026-11-12T10:23:08.725Z"
+  },
+  {
+    "key": "collection-media/georgia/hero-video.mp4",
+    "size": 9579736,
+    "lastModified": "2026-11-12T10:23:14.126Z"
+  },
+  {
+    "key": "collection-media/malaysia/cover.png",
+    "size": 3357109,
+    "lastModified": "2026-11-12T10:22:27.731Z"
+  },
+  {
+    "key": "collection-media/malaysia/hero-thumb.png",
+    "size": 228434,
+    "lastModified": "2026-11-12T10:22:29.531Z"
+  },
+  {
+    "key": "collection-media/malaysia/hero-video.mp4",
+    "size": 7621454,
+    "lastModified": "2026-11-12T10:22:32.468Z"
+  },
+  {
+    "key": "collection-media/thailand/cover.png",
+    "size": 3356093,
+    "lastModified": "2026-11-12T10:22:11.542Z"
+  },
+  {
+    "key": "collection-media/thailand/hero-thumb.png",
+    "size": 2828625,
+    "lastModified": "2026-11-12T10:22:13.798Z"
+  },
+  {
+    "key": "collection-media/thailand/hero-video.mp4",
+    "size": 15125010,
+    "lastModified": "2026-11-12T10:22:24.841Z"
+  },
+  {
+    "key": "homepage/1794463977843-realestate-copyrightfree.mp4",
+    "size": 4134273,
+    "lastModified": "2026-11-12T06:13:00.188Z"
+  },
+  {
+    "key": "homepage/1794464022214-home-page.mp4",
+    "size": 6257796,
+    "lastModified": "2026-11-12T06:13:42.997Z"
+  },
+  {
+    "key": "homepage/1794464054462-home-page.mp4",
+    "size": 6257796,
+    "lastModified": "2026-11-12T06:14:16.240Z"
+  },
+  {
+    "key": "homepage/1794467155343-93dcdd92-gemini-generated-video-0e105bc8.mp4",
+    "size": 3985648,
+    "lastModified": "2026-11-12T07:05:58.989Z"
+  },
+  {
+    "key": "homepage/1794474037077-e091fcfb-home-page.mp4",
+    "size": 6257796,
+    "lastModified": "2026-11-12T09:00:40.025Z"
+  },
+  {
+    "key": "homepage/1794477214711-db708994-real-estate-video-editing-cinematic-realtor-reel-videoediting-re.mp4",
+    "size": 8780142,
+    "lastModified": "2026-11-12T09:53:36.027Z"
+  },
+  {
+    "key": "homepage/1794485900164-4b68a2f8-gemini-generated-video-0e105bc8.mp4",
+    "size": 3985648,
+    "lastModified": "2026-11-12T12:18:22.258Z"
+  },
+  {
+    "key": "homepage/1794485928454-9fda891f-home-page.mp4",
+    "size": 6257796,
+    "lastModified": "2026-11-12T12:18:50.226Z"
+  },
+  {
+    "key": "homepage/hero-thumbnail.png",
+    "size": 196823,
+    "lastModified": "2026-11-12T10:21:27.886Z"
+  },
+  {
+    "key": "homepage/one-team-video.mp4",
+    "size": 14001141,
+    "lastModified": "2026-11-12T10:21:32.529Z"
+  },
+  {
+    "key": "one-team/commercial.png",
+    "size": 228434,
+    "lastModified": "2026-11-12T10:21:35.248Z"
+  },
+  {
+    "key": "one-team/luxury-villas-1794477337198-dd85cdbd-images-3.jpg",
+    "size": 8956,
+    "lastModified": "2026-11-12T09:55:37.305Z"
+  },
+  {
+    "key": "one-team/middle-video.mp4",
+    "size": 14001141,
+    "lastModified": "2026-11-12T10:21:47.927Z"
+  },
+  {
+    "key": "one-team/sky-residences.png",
+    "size": 196823,
+    "lastModified": "2026-11-12T10:21:41.426Z"
+  },
+  {
+    "key": "one-team/waterfront-residences.png",
+    "size": 238594,
+    "lastModified": "2026-11-12T10:21:44.364Z"
+  },
+  {
+    "key": "properties/1794035247947-test-luxury-estate.jpg",
+    "size": 26,
+    "lastModified": "2026-11-07T07:07:28.938Z"
+  },
+  {
+    "key": "properties/1794381218392-riverside-views-gallery-00.jpg",
+    "size": 881896,
+    "lastModified": "2026-11-11T07:13:43.108Z"
+  },
+  {
+    "key": "properties/1794381259128-luxury-epoxy-river-table-reel-with-music-5.mp4",
+    "size": 1086758,
+    "lastModified": "2026-11-11T07:14:20.099Z"
+  },
+  {
+    "key": "properties/1794381269302-images-17.jpg",
+    "size": 76557,
+    "lastModified": "2026-11-11T07:14:30.021Z"
+  },
+  {
+    "key": "properties/1794381277135-1738149234drv-1.jpg",
+    "size": 281229,
+    "lastModified": "2026-11-11T07:14:37.731Z"
+  },
+  {
+    "key": "properties/1794381286405-img-20250603-wa0002-1.jpg",
+    "size": 1603880,
+    "lastModified": "2026-11-11T07:14:47.430Z"
+  },
+  {
+    "key": "properties/1794381295042-img-20250602-wa0001.jpg",
+    "size": 271507,
+    "lastModified": "2026-11-11T07:14:55.976Z"
+  },
+  {
+    "key": "properties/1794381301982-images-15.jpg",
+    "size": 59247,
+    "lastModified": "2026-11-11T07:15:02.636Z"
+  },
+  {
+    "key": "properties/1794381320448-riverside-views-gallery-00.jpg",
+    "size": 881896,
+    "lastModified": "2026-11-11T07:15:21.124Z"
+  },
+  {
+    "key": "properties/1794386386748-images-1.jpg",
+    "size": 60447,
+    "lastModified": "2026-11-11T08:39:48.217Z"
+  },
+  {
+    "key": "properties/1794386392587-images-3.jpg",
+    "size": 8956,
+    "lastModified": "2026-11-11T08:39:53.222Z"
+  },
+  {
+    "key": "properties/1794386397380-images-4.jpg",
+    "size": 62533,
+    "lastModified": "2026-11-11T08:39:58.147Z"
+  },
+  {
+    "key": "properties/1794386405541-images.jpg",
+    "size": 57423,
+    "lastModified": "2026-11-11T08:40:06.215Z"
+  },
+  {
+    "key": "properties/1794386411270-images-2.jpg",
+    "size": 30984,
+    "lastModified": "2026-11-11T08:40:11.923Z"
+  },
+  {
+    "key": "properties/1794386427848-images-2.jpg",
+    "size": 30984,
+    "lastModified": "2026-11-11T08:40:28.546Z"
+  },
+  {
+    "key": "properties/1794392240448-images-1.jpg",
+    "size": 60447,
+    "lastModified": "2026-11-11T10:17:22.312Z"
+  },
+  {
+    "key": "properties/1794392244050-gemini-generated-video-a6624ebb.mp4",
+    "size": 7157495,
+    "lastModified": "2026-11-11T10:17:26.024Z"
+  },
+  {
+    "key": "properties/1794392251199-images-1.jpg",
+    "size": 28928,
+    "lastModified": "2026-11-11T10:17:31.863Z"
+  },
+  {
+    "key": "properties/1794392254541-images-2.jpg",
+    "size": 44353,
+    "lastModified": "2026-11-11T10:17:35.274Z"
+  },
+  {
+    "key": "properties/1794392260011-images-3.jpg",
+    "size": 34165,
+    "lastModified": "2026-11-11T10:17:40.704Z"
+  },
+  {
+    "key": "properties/1794392264747-images-4.jpg",
+    "size": 41949,
+    "lastModified": "2026-11-11T10:17:45.479Z"
+  },
+  {
+    "key": "properties/1794392270574-images.jpg",
+    "size": 50906,
+    "lastModified": "2026-11-11T10:17:51.172Z"
+  },
+  {
+    "key": "properties/1794392287240-images-1.jpg",
+    "size": 60447,
+    "lastModified": "2026-11-11T10:18:07.834Z"
+  },
+  {
+    "key": "properties/1794400340816-images-2.jpg",
+    "size": 30984,
+    "lastModified": "2026-11-11T12:32:23.327Z"
+  },
+  {
+    "key": "properties/1794400344392-gemini-generated-video-a6624ebb.mp4",
+    "size": 7157495,
+    "lastModified": "2026-11-11T12:32:26.392Z"
+  },
+  {
+    "key": "properties/1794400351169-images-1.jpg",
+    "size": 28928,
+    "lastModified": "2026-11-11T12:32:31.586Z"
+  },
+  {
+    "key": "properties/1794400355147-images-2.jpg",
+    "size": 44353,
+    "lastModified": "2026-11-11T12:32:35.545Z"
+  },
+  {
+    "key": "properties/1794400362427-images-3.jpg",
+    "size": 34165,
+    "lastModified": "2026-11-11T12:32:42.896Z"
+  },
+  {
+    "key": "properties/1794400367426-images-4.jpg",
+    "size": 41949,
+    "lastModified": "2026-11-11T12:32:47.833Z"
+  },
+  {
+    "key": "properties/1794400373343-images.jpg",
+    "size": 50906,
+    "lastModified": "2026-11-11T12:32:53.724Z"
+  },
+  {
+    "key": "properties/1794400394535-images-2.jpg",
+    "size": 30984,
+    "lastModified": "2026-11-11T12:33:14.916Z"
+  },
+  {
+    "key": "properties/australia/ivory-residences/gallery/image-01.jpg",
+    "size": 171842,
+    "lastModified": "2026-11-12T10:25:48.784Z"
+  },
+  {
+    "key": "properties/australia/ivory-residences/gallery/image-02.jpg",
+    "size": 405336,
+    "lastModified": "2026-11-12T10:25:50.379Z"
+  },
+  {
+    "key": "properties/australia/ivory-residences/gallery/image-03.jpg",
+    "size": 163128,
+    "lastModified": "2026-11-12T10:25:51.962Z"
+  },
+  {
+    "key": "properties/australia/ivory-residences/hero-video.mp4",
+    "size": 15125010,
+    "lastModified": "2026-11-12T10:25:45.726Z"
+  },
+  {
+    "key": "properties/australia/ivory-residences/thumbnail.jpg",
+    "size": 328745,
+    "lastModified": "2026-11-12T10:25:39.660Z"
+  },
+  {
+    "key": "properties/australia/point-piper-villa/gallery/image-01.jpg",
+    "size": 240500,
+    "lastModified": "2026-11-12T10:26:31.226Z"
+  },
+  {
+    "key": "properties/australia/point-piper-villa/gallery/image-02.jpg",
+    "size": 275959,
+    "lastModified": "2026-11-12T10:26:33.257Z"
+  },
+  {
+    "key": "properties/australia/point-piper-villa/thumbnail.jpg",
+    "size": 441692,
+    "lastModified": "2026-11-12T10:26:29.712Z"
+  },
+  {
+    "key": "properties/australia/travertine-pavilion/gallery/image-01.jpg",
+    "size": 163128,
+    "lastModified": "2026-11-12T10:27:11.954Z"
+  },
+  {
+    "key": "properties/australia/travertine-pavilion/gallery/image-02.jpg",
+    "size": 275959,
+    "lastModified": "2026-11-12T10:27:15.444Z"
+  },
+  {
+    "key": "properties/australia/travertine-pavilion/thumbnail.jpg",
+    "size": 294711,
+    "lastModified": "2026-11-12T10:27:09.416Z"
+  },
+  {
+    "key": "properties/dubai/aurelia-villa/gallery/1794482151467-f962ead8-e2e-upload-test.png",
+    "size": 70,
+    "lastModified": "2026-11-12T11:15:52.984Z"
+  },
+  {
+    "key": "properties/dubai/aurelia-villa/gallery/1794482368597-240e019a-e2e-upload-test.png",
+    "size": 70,
+    "lastModified": "2026-11-12T11:19:28.896Z"
+  },
+  {
+    "key": "properties/dubai/aurelia-villa/gallery/1794482446701-385b47d2-e2e-upload-test.png",
+    "size": 70,
+    "lastModified": "2026-11-12T11:20:47.027Z"
+  },
+  {
+    "key": "properties/dubai/aurelia-villa/gallery/1794482645681-97476bc9-e2e-upload-test.png",
+    "size": 70,
+    "lastModified": "2026-11-12T11:24:06.208Z"
+  },
+  {
+    "key": "properties/dubai/aurelia-villa/gallery/1794482709440-6273ecbb-e2e-upload-test.png",
+    "size": 70,
+    "lastModified": "2026-11-12T11:25:09.751Z"
+  },
+  {
+    "key": "properties/dubai/aurelia-villa/gallery/1794482813709-c6603a54-e2e-upload-test.png",
+    "size": 70,
+    "lastModified": "2026-11-12T11:26:54.660Z"
+  },
+  {
+    "key": "properties/dubai/aurelia-villa/gallery/image-02.jpg",
+    "size": 148827,
+    "lastModified": "2026-11-12T10:24:33.259Z"
+  },
+  {
+    "key": "properties/dubai/aurelia-villa/gallery/image-03.jpg",
+    "size": 195869,
+    "lastModified": "2026-11-12T10:24:37.365Z"
+  },
+  {
+    "key": "properties/dubai/aurelia-villa/hero-video.mp4",
+    "size": 7621454,
+    "lastModified": "2026-11-12T10:24:30.010Z"
+  },
+  {
+    "key": "properties/dubai/aurelia-villa/thumbnail.jpg",
+    "size": 280680,
+    "lastModified": "2026-11-12T10:24:27.126Z"
+  },
+  {
+    "key": "properties/dubai/azure-haven/gallery/image-01.jpg",
+    "size": 140077,
+    "lastModified": "2026-11-12T10:24:47.075Z"
+  },
+  {
+    "key": "properties/dubai/azure-haven/gallery/image-02.jpg",
+    "size": 163128,
+    "lastModified": "2026-11-12T10:24:49.778Z"
+  },
+  {
+    "key": "properties/dubai/azure-haven/thumbnail.jpg",
+    "size": 255931,
+    "lastModified": "2026-11-12T10:24:44.010Z"
+  },
+  {
+    "key": "properties/dubai/marble-sanctuary/gallery/image-01.jpg",
+    "size": 137471,
+    "lastModified": "2026-11-12T10:26:12.612Z"
+  },
+  {
+    "key": "properties/dubai/marble-sanctuary/gallery/image-02.jpg",
+    "size": 242524,
+    "lastModified": "2026-11-12T10:26:17.611Z"
+  },
+  {
+    "key": "properties/dubai/marble-sanctuary/gallery/image-04.jpg",
+    "size": 148827,
+    "lastModified": "2026-11-12T10:26:20.534Z"
+  },
+  {
+    "key": "properties/dubai/marble-sanctuary/thumbnail.jpg",
+    "size": 243904,
+    "lastModified": "2026-11-12T10:26:04.225Z"
+  },
+  {
+    "key": "properties/dubai/mirage-villa/gallery/image-01.jpg",
+    "size": 176504,
+    "lastModified": "2026-11-12T10:26:25.000Z"
+  },
+  {
+    "key": "properties/dubai/mirage-villa/gallery/image-02.jpg",
+    "size": 140077,
+    "lastModified": "2026-11-12T10:26:28.111Z"
+  },
+  {
+    "key": "properties/dubai/mirage-villa/thumbnail.jpg",
+    "size": 328745,
+    "lastModified": "2026-11-12T10:26:23.174Z"
+  },
+  {
+    "key": "properties/dubai/the-meridian/gallery/image-01.jpg",
+    "size": 136634,
+    "lastModified": "2026-11-12T10:27:00.981Z"
+  },
+  {
+    "key": "properties/dubai/the-meridian/gallery/image-02.jpg",
+    "size": 163128,
+    "lastModified": "2026-11-12T10:27:05.580Z"
+  },
+  {
+    "key": "properties/dubai/the-meridian/gallery/image-03.jpg",
+    "size": 176504,
+    "lastModified": "2026-11-12T10:27:07.931Z"
+  },
+  {
+    "key": "properties/dubai/the-meridian/hero-video.mp4",
+    "size": 20132712,
+    "lastModified": "2026-11-12T10:26:57.865Z"
+  },
+  {
+    "key": "properties/dubai/the-meridian/thumbnail.jpg",
+    "size": 301437,
+    "lastModified": "2026-11-12T10:26:53.367Z"
+  },
+  {
+    "key": "properties/dubai/verdant-house/gallery/image-01.jpg",
+    "size": 220333,
+    "lastModified": "2026-11-12T10:27:21.648Z"
+  },
+  {
+    "key": "properties/dubai/verdant-house/gallery/image-02.jpg",
+    "size": 240500,
+    "lastModified": "2026-11-12T10:27:25.968Z"
+  },
+  {
+    "key": "properties/dubai/verdant-house/gallery/image-04.jpg",
+    "size": 170597,
+    "lastModified": "2026-11-12T10:27:28.128Z"
+  },
+  {
+    "key": "properties/dubai/verdant-house/thumbnail.jpg",
+    "size": 296771,
+    "lastModified": "2026-11-12T10:27:19.715Z"
+  },
+  {
+    "key": "properties/georgia/batumi-heights/gallery/image-01.jpg",
+    "size": 261273,
+    "lastModified": "2026-11-12T10:25:05.368Z"
+  },
+  {
+    "key": "properties/georgia/batumi-heights/gallery/image-02.jpg",
+    "size": 249216,
+    "lastModified": "2026-11-12T10:25:06.882Z"
+  },
+  {
+    "key": "properties/georgia/batumi-heights/thumbnail.jpg",
+    "size": 421073,
+    "lastModified": "2026-11-12T10:25:03.629Z"
+  },
+  {
+    "key": "properties/georgia/borjomi-chalet/gallery/image-01.jpg",
+    "size": 134971,
+    "lastModified": "2026-11-12T10:25:13.302Z"
+  },
+  {
+    "key": "properties/georgia/borjomi-chalet/gallery/image-02.jpg",
+    "size": 249216,
+    "lastModified": "2026-11-12T10:25:16.106Z"
+  },
+  {
+    "key": "properties/georgia/borjomi-chalet/thumbnail.jpg",
+    "size": 253276,
+    "lastModified": "2026-11-12T10:25:09.407Z"
+  },
+  {
+    "key": "properties/georgia/colchis-manor/gallery/image-01.jpg",
+    "size": 249216,
+    "lastModified": "2026-11-12T10:25:21.110Z"
+  },
+  {
+    "key": "properties/georgia/colchis-manor/gallery/image-02.jpg",
+    "size": 134971,
+    "lastModified": "2026-11-12T10:25:23.924Z"
+  },
+  {
+    "key": "properties/georgia/colchis-manor/thumbnail.jpg",
+    "size": 453958,
+    "lastModified": "2026-11-12T10:25:19.039Z"
+  },
+  {
+    "key": "properties/malaysia/banyan-residence/gallery/image-01.jpg",
+    "size": 240500,
+    "lastModified": "2026-11-12T10:24:53.675Z"
+  },
+  {
+    "key": "properties/malaysia/banyan-residence/gallery/image-02.jpg",
+    "size": 215342,
+    "lastModified": "2026-11-12T10:25:02.118Z"
+  },
+  {
+    "key": "properties/malaysia/banyan-residence/thumbnail.jpg",
+    "size": 441692,
+    "lastModified": "2026-11-12T10:24:51.660Z"
+  },
+  {
+    "key": "properties/malaysia/horizon-pavilion/gallery/image-01.jpg",
+    "size": 163128,
+    "lastModified": "2026-11-12T10:25:33.256Z"
+  },
+  {
+    "key": "properties/malaysia/horizon-pavilion/gallery/image-02.jpg",
+    "size": 152218,
+    "lastModified": "2026-11-12T10:25:34.767Z"
+  },
+  {
+    "key": "properties/malaysia/horizon-pavilion/gallery/image-03.jpg",
+    "size": 182116,
+    "lastModified": "2026-11-12T10:25:36.444Z"
+  },
+  {
+    "key": "properties/malaysia/horizon-pavilion/gallery/image-04.jpg",
+    "size": 140077,
+    "lastModified": "2026-11-12T10:25:37.876Z"
+  },
+  {
+    "key": "properties/malaysia/horizon-pavilion/hero-video.mp4",
+    "size": 7621454,
+    "lastModified": "2026-11-12T10:25:30.493Z"
+  },
+  {
+    "key": "properties/malaysia/horizon-pavilion/thumbnail.jpg",
+    "size": 294711,
+    "lastModified": "2026-11-12T10:25:26.074Z"
+  },
+  {
+    "key": "properties/malaysia/the-lantern-house/gallery/image-01.jpg",
+    "size": 215342,
+    "lastModified": "2026-11-12T10:26:48.772Z"
+  },
+  {
+    "key": "properties/malaysia/the-lantern-house/gallery/image-02.jpg",
+    "size": 163128,
+    "lastModified": "2026-11-12T10:26:50.366Z"
+  },
+  {
+    "key": "properties/malaysia/the-lantern-house/thumbnail.jpg",
+    "size": 371795,
+    "lastModified": "2026-11-12T10:26:47.041Z"
+  },
+  {
+    "key": "properties/thailand/andaman-villa/gallery/image-01.jpg",
+    "size": 308462,
+    "lastModified": "2026-11-12T10:24:15.614Z"
+  },
+  {
+    "key": "properties/thailand/andaman-villa/gallery/image-02.jpg",
+    "size": 163128,
+    "lastModified": "2026-11-12T10:24:20.819Z"
+  },
+  {
+    "key": "properties/thailand/andaman-villa/gallery/image-03.jpg",
+    "size": 152218,
+    "lastModified": "2026-11-12T10:24:22.919Z"
+  },
+  {
+    "key": "properties/thailand/andaman-villa/thumbnail.jpg",
+    "size": 559915,
+    "lastModified": "2026-11-12T10:24:13.509Z"
+  },
+  {
+    "key": "properties/thailand/lotus-pavilion/gallery/image-01.jpg",
+    "size": 607583,
+    "lastModified": "2026-11-12T10:25:59.287Z"
+  },
+  {
+    "key": "properties/thailand/lotus-pavilion/gallery/image-02.jpg",
+    "size": 240500,
+    "lastModified": "2026-11-12T10:26:00.761Z"
+  },
+  {
+    "key": "properties/thailand/lotus-pavilion/gallery/image-03.jpg",
+    "size": 140077,
+    "lastModified": "2026-11-12T10:26:02.463Z"
+  },
+  {
+    "key": "properties/thailand/lotus-pavilion/thumbnail.jpg",
+    "size": 1218239,
+    "lastModified": "2026-11-12T10:25:53.906Z"
+  },
+  {
+    "key": "properties/thailand/samui-estate/gallery/image-01.jpg",
+    "size": 232326,
+    "lastModified": "2026-11-12T10:26:38.724Z"
+  },
+  {
+    "key": "properties/thailand/samui-estate/gallery/image-02.jpg",
+    "size": 220333,
+    "lastModified": "2026-11-12T10:26:40.328Z"
+  },
+  {
+    "key": "properties/thailand/samui-estate/gallery/image-03.jpg",
+    "size": 175868,
+    "lastModified": "2026-11-12T10:26:41.904Z"
+  },
+  {
+    "key": "properties/thailand/samui-estate/gallery/image-04.jpg",
+    "size": 182116,
+    "lastModified": "2026-11-12T10:26:43.839Z"
+  },
+  {
+    "key": "properties/thailand/samui-estate/thumbnail.jpg",
+    "size": 421262,
+    "lastModified": "2026-11-12T10:26:37.133Z"
+  },
+  {
+    "key": "services/commercial-properties/cover.png",
+    "size": 228434,
+    "lastModified": "2026-11-12T10:23:54.735Z"
+  },
+  {
+    "key": "services/commercial-properties/hero-video.mp4",
+    "size": 9579736,
+    "lastModified": "2026-11-12T10:24:01.444Z"
+  },
+  {
+    "key": "services/luxury-villas/hero-video.mp4",
+    "size": 7621454,
+    "lastModified": "2026-11-12T10:23:20.441Z"
+  },
+  {
+    "key": "services/sky-residences/cover.png",
+    "size": 196823,
+    "lastModified": "2026-11-12T10:23:36.550Z"
+  },
+  {
+    "key": "services/sky-residences/hero-video.mp4",
+    "size": 20132712,
+    "lastModified": "2026-11-12T10:23:41.470Z"
+  },
+  {
+    "key": "services/waterfront-residences/cover.png",
+    "size": 238594,
+    "lastModified": "2026-11-12T10:24:04.159Z"
+  },
+  {
+    "key": "services/waterfront-residences/hero-video.mp4",
+    "size": 15125010,
+    "lastModified": "2026-11-12T10:24:10.598Z"
+  },
+  {
+    "key": "test-path-style.jpg",
+    "size": 18,
+    "lastModified": "2026-11-07T07:05:02.569Z"
+  }
+]

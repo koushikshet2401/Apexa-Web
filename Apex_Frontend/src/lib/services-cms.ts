@@ -16,6 +16,7 @@ export interface ServiceItem {
   description: string
   heroDescription: string
   image: string
+  videoUrl?: string | null
   iconType: 'villa' | 'sky' | 'commercial'
   route: string
   architecturalFocus: string[]
@@ -64,6 +65,7 @@ export function mapDbServiceToItem(row: {
   description: string | null
   heroDescription: string | null
   image: string | null
+  videoUrl?: string | null
   displayOrder: number
   architecturalFocus?: unknown
   deliverables?: unknown
@@ -79,6 +81,7 @@ export function mapDbServiceToItem(row: {
     description: row.description || '',
     heroDescription: row.heroDescription || row.description || '',
     image: row.image || '',
+    videoUrl: row.videoUrl || null,
     iconType: inferServiceIconType(row.slug),
     route: `/services/${row.slug}`,
     architecturalFocus: normalizeFocusList(row.architecturalFocus),
@@ -100,6 +103,7 @@ export async function fetchPublishedServicesFromDb(): Promise<ServiceItem[]> {
         description: true,
         heroDescription: true,
         image: true,
+        videoUrl: true,
         displayOrder: true,
         architecturalFocus: true,
         deliverables: true,
@@ -124,6 +128,7 @@ export async function fetchPublishedServicesFromDb(): Promise<ServiceItem[]> {
           description: true,
           heroDescription: true,
           image: true,
+          videoUrl: true,
           displayOrder: true,
         },
       })
@@ -161,6 +166,7 @@ export async function fetchServiceBySlugFromDb(slug: string) {
         description: true,
         heroDescription: true,
         image: true,
+        videoUrl: true,
         displayOrder: true,
         isPublished: true,
         architecturalFocus: true,
@@ -185,6 +191,7 @@ export async function fetchServiceBySlugFromDb(slug: string) {
           description: true,
           heroDescription: true,
           image: true,
+          videoUrl: true,
           displayOrder: true,
           isPublished: true,
           ...includeProperties,

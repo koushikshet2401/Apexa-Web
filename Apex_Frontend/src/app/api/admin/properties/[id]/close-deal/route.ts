@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requirePermission, PERMISSIONS } from '@/lib/rbac'
 import { closeDealTransaction } from '@/../prisma/deal_service'
+import { revalidatePropertyCms } from '@/lib/revalidate'
 import { customAlphabet } from 'nanoid'
 
 const generateDealRef = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 8)
@@ -43,6 +44,7 @@ export async function POST(
     const property = await db.property.findUnique({
       where: { id: propertyId },
       include: {
+        country: { select: { slug: true } },
         deals: {
           where: { status: { not: 'LOST' } },
           orderBy: { createdAt: 'desc' },
@@ -94,6 +96,11 @@ export async function POST(
       currency,
       keepPubliclyVisible,
       notes: notes?.trim(),
+    })
+
+    revalidatePropertyCms({
+      slug: property.slug,
+      countrySlug: property.country?.slug,
     })
 
     return NextResponse.json({

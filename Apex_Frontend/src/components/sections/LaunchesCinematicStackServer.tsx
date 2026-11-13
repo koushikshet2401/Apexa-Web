@@ -38,14 +38,37 @@ export async function LaunchesCinematicStackServer() {
       }
     }
 
+    const fetchHomepageContent = async () => {
+      try {
+        return await db.homepageContent.findFirst()
+      } catch (err) {
+        if (isMissingCmsExtensionError(err)) {
+          try {
+            const rows = await db.$queryRawUnsafe<any[]>('SELECT * FROM "HomepageContent" LIMIT 1')
+            return rows?.[0] || null
+          } catch {
+            return null
+          }
+        }
+        return null
+      }
+    }
+
     const fetchOneTeam = async () => {
       try {
         return await db.oneTeamContent.findFirst({
           orderBy: { createdAt: 'asc' },
         })
       } catch (err) {
-        if (isMissingCmsExtensionError(err)) return null
-        throw err
+        if (isMissingCmsExtensionError(err)) {
+          try {
+            const rows = await db.$queryRawUnsafe<any[]>('SELECT * FROM "OneTeamContent" LIMIT 1')
+            return rows?.[0] || null
+          } catch {
+            return null
+          }
+        }
+        return null
       }
     }
 
@@ -90,7 +113,7 @@ export async function LaunchesCinematicStackServer() {
         },
       }),
 
-      db.homepageContent.findFirst(),
+      fetchHomepageContent(),
 
       db.serviceCategory.findMany({
         where: { isPublished: true },
@@ -241,6 +264,11 @@ export async function LaunchesCinematicStackServer() {
   const waterfrontSvc = services.find((s) => s.slug === 'waterfront-residences')
 
   const oneTeamContent: OneTeamMediaProps = {
+    sectionEyebrow: dbOneTeam?.sectionEyebrow ?? null,
+    sectionHeading: dbOneTeam?.sectionHeading ?? null,
+    sectionDescription: dbOneTeam?.sectionDescription ?? null,
+    bannerLabel: dbOneTeam?.bannerLabel ?? null,
+    bannerHeading: dbOneTeam?.bannerHeading ?? null,
     luxuryVillasImageUrl: dbOneTeam?.luxuryVillasImageUrl ?? luxuryVillasSvc?.image ?? null,
     commercialImageUrl: dbOneTeam?.commercialImageUrl ?? commercialSvc?.image ?? null,
     skyResidencesImageUrl: dbOneTeam?.skyResidencesImageUrl ?? skyResidencesSvc?.image ?? null,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requirePermission, PERMISSIONS } from '@/lib/rbac'
+import { revalidatePropertyCms } from '@/lib/revalidate'
 
 export async function GET(
   request: NextRequest,
@@ -32,7 +33,10 @@ export async function POST(
 
   try {
     const { id } = await params
-    const property = await db.property.findUnique({ where: { id } })
+    const property = await db.property.findUnique({
+      where: { id },
+      include: { country: { select: { slug: true } } },
+    })
     if (!property) {
       return NextResponse.json({ error: 'Property not found' }, { status: 404 })
     }
@@ -42,6 +46,13 @@ export async function POST(
 
     if (!url || typeof url !== 'string' || !url.trim()) {
       return NextResponse.json({ error: 'Image URL is required' }, { status: 400 })
+    }
+
+    if (url.trim().startsWith('/uploads/')) {
+      return NextResponse.json(
+        { error: 'Local /uploads/ storage is disabled. Upload media to Cloudflare R2.' },
+        { status: 400 }
+      )
     }
 
     const maxOrder = await db.propertyImage.findFirst({
@@ -60,6 +71,11 @@ export async function POST(
         description: description ? description.trim() : (alt ? alt.trim() : null),
         order: newOrder,
       },
+    })
+
+    revalidatePropertyCms({
+      slug: property.slug,
+      countrySlug: property.country?.slug,
     })
 
     return NextResponse.json(newImage, { status: 201 })
@@ -94,6 +110,7 @@ export async function DELETE(
 
     const existing = await db.propertyImage.findFirst({
       where: { id: imageId, propertyId: id },
+      include: { property: { select: { slug: true, country: { select: { slug: true } } } } },
     })
 
     if (!existing) {
@@ -102,6 +119,11 @@ export async function DELETE(
 
     await db.propertyImage.delete({
       where: { id: imageId },
+    })
+
+    revalidatePropertyCms({
+      slug: existing.property.slug,
+      countrySlug: existing.property.country?.slug,
     })
 
     return NextResponse.json({ ok: true, message: 'Image deleted' })

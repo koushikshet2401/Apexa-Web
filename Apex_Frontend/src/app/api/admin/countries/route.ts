@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requirePermission, PERMISSIONS } from '@/lib/rbac'
+import { revalidateCollectionAndCountries } from '@/lib/revalidate'
 
 export async function GET(request: NextRequest) {
   const auth = await requirePermission(request, PERMISSIONS.CONTENT_READ)
@@ -42,6 +43,13 @@ export async function POST(request: NextRequest) {
       isPublished,
     } = body
 
+    if ([heroVideoUrl, heroVideoThumb, cardImage].some((u) => typeof u === 'string' && u.trim().startsWith('/uploads/'))) {
+      return NextResponse.json(
+        { error: 'Local /uploads/ storage is disabled. Upload media to Cloudflare R2.' },
+        { status: 400 }
+      )
+    }
+
     if (!name || typeof name !== 'string' || !name.trim()) {
       return NextResponse.json({ error: 'Country name is required' }, { status: 400 })
     }
@@ -72,6 +80,19 @@ export async function POST(request: NextRequest) {
         isPublished: isPublished !== undefined ? Boolean(isPublished) : true,
       },
     })
+
+    if (cardImage || heroVideoUrl || heroVideoThumb) {
+      await db.collectionMedia.create({
+        data: {
+          countryId: country.id,
+          coverImageUrl: cardImage || heroVideoThumb || null,
+          heroVideoUrl: heroVideoUrl || null,
+          updatedBy: auth.email,
+        },
+      })
+    }
+
+    revalidateCollectionAndCountries([country.slug])
 
     return NextResponse.json(country, { status: 201 })
   } catch (error) {

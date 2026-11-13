@@ -47,6 +47,11 @@ export default async function AdminOneTeamPage() {
     <OneTeamAdminClient
       initialData={{
         id: oneTeam?.id || null,
+        sectionEyebrow: oneTeam?.sectionEyebrow ?? null,
+        sectionHeading: oneTeam?.sectionHeading ?? null,
+        sectionDescription: oneTeam?.sectionDescription ?? null,
+        bannerLabel: oneTeam?.bannerLabel ?? null,
+        bannerHeading: oneTeam?.bannerHeading ?? null,
         luxuryVillasImageUrl: oneTeam?.luxuryVillasImageUrl ?? luxuryVillas?.image ?? null,
         commercialImageUrl: oneTeam?.commercialImageUrl ?? commercial?.image ?? null,
         skyResidencesImageUrl: oneTeam?.skyResidencesImageUrl ?? sky?.image ?? null,

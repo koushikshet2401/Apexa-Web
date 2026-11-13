@@ -9,11 +9,63 @@ import { useTheme } from '@/components/providers/ThemeProvider'
 import { themeTokens } from '@/lib/theme'
 import { cn } from '@/lib/utils'
 
-export function Footer() {
+export interface FooterItemSummary {
+  id: string
+  slug: string
+  name: string
+  displayName?: string | null
+}
+
+export interface FooterProps {
+  initialServices?: FooterItemSummary[]
+  initialCountries?: FooterItemSummary[]
+}
+
+export function Footer({ initialServices, initialCountries }: FooterProps = {}) {
   const currentYear = new Date().getFullYear()
   const pathname = usePathname()
   const router = useRouter()
   const { isLight } = useTheme()
+  const [services, setServices] = React.useState<FooterItemSummary[]>(initialServices || [])
+  const [countries, setCountries] = React.useState<FooterItemSummary[]>(initialCountries || [])
+
+  React.useEffect(() => {
+    if (initialServices && initialServices.length > 0) setServices(initialServices)
+    if (initialCountries && initialCountries.length > 0) setCountries(initialCountries)
+  }, [initialServices, initialCountries])
+
+  React.useEffect(() => {
+    if ((!initialServices || initialServices.length === 0) || (!initialCountries || initialCountries.length === 0)) {
+      fetch('/api/public/homepage')
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (!data) return
+          if (data.services && (!initialServices || initialServices.length === 0)) {
+            setServices(data.services.map((s: any) => ({ id: s.id, slug: s.slug, name: s.name })))
+          }
+          if (data.countries && (!initialCountries || initialCountries.length === 0)) {
+            setCountries(data.countries.map((c: any) => ({ id: c.id, slug: c.slug, name: c.name, displayName: c.displayName })))
+          }
+        })
+        .catch(() => {})
+    }
+  }, [initialServices, initialCountries])
+
+  const displayServices = services.length > 0 ? services : [
+    { id: '1', slug: 'luxury-villas', name: 'Luxury Villas' },
+    { id: '2', slug: 'sky-residences', name: 'Sky Residences' },
+    { id: '3', slug: 'commercial-properties', name: 'Commercial Properties' },
+  ]
+
+  const displayDestinations = countries.length > 0 ? countries : [
+    { id: '1', slug: 'dubai', name: 'Dubai & Abu Dhabi' },
+    { id: '2', slug: 'thailand', name: 'Phuket, Thailand' },
+    { id: '3', slug: 'australia', name: 'Sydney & Melbourne' },
+  ]
+
+  const countryStripText = countries.length > 0
+    ? countries.map((c) => (c.displayName || c.name).toUpperCase()).join(' · ')
+    : 'UAE · THAILAND · MALAYSIA · AUSTRALIA · GEORGIA'
 
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (href === '/#contact') {
@@ -140,21 +192,13 @@ export function Footer() {
               SERVICES
             </h4>
             <ul className={cn("space-y-1 font-sans text-[11px] transition-colors duration-300", themeTokens.footer.colList(isLight))}>
-              <li>
-                <Link href="/services/luxury-villas" className={cn("transition-colors", themeTokens.footer.colLink(isLight))}>
-                  Luxury Villas
-                </Link>
-              </li>
-              <li>
-                <Link href="/services/sky-residences" className={cn("transition-colors", themeTokens.footer.colLink(isLight))}>
-                  Sky Residences
-                </Link>
-              </li>
-              <li>
-                <Link href="/services/commercial-properties" className={cn("transition-colors", themeTokens.footer.colLink(isLight))}>
-                  Commercial Properties
-                </Link>
-              </li>
+              {displayServices.map((svc) => (
+                <li key={svc.id || svc.slug}>
+                  <Link href={`/services/${svc.slug}`} className={cn("transition-colors", themeTokens.footer.colLink(isLight))}>
+                    {svc.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -166,21 +210,13 @@ export function Footer() {
               DESTINATIONS
             </h4>
             <ul className={cn("space-y-1 font-sans text-[11px] transition-colors duration-300", themeTokens.footer.colList(isLight))}>
-              <li>
-                <Link href="/collection/dubai" className={cn("transition-colors", themeTokens.footer.colLink(isLight))}>
-                  Dubai &amp; Abu Dhabi
-                </Link>
-              </li>
-              <li>
-                <Link href="/collection/thailand" className={cn("transition-colors", themeTokens.footer.colLink(isLight))}>
-                  Phuket, Thailand
-                </Link>
-              </li>
-              <li>
-                <Link href="/collection/australia" className={cn("transition-colors", themeTokens.footer.colLink(isLight))}>
-                  Sydney &amp; Melbourne
-                </Link>
-              </li>
+              {displayDestinations.map((c) => (
+                <li key={c.id || c.slug}>
+                  <Link href={`/collection/${c.slug}`} className={cn("transition-colors", themeTokens.footer.colLink(isLight))}>
+                    {c.displayName || c.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -241,7 +277,7 @@ export function Footer() {
           </div>
 
           <div className={cn("text-[8.5px] sm:text-[9px] transition-colors duration-300", themeTokens.footer.bottomText(isLight))}>
-            UAE · THAILAND · MALAYSIA · AUSTRALIA · GEORGIA
+            {countryStripText}
           </div>
         </div>
       </div>

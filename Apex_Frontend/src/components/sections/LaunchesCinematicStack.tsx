@@ -64,10 +64,20 @@ export interface CollectionCountry {
 export interface HomepageContentProps {
   heroVideoUrl?: string | null
   heroVideoThumb?: string | null
+  unveilLabel?: string | null
   unveilHeading?: string | null
   unveilSubtext?: string | null
   oneTeamVideoUrl?: string | null
   advisoryVideoUrl?: string | null
+  collectionEyebrow?: string | null
+  collectionHeading?: string | null
+  collectionDescription?: string | null
+  spacesHeading?: string | null
+  spacesDescription?: string | null
+  advisoryEyebrow?: string | null
+  advisoryHeading?: string | null
+  advisoryDescription?: string | null
+  advisoryFooterNote?: string | null
 }
 
 export interface OneTeamServiceItem {
@@ -80,6 +90,11 @@ export interface OneTeamServiceItem {
 }
 
 export interface OneTeamMediaProps {
+  sectionEyebrow?: string | null
+  sectionHeading?: string | null
+  sectionDescription?: string | null
+  bannerLabel?: string | null
+  bannerHeading?: string | null
   luxuryVillasImageUrl?: string | null
   commercialImageUrl?: string | null
   skyResidencesImageUrl?: string | null
@@ -94,6 +109,39 @@ export interface LaunchesCinematicStackProps {
   homepageContent?: HomepageContentProps | null
   services?: OneTeamServiceItem[]
   oneTeamContent?: OneTeamMediaProps | null
+}
+
+function renderSplitHeading(text: string, accentClass: string) {
+  const trimmed = text.trim()
+  if (!trimmed) return null
+  const commaIdx = trimmed.indexOf(',')
+  if (commaIdx !== -1 && commaIdx < trimmed.length - 1) {
+    return (
+      <>
+        {trimmed.slice(0, commaIdx + 1)}{' '}
+        <span className={accentClass}>{trimmed.slice(commaIdx + 1).trim()}</span>
+      </>
+    )
+  }
+  const inIdx = trimmed.toLowerCase().indexOf(' in ')
+  if (inIdx > 0) {
+    return (
+      <>
+        {trimmed.slice(0, inIdx)}{' '}
+        <span className={accentClass}>{trimmed.slice(inIdx + 1)}</span>
+      </>
+    )
+  }
+  const lastSpace = trimmed.lastIndexOf(' ')
+  if (lastSpace > 0) {
+    return (
+      <>
+        {trimmed.slice(0, lastSpace)}{' '}
+        <span className={accentClass}>{trimmed.slice(lastSpace + 1)}</span>
+      </>
+    )
+  }
+  return trimmed
 }
 
 export function LaunchesCinematicStack({
@@ -1318,7 +1366,7 @@ export function LaunchesCinematicStack({
                 "font-mono text-xs sm:text-sm tracking-[0.32em] uppercase font-medium transition-colors",
                 isLight ? "text-[#6B6661]" : "text-[#7DD3FC]"
               )}>
-                NEW LAUNCHES
+                {homepageContent?.unveilLabel || 'NEW LAUNCHES'}
               </span>
               <span className={cn("w-8 h-px transition-colors", isLight ? "bg-[#0B1325]/30" : "bg-sky-400/60")} />
             </div>
@@ -1331,7 +1379,12 @@ export function LaunchesCinematicStack({
               )}
               style={{ fontSize: 'clamp(2.3rem, 5.8vw, 4.8rem)' }}
             >
-              {homepageContent?.unveilHeading || (
+              {homepageContent?.unveilHeading ? (
+                renderSplitHeading(
+                  homepageContent.unveilHeading,
+                  isLight ? "text-[#1D263B] font-normal" : "text-sky-200"
+                )
+              ) : (
                 <>Unveil the Latest in <span className={isLight ? "text-[#1D263B] font-normal" : "text-sky-200"}>Exceptional Living</span></>
               )}
             </h2>
@@ -1764,17 +1817,21 @@ export function LaunchesCinematicStack({
             <div className="flex items-center gap-2">
               <span className={cn("w-5 h-px transition-colors duration-300", themeTokens.collection.eyebrowLine(isLight))} />
               <span className={cn("font-mono text-[9px] sm:text-[11px] tracking-[0.24em] uppercase font-medium transition-colors duration-300", themeTokens.collection.eyebrow(isLight))}>
-                SIGNATURE RESIDENCES
+                {homepageContent?.collectionEyebrow || 'SIGNATURE RESIDENCES'}
               </span>
             </div>
 
             {/* Title & Description Row */}
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-1 sm:gap-6">
               <h2 className={cn("font-serif text-2xl sm:text-4xl md:text-5xl font-light tracking-tight leading-none transition-colors duration-300", themeTokens.collection.title(isLight))}>
-                The <span className={themeTokens.collection.titleAccent(isLight)}>collection</span>
+                {renderSplitHeading(
+                  homepageContent?.collectionHeading || 'The collection',
+                  themeTokens.collection.titleAccent(isLight)
+                )}
               </h2>
               <p className={cn("font-sans text-[11px] sm:text-xs md:text-sm max-w-md font-light leading-relaxed text-left sm:text-right line-clamp-1 sm:line-clamp-none transition-colors duration-300", themeTokens.collection.description(isLight))}>
-                Five addresses, each designed around its site. Drag, swipe or click to explore the portfolio.
+                {homepageContent?.collectionDescription ||
+                  'Five addresses, each designed around its site. Drag, swipe or click to explore the portfolio.'}
               </p>
             </div>
 
@@ -2051,7 +2108,7 @@ export function LaunchesCinematicStack({
             <div className="flex items-center justify-center gap-3 mb-4 sm:mb-6">
               <span className={cn("w-8 h-px transition-colors duration-300", themeTokens.oneTeam.eyebrowLine(isLight))} />
               <span className={cn("font-mono text-xs sm:text-sm tracking-[0.32em] uppercase font-medium transition-colors duration-300", themeTokens.oneTeam.eyebrow(isLight))}>
-                WHAT WE DO
+                {oneTeamContent?.sectionEyebrow || 'WHAT WE DO'}
               </span>
               <span className={cn("w-8 h-px transition-colors duration-300", themeTokens.oneTeam.eyebrowLine(isLight))} />
             </div>
@@ -2061,12 +2118,16 @@ export function LaunchesCinematicStack({
               className={cn("heading-display font-light tracking-tight leading-[1.08] mb-5 sm:mb-7 text-balance transition-colors duration-300", themeTokens.oneTeam.title(isLight))}
               style={{ fontSize: 'clamp(2.4rem, 6vw, 4.8rem)' }}
             >
-              One team, <span className={themeTokens.oneTeam.titleAccent(isLight)}>end to end</span>
+              {renderSplitHeading(
+                oneTeamContent?.sectionHeading || 'One team, end to end',
+                themeTokens.oneTeam.titleAccent(isLight)
+              )}
             </h2>
 
             {/* Description */}
             <p className={cn("font-sans text-xs sm:text-base md:text-lg font-light max-w-xl mx-auto leading-relaxed text-pretty transition-colors duration-300", themeTokens.oneTeam.description(isLight))}>
-              Development, design and advice from a single studio, so nothing is lost between the drawing board and the front door.
+              {oneTeamContent?.sectionDescription ||
+                'Development, design and advice from a single studio, so nothing is lost between the drawing board and the front door.'}
             </p>
 
             {/* Subtle Scroll Cue */}
@@ -2247,10 +2308,10 @@ export function LaunchesCinematicStack({
 
               <div className="absolute bottom-2 sm:bottom-3.5 left-2.5 sm:left-4 z-10">
                 <span className="font-mono text-[8px] sm:text-[10px] tracking-widest uppercase text-[#7DD3FC] block mb-0.5">
-                  APEX PACIFIC HOLDINGS
+                  {oneTeamContent?.bannerLabel || 'APEX PACIFIC HOLDINGS'}
                 </span>
                 <p className="font-serif text-xs sm:text-base md:text-lg text-white font-light">
-                  One team, end to end
+                  {oneTeamContent?.bannerHeading || 'One team, end to end'}
                 </p>
               </div>
             </div>
@@ -2405,11 +2466,15 @@ export function LaunchesCinematicStack({
           <div className="w-full max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-3 sm:gap-4 shrink-0 pointer-events-auto">
             <div>
               <h2 className={cn("heading-display font-light text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight leading-none transition-colors duration-300", themeTokens.spacesInTheRound.title(isLight))}>
-                Spaces <span className={themeTokens.spacesInTheRound.titleAccent(isLight)}>in the round</span>
+                {renderSplitHeading(
+                  homepageContent?.spacesHeading || 'Spaces in the round',
+                  themeTokens.spacesInTheRound.titleAccent(isLight)
+                )}
               </h2>
             </div>
             <p className={cn("max-w-md font-sans text-xs sm:text-sm font-light leading-relaxed transition-colors duration-300", themeTokens.spacesInTheRound.description(isLight))}>
-              Exteriors and interiors from across the portfolio. Drag the ring to turn it.
+              {homepageContent?.spacesDescription ||
+                'Exteriors and interiors from across the portfolio. Drag the ring to turn it.'}
             </p>
           </div>
 
@@ -2562,7 +2627,7 @@ export function LaunchesCinematicStack({
             <div className="flex items-center justify-center gap-3 mb-4 sm:mb-6">
               <span className={cn("w-8 h-px transition-colors duration-300", themeTokens.privateAdvisory.eyebrowLine(isLight))} />
               <span className={cn("font-mono text-xs sm:text-sm tracking-[0.32em] uppercase font-medium transition-colors duration-300", themeTokens.privateAdvisory.eyebrow(isLight))}>
-                PRIVATE ADVISORY
+                {homepageContent?.advisoryEyebrow || 'PRIVATE ADVISORY'}
               </span>
               <span className={cn("w-8 h-px transition-colors duration-300", themeTokens.privateAdvisory.eyebrowLine(isLight))} />
             </div>
@@ -2572,12 +2637,16 @@ export function LaunchesCinematicStack({
               className={cn("heading-display font-light tracking-tight leading-[1.08] mb-4 sm:mb-6 text-balance transition-colors duration-300", themeTokens.privateAdvisory.title(isLight))}
               style={{ fontSize: 'clamp(2.3rem, 5.2vw, 4.4rem)' }}
             >
-              Begin your <span className={themeTokens.privateAdvisory.titleAccent(isLight)}>conversation</span>
+              {renderSplitHeading(
+                homepageContent?.advisoryHeading || 'Begin your conversation',
+                themeTokens.privateAdvisory.titleAccent(isLight)
+              )}
             </h2>
 
             {/* Description */}
             <p className={cn("font-sans text-xs sm:text-base md:text-lg font-light max-w-xl mx-auto leading-relaxed text-pretty mb-8 sm:mb-10 transition-colors duration-300", themeTokens.privateAdvisory.description(isLight))}>
-              Our senior partners advise private clients and family offices on prime residential acquisitions across the Gulf, Southeast Asia, and Australasia.
+              {homepageContent?.advisoryDescription ||
+                'Our senior partners advise private clients and family offices on prime residential acquisitions across the Gulf, Southeast Asia, and Australasia.'}
             </p>
 
             {/* Click-to-open “SPEAK WITH US” Button */}
@@ -2598,7 +2667,7 @@ export function LaunchesCinematicStack({
             </button>
 
             <span className={cn("font-mono text-[10px] tracking-[0.22em] uppercase mt-4 transition-colors duration-300", themeTokens.privateAdvisory.confidentialText(isLight))}>
-              CONFIDENTIAL · INVITATION ONLY
+              {homepageContent?.advisoryFooterNote || 'CONFIDENTIAL · INVITATION ONLY'}
             </span>
           </div>
         </div>

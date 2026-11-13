@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { revalidatePath } from 'next/cache'
 import { MediaRole } from '@prisma/client'
 import { db } from '@/lib/db'
 import { PERMISSIONS, requireAnyPermission } from '@/lib/rbac'
 import { logAdminActivity } from '@/lib/activityLog'
 import { resolveOrUpsertR2AssetId } from '@/lib/mediaAssetStore'
+import { revalidateCollectionAndCountries } from '@/lib/revalidate'
 
 export const dynamic = 'force-dynamic'
 
@@ -153,15 +153,7 @@ export async function PATCH(
       return collectionMedia
     })
 
-    try {
-      revalidatePath('/')
-      revalidatePath('/collection')
-      revalidatePath(`/collection/${country.slug}`)
-      revalidatePath('/admin/collection-media')
-      revalidatePath('/admin/countries')
-    } catch (revalidateErr) {
-      console.warn('Revalidation warning:', revalidateErr)
-    }
+    revalidateCollectionAndCountries([country.slug])
 
     await logAdminActivity({
       adminId: auth.id,
