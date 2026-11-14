@@ -145,6 +145,15 @@ export default function PropertiesListClient({
   const soldProjects = properties.filter((p) => !p.isArchived && p.deals.length > 0)
   const archivedProjects = properties.filter((p) => p.isArchived)
 
+  const activeTabProjects =
+    activeTab === 'current'
+      ? currentProjects
+      : activeTab === 'sold'
+        ? soldProjects
+        : archivedProjects
+
+  const unassignedCount = activeTabProjects.filter((p) => !p.country?.id).length
+
   // Filter based on active tab, search, and country
   const displayedProperties = properties.filter((p) => {
     if (activeTab === 'current') {
@@ -155,8 +164,12 @@ export default function PropertiesListClient({
       if (!p.isArchived) return false
     }
 
-    if (selectedCountryId !== 'all' && p.country?.id !== selectedCountryId) {
-      return false
+    if (selectedCountryId !== 'all') {
+      if (selectedCountryId === 'unassigned') {
+        if (p.country?.id) return false
+      } else if (p.country?.id !== selectedCountryId) {
+        return false
+      }
     }
 
     if (search.trim()) {
@@ -548,6 +561,9 @@ export default function PropertiesListClient({
                 {c.displayName || c.name}
               </option>
             ))}
+            {unassignedCount > 0 && (
+              <option value="unassigned">Unassigned ({unassignedCount})</option>
+            )}
           </select>
 
           <div className="relative min-w-[220px]">
@@ -561,6 +577,92 @@ export default function PropertiesListClient({
             />
           </div>
         </div>
+      </div>
+
+      {/* 5 COUNTRY CAPSULE PILLS (Exact style from reference) */}
+      <div className="flex flex-wrap items-center gap-2 pt-1 pb-1">
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedCountryId('all')
+            setShowAllCurrent(true)
+          }}
+          className={`px-4 py-1.5 rounded-full text-xs font-mono font-semibold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer ${
+            selectedCountryId === 'all'
+              ? 'bg-[#38BDF8] text-[#040810] shadow-[0_0_15px_rgba(56,189,248,0.35)] ring-1 ring-[#38BDF8]'
+              : 'bg-[#070E1C] hover:bg-[#0B1528] text-gray-300 hover:text-white border border-white/10'
+          }`}
+        >
+          <span>ALL</span>
+          <span
+            className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+              selectedCountryId === 'all'
+                ? 'bg-black/20 text-[#040810]'
+                : 'bg-white/10 text-gray-400'
+            }`}
+          >
+            {activeTabProjects.length}
+          </span>
+        </button>
+
+        {countries.map((c) => {
+          const count = activeTabProjects.filter((p) => p.country?.id === c.id).length
+          const isSelected = selectedCountryId === c.id
+          return (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => {
+                setSelectedCountryId(isSelected ? 'all' : c.id)
+                setShowAllCurrent(false)
+              }}
+              className={`px-4 py-1.5 rounded-full text-xs font-mono font-semibold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer ${
+                isSelected
+                  ? 'bg-[#38BDF8] text-[#040810] shadow-[0_0_15px_rgba(56,189,248,0.35)] ring-1 ring-[#38BDF8]'
+                  : 'bg-[#070E1C] hover:bg-[#0B1528] text-gray-300 hover:text-white border border-white/10'
+              }`}
+            >
+              <span>{c.displayName || c.name}</span>
+              <span
+                className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                  isSelected
+                    ? 'bg-black/20 text-[#040810]'
+                    : count > 0
+                      ? 'bg-[#38BDF8]/20 text-[#38BDF8]'
+                      : 'bg-white/10 text-gray-500'
+                }`}
+              >
+                {count}
+              </span>
+            </button>
+          )
+        })}
+
+        {unassignedCount > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedCountryId(selectedCountryId === 'unassigned' ? 'all' : 'unassigned')
+              setShowAllCurrent(false)
+            }}
+            className={`px-4 py-1.5 rounded-full text-xs font-mono font-semibold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer ${
+              selectedCountryId === 'unassigned'
+                ? 'bg-[#38BDF8] text-[#040810] shadow-[0_0_15px_rgba(56,189,248,0.35)] ring-1 ring-[#38BDF8]'
+                : 'bg-[#070E1C] hover:bg-[#0B1528] text-gray-300 hover:text-white border border-white/10'
+            }`}
+          >
+            <span>Unassigned</span>
+            <span
+              className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                selectedCountryId === 'unassigned'
+                  ? 'bg-black/20 text-[#040810]'
+                  : 'bg-white/10 text-gray-400'
+              }`}
+            >
+              {unassignedCount}
+            </span>
+          </button>
+        )}
       </div>
 
       {/* 5 DESTINATION COUNTRY CARDS (Current Projects tab) */}
@@ -668,8 +770,24 @@ export default function PropertiesListClient({
           <Building2 className="w-10 h-10 text-gray-600 mx-auto" />
           <h3 className="text-sm font-semibold text-white">No projects found</h3>
           <p className="text-xs text-gray-400">
-            {search ? 'No projects match your search criteria.' : 'No projects recorded in this section.'}
+            {search
+              ? 'No projects match your search criteria.'
+              : selectedCountryId !== 'all'
+                ? `No ${activeTab === 'archived' ? 'deleted' : activeTab === 'sold' ? 'soldout' : 'current'} projects recorded for this destination.`
+                : 'No projects recorded in this section.'}
           </p>
+          {selectedCountryId !== 'all' && (
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCountryId('all')
+                setShowAllCurrent(true)
+              }}
+              className="px-3.5 py-1.5 rounded-lg bg-[#38BDF8]/15 hover:bg-[#38BDF8]/25 text-[#38BDF8] text-xs font-mono border border-[#38BDF8]/30 transition-colors cursor-pointer inline-flex items-center gap-1.5 mt-2"
+            >
+              ← View All {activeTab === 'archived' ? 'Deleted' : activeTab === 'sold' ? 'Soldout' : 'Current'} Projects
+            </button>
+          )}
         </div>
       ) : activeTab === 'current' ? (
         /* CURRENT PROJECTS GROUPED BY COUNTRY */
