@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "5a148e43-e20b-4156-a1e7-9b7f387a5ab0",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "E:\\ApexaHoldings\\Architecture Daigram\\apex-system-architecture.candidate.json",
+  "output": "E:\\ApexaHoldings\\Architecture Daigram\\apex-architecture.html",
+  "specification": {
+    "sha256": "a5f63773beaa0c49ac786a05f894b40d43d611d590063dd25bd5fa9e37478e38",
+    "bytes": 7986
+  },
+  "artifact": {
+    "sha256": "3c7b4432f7e47394f42e927b73d9b60e3f37d6cccccd20d55f9f47a256960bb2",
+    "bytes": 865109
+  }
+}

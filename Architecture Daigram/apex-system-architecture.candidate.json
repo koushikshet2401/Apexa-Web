@@ -1,0 +1,299 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "APEX Pacific Holdings — System Architecture & Data Transfer",
+    "subtitle": "Full-Stack Architecture: Next.js 15 Frontend, Node Backend APIs, PostgreSQL DB, and Cloudflare R2 Pipelines",
+    "output": "Architecture Daigram/apex-architecture.html",
+    "quality_profile": "showcase",
+    "visual_preset": "blueprint",
+    "animation": "trace"
+  },
+  "components": [
+    {
+      "id": "public_users",
+      "type": "external",
+      "label": "Global Clients",
+      "sublabel": "Browser / Mobile",
+      "pos": [40, 160],
+      "size": [160, 64]
+    },
+    {
+      "id": "admin_users",
+      "type": "external",
+      "label": "Admin Staff",
+      "sublabel": "Super Admin & Staff",
+      "pos": [40, 360],
+      "size": [160, 64]
+    },
+    {
+      "id": "public_web",
+      "type": "frontend",
+      "label": "Public Website",
+      "sublabel": "Next.js 15 · GSAP 3D",
+      "pos": [280, 160],
+      "size": [160, 64],
+      "tag": "React 19"
+    },
+    {
+      "id": "admin_portal",
+      "type": "frontend",
+      "label": "Admin Portal",
+      "sublabel": "Portfolio & CMS Hub",
+      "pos": [280, 360],
+      "size": [160, 64],
+      "tag": "RBAC Panels"
+    },
+    {
+      "id": "media_uploader",
+      "type": "frontend",
+      "label": "R2 Uploader Engine",
+      "sublabel": "clientMediaUpload.ts",
+      "pos": [280, 560],
+      "size": [160, 64],
+      "tag": "Direct PUT"
+    },
+    {
+      "id": "api_gateway",
+      "type": "backend",
+      "label": "API Route Handlers",
+      "sublabel": "Node.js Server Runtime",
+      "pos": [560, 160],
+      "size": [160, 64],
+      "tag": "REST APIs"
+    },
+    {
+      "id": "auth_engine",
+      "type": "security",
+      "label": "Auth & RBAC Guard",
+      "sublabel": "Jose JWT · HttpOnly",
+      "pos": [560, 360],
+      "size": [160, 64],
+      "tag": "Bcrypt Hash"
+    },
+    {
+      "id": "cms_controller",
+      "type": "backend",
+      "label": "CMS Controller",
+      "sublabel": "Properties & Content",
+      "pos": [560, 560],
+      "size": [160, 64],
+      "tag": "Sync Logic"
+    },
+    {
+      "id": "prisma_orm",
+      "type": "database",
+      "label": "Prisma ORM",
+      "sublabel": "Type-Safe Data Access",
+      "pos": [840, 160],
+      "size": [160, 64],
+      "tag": "25 Models"
+    },
+    {
+      "id": "postgres_db",
+      "type": "database",
+      "label": "PostgreSQL DB",
+      "sublabel": "apex_disposable_test / apex",
+      "pos": [840, 360],
+      "size": [160, 64],
+      "tag": "Port 5432"
+    },
+    {
+      "id": "audit_ledger",
+      "type": "database",
+      "label": "Audit Logs",
+      "sublabel": "AdminActivityLog",
+      "pos": [840, 560],
+      "size": [160, 64],
+      "tag": "Ledger"
+    },
+    {
+      "id": "cloudflare_cdn",
+      "type": "cloud",
+      "label": "Cloudflare CDN",
+      "sublabel": "Edge Media Distribution",
+      "pos": [1120, 160],
+      "size": [180, 64],
+      "tag": "Global Edge"
+    },
+    {
+      "id": "r2_bucket",
+      "type": "cloud",
+      "label": "Cloudflare R2",
+      "sublabel": "Bucket: apex-media",
+      "pos": [1120, 360],
+      "size": [180, 64],
+      "tag": "Media Vault"
+    },
+    {
+      "id": "r2_presign_auth",
+      "type": "cloud",
+      "label": "S3 Auth Endpoint",
+      "sublabel": "Presigned Upload Target",
+      "pos": [1120, 560],
+      "size": [180, 64],
+      "tag": "S3-Compatible API"
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "security-group",
+      "label": "Presentation Layer (Next.js 15 Client Engine)",
+      "wraps": ["public_web", "admin_portal", "media_uploader"],
+      "pad": 16
+    },
+    {
+      "kind": "security-group",
+      "label": "Application & Security Tier (Node.js API Route Handlers)",
+      "wraps": ["api_gateway", "auth_engine", "cms_controller"],
+      "pad": 16
+    },
+    {
+      "kind": "region",
+      "label": "PostgreSQL Persistence Tier (Prisma Schema & Relational Data)",
+      "wraps": ["prisma_orm", "postgres_db", "audit_ledger"],
+      "pad": 16
+    },
+    {
+      "kind": "region",
+      "label": "Cloudflare Media Storage & Global Edge Tier",
+      "wraps": ["cloudflare_cdn", "r2_bucket", "r2_presign_auth"],
+      "pad": 16
+    }
+  ],
+  "connections": [
+    {
+      "id": "c_users_web",
+      "from": "public_users",
+      "to": "public_web",
+      "label": "HTTPS",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c_admin_portal",
+      "from": "admin_users",
+      "to": "admin_portal",
+      "label": "HTTPS",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c_web_api",
+      "from": "public_web",
+      "to": "api_gateway",
+      "label": "API Queries",
+      "variant": "default"
+    },
+    {
+      "id": "c_api_prisma",
+      "from": "api_gateway",
+      "to": "prisma_orm",
+      "label": "ORM Queries",
+      "variant": "default"
+    },
+    {
+      "id": "c_prisma_db",
+      "from": "prisma_orm",
+      "to": "postgres_db",
+      "label": "SQL Wire",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c_admin_auth",
+      "from": "admin_portal",
+      "to": "auth_engine",
+      "label": "JWT Auth",
+      "variant": "security"
+    },
+    {
+      "id": "c_admin_cms",
+      "from": "admin_portal",
+      "to": "cms_controller",
+      "label": "Mutations",
+      "variant": "default"
+    },
+    {
+      "id": "c_admin_uploader",
+      "from": "admin_portal",
+      "to": "media_uploader",
+      "label": "Select Media",
+      "variant": "dashed"
+    },
+    {
+      "id": "c_cms_db",
+      "from": "cms_controller",
+      "to": "postgres_db",
+      "label": "Save Records",
+      "variant": "default"
+    },
+    {
+      "id": "c_cms_audit",
+      "from": "cms_controller",
+      "to": "audit_ledger",
+      "label": "Audit Logs",
+      "variant": "dashed"
+    },
+    {
+      "id": "c_uploader_presign",
+      "from": "media_uploader",
+      "to": "r2_presign_auth",
+      "label": "1. Presign Request",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "bottom",
+      "via": [[360, 680], [1210, 680]]
+    },
+    {
+      "id": "c_auth_bucket",
+      "from": "r2_presign_auth",
+      "to": "r2_bucket",
+      "label": "Authorize Upload",
+      "variant": "security"
+    },
+    {
+      "id": "c_r2_cdn",
+      "from": "r2_bucket",
+      "to": "cloudflare_cdn",
+      "label": "Sync Origin",
+      "variant": "default"
+    },
+    {
+      "id": "c_cdn_web",
+      "from": "cloudflare_cdn",
+      "to": "public_web",
+      "label": "Stream Videos",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "top",
+      "via": [[1210, 80], [360, 80]]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Frontend & Client Layer (Next.js 15 & React 19)",
+      "items": [
+        "Public Website delivers cinematic hero video, 3D circular Space-in-Round, and dynamic country collections.",
+        "Admin Portal provides comprehensive navigation across Portfolio (5), Website CMS (9), and Operations (4).",
+        "Direct R2 Uploader streams files up to 500MB directly to Cloudflare without server body truncation."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Backend Services & Database Tier",
+      "items": [
+        "Node.js API Route Handlers enforce Jose JWT authentication, CSP headers, and RBAC permission checks.",
+        "PostgreSQL 16 managed with Prisma ORM across 25 schema tables with single-source-of-truth queries.",
+        "Audit Logging records all administrator actions, soft deletes, price adjustments, and closed deals."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Cloudflare R2 Object Storage & Transfer Flow",
+      "items": [
+        "Presigned S3 credentials generated on the backend and returned to the client uploader.",
+        "Direct client binary PUT stream writes directly to the apex-media bucket with zero server RAM pressure.",
+        "Permanent deletion triggers automated DeleteObject commands to prevent R2 storage bloat."
+      ]
+    }
+  ]
+}
