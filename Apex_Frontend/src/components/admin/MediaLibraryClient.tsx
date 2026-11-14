@@ -16,6 +16,13 @@ import {
   Search,
   Orbit,
   CheckCircle2,
+  Building2,
+  Globe,
+  Sparkles,
+  Users,
+  FolderArchive,
+  HardDrive,
+  LucideIcon,
 } from 'lucide-react'
 import MediaUploader from './MediaUploader'
 
@@ -69,12 +76,22 @@ export const FOLDER_LABELS: Record<string, string> = {
   general: 'GENERAL',
 }
 
-export const CATEGORY_DESTINATIONS = [
+export interface CategoryDestination {
+  id: string
+  label: string
+  badge: string
+  icon: LucideIcon
+  folder: string
+  role: string
+  description: string
+}
+
+export const CATEGORY_DESTINATIONS: readonly CategoryDestination[] = [
   {
     id: 'space-in-round',
     label: 'Spaces in the Round',
     badge: '3D Carousel',
-    icon: '🪐',
+    icon: Orbit,
     folder: 'space-in-round',
     role: 'SPACE_IN_ROUND',
     description: 'Circular interactive cards & panoramic 3D models',
@@ -83,7 +100,7 @@ export const CATEGORY_DESTINATIONS = [
     id: 'properties',
     label: 'Properties & Projects',
     badge: 'Portfolio',
-    icon: '🏢',
+    icon: Building2,
     folder: 'properties',
     role: 'GALLERY_IMAGE',
     description: 'Architectural galleries, hero banners & blueprints',
@@ -92,7 +109,7 @@ export const CATEGORY_DESTINATIONS = [
     id: 'countries',
     label: 'Countries & Destinations',
     badge: 'Destinations',
-    icon: '🌍',
+    icon: Globe,
     folder: 'countries',
     role: 'COUNTRY_MEDIA',
     description: 'Country hero video reels, scenic posters & guides',
@@ -101,7 +118,7 @@ export const CATEGORY_DESTINATIONS = [
     id: 'services',
     label: 'Services & Sectors',
     badge: 'Services',
-    icon: '⚜️',
+    icon: Sparkles,
     folder: 'services',
     role: 'SERVICE_MEDIA',
     description: 'Luxury Villas, Sky Residences, Commercial & Waterfront',
@@ -110,7 +127,7 @@ export const CATEGORY_DESTINATIONS = [
     id: 'homepage',
     label: 'Homepage Hero Video',
     badge: 'Landing',
-    icon: '🎬',
+    icon: Film,
     folder: 'homepage',
     role: 'HOMEPAGE_VIDEO',
     description: 'Cinematic landing video reel & fallback poster frames',
@@ -119,7 +136,7 @@ export const CATEGORY_DESTINATIONS = [
     id: 'one-team',
     label: 'One Team, End to End',
     badge: 'One Team',
-    icon: '👥',
+    icon: Users,
     folder: 'one-team',
     role: 'ONE_TEAM_VIDEO',
     description: 'Middle showcase video reel & 4 architecture cards',
@@ -128,7 +145,7 @@ export const CATEGORY_DESTINATIONS = [
     id: 'collection-media',
     label: 'Collection Portals',
     badge: 'Portals',
-    icon: '📁',
+    icon: FolderArchive,
     folder: 'collection-media',
     role: 'COLLECTION_COVER',
     description: 'Country portfolio collection reels & card covers',
@@ -137,12 +154,12 @@ export const CATEGORY_DESTINATIONS = [
     id: 'general',
     label: 'General Media Library',
     badge: 'Storage',
-    icon: '📦',
+    icon: HardDrive,
     folder: 'general',
     role: 'GENERAL',
     description: 'Shared assets, brand identity & general cloud storage',
   },
-] as const
+]
 
 export default function MediaLibraryClient({
   onSelect,
@@ -422,11 +439,19 @@ export default function MediaLibraryClient({
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-lg">{cat.icon}</span>
+                      <div
+                        className={`p-1.5 rounded-lg transition-colors ${
+                          isSelected
+                            ? 'bg-[#38BDF8] text-[#040810]'
+                            : 'bg-white/5 text-gray-400 group-hover:text-white'
+                        }`}
+                      >
+                        <cat.icon className="w-4 h-4" />
+                      </div>
                       <span
                         className={`text-[9px] font-mono uppercase px-1.5 py-0.5 rounded font-semibold ${
                           isSelected
-                            ? 'bg-[#38BDF8] text-[#040810]'
+                            ? 'bg-[#38BDF8]/20 text-[#38BDF8] border border-[#38BDF8]/40'
                             : 'bg-white/10 text-gray-400'
                         }`}
                       >
