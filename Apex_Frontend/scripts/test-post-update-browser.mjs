@@ -27,7 +27,7 @@ async function signAdminJwt(payload) {
 }
 
 async function main() {
-  console.log('=== REAL BROWSER POST-UPDATE VERIFICATION ===')
+  console.log('=== REAL BROWSER VERIFICATION ===')
 
   const prisma = new PrismaClient({ datasources: { db: { url: DISPOSABLE_DB_URL } } })
   const adminUser = await prisma.adminUser.findFirst({
@@ -48,7 +48,7 @@ async function main() {
   const browser = await puppeteer.launch({
     executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--window-size=1440,900'],
   })
 
   try {
@@ -63,29 +63,23 @@ async function main() {
       httpOnly: true,
     })
 
-    // 1. Visit /admin/properties?tab=current
-    console.log('1. Navigating to /admin/properties?tab=current...')
-    await page.goto(`${BASE_URL}/admin/properties?tab=current`, { waitUntil: 'networkidle2', timeout: 30000 })
-    const shot1 = path.join(SHOT_DIR, 'updated-admin-properties-sidebar.png')
-    await page.screenshot({ path: shot1, fullPage: true })
-    console.log(`   Saved: ${shot1}`)
+    const targets = [
+      { url: `${BASE_URL}/admin/homepage-video`, name: 'verified-admin-homepage-video.png' },
+      { url: `${BASE_URL}/admin/countries`, name: 'verified-admin-countries.png' },
+      { url: `${BASE_URL}/admin/services`, name: 'verified-admin-services.png' },
+      { url: `${BASE_URL}/admin/space-in-round`, name: 'verified-admin-space-in-round.png' },
+      { url: `${BASE_URL}/admin/properties?tab=archived`, name: 'verified-admin-deleted-projects.png' },
+      { url: `${BASE_URL}/collection/dubai`, name: 'verified-public-collection-dubai.png' },
+    ]
 
-    // 2. Visit /admin/properties?tab=sold
-    console.log('2. Navigating to /admin/properties?tab=sold...')
-    await page.goto(`${BASE_URL}/admin/properties?tab=sold`, { waitUntil: 'networkidle2', timeout: 30000 })
-    const shot2 = path.join(SHOT_DIR, 'updated-admin-soldout-actions.png')
-    await page.screenshot({ path: shot2, fullPage: true })
-    console.log(`   Saved: ${shot2}`)
-
-    // 3. Visit public /collection/dubai
-    console.log('3. Navigating to /collection/dubai...')
-    await page.goto(`${BASE_URL}/collection/dubai`, { waitUntil: 'networkidle2', timeout: 30000 })
-    const dubaiText = await page.evaluate(() => document.body.innerText)
-    console.log('   Includes Palm Royal Showcase:', dubaiText.includes('Palm Royal Showcase'))
-    console.log('   Includes Empty State Message:', dubaiText.includes('No active residences'))
-    const shot3 = path.join(SHOT_DIR, 'updated-public-collection-dubai.png')
-    await page.screenshot({ path: shot3, fullPage: true })
-    console.log(`   Saved: ${shot3}`)
+    for (const t of targets) {
+      console.log(`Navigating to ${t.url}...`)
+      await page.goto(t.url, { waitUntil: 'networkidle2', timeout: 30000 })
+      await new Promise((r) => setTimeout(r, 800))
+      const outPath = path.join(SHOT_DIR, t.name)
+      await page.screenshot({ path: outPath, fullPage: false })
+      console.log(`Saved: ${t.name}`)
+    }
 
     console.log('=== VERIFICATION COMPLETE ===')
   } finally {

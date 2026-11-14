@@ -17,6 +17,7 @@ import {
   FolderOpen,
 } from 'lucide-react'
 import MediaLibraryModal from './MediaLibraryModal'
+import { uploadFileToR2 } from '@/lib/clientMediaUpload'
 
 export interface CollectionCountryMediaItem {
   countryId: string
@@ -87,33 +88,18 @@ export default function CollectionMediaClient({
     setToast(null)
 
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('folder', 'homepage')
-      formData.append('mediaRole', 'HOMEPAGE_VIDEO')
-
-      const res = await fetch('/api/admin/media/upload', {
-        method: 'POST',
-        body: formData,
+      const { publicUrl } = await uploadFileToR2(file, {
+        folder: 'homepage',
+        mediaRole: 'HOMEPAGE_VIDEO',
       })
 
-      const data = await res.json()
-      const uploadedUrl = data.publicUrl || data.url
-      if (!res.ok || !uploadedUrl) {
-        setToast({
-          type: 'error',
-          message: data.error || 'Failed to upload Speak With Us / Contact video.',
-        })
-        return
-      }
-
-      setAdvisoryVideoUrl(uploadedUrl)
+      setAdvisoryVideoUrl(publicUrl)
       setToast({
         type: 'success',
         message: 'Speak With Us / Contact video uploaded to R2. Click Save to publish.',
       })
-    } catch {
-      setToast({ type: 'error', message: 'Network error uploading Speak With Us / Contact video.' })
+    } catch (err: any) {
+      setToast({ type: 'error', message: err?.message || 'Error uploading Speak With Us / Contact video.' })
     } finally {
       setUploadingAdvisoryVideo(false)
     }
@@ -165,32 +151,17 @@ export default function CollectionMediaClient({
     setToast(null)
 
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('folder', 'collection-media')
-      formData.append('countrySlug', country.slug)
-      formData.append(
-        'mediaRole',
-        field === 'cover' ? 'COLLECTION_COVER' : 'COLLECTION_HERO_VIDEO'
-      )
-
-      const res = await fetch('/api/admin/media/upload', {
-        method: 'POST',
-        body: formData,
+      const { publicUrl } = await uploadFileToR2(file, {
+        folder: 'collection-media',
+        countrySlug: country.slug,
+        mediaRole: field === 'cover' ? 'COLLECTION_COVER' : 'COLLECTION_HERO_VIDEO',
       })
-
-      const data = await res.json()
-      const uploadedUrl = data.publicUrl || data.url
-      if (!res.ok || !uploadedUrl) {
-        setToast({ type: 'error', message: data.error || `Failed to upload ${field} for ${country.displayName}.` })
-        return
-      }
 
       setDrafts((prev) => ({
         ...prev,
         [country.countryId]: {
           ...prev[country.countryId],
-          ...(field === 'cover' ? { coverImageUrl: uploadedUrl } : { heroVideoUrl: uploadedUrl }),
+          ...(field === 'cover' ? { coverImageUrl: publicUrl } : { heroVideoUrl: publicUrl }),
         },
       }))
 
@@ -198,8 +169,8 @@ export default function CollectionMediaClient({
         type: 'success',
         message: `${country.displayName} ${field === 'cover' ? 'cover image' : 'hero video'} uploaded to R2. Click Save to publish.`,
       })
-    } catch {
-      setToast({ type: 'error', message: `Network error uploading for ${country.displayName}.` })
+    } catch (err: any) {
+      setToast({ type: 'error', message: err?.message || `Failed to upload ${field} for ${country.displayName}.` })
     } finally {
       setUploadingKey(null)
     }

@@ -23,6 +23,7 @@ import {
   FileText,
 } from 'lucide-react'
 import MediaLibraryModal from './MediaLibraryModal'
+import { uploadFileToR2 } from '@/lib/clientMediaUpload'
 
 interface HomepageContentData {
   id?: string
@@ -227,47 +228,18 @@ export default function HomepageVideoClient({
       setUploadedFileName(file.name)
       setToast(null)
 
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('folder', 'homepage')
-      formData.append('mediaRole', 'HOMEPAGE_VIDEO')
-
-      // Use XMLHttpRequest for progress feedback
-      const xhr = new XMLHttpRequest()
-      xhr.open('POST', '/api/admin/media/upload', true)
-
-      xhr.upload.onprogress = (ev) => {
-        if (ev.lengthComputable) {
-          const pct = Math.round((ev.loaded / ev.total) * 100)
-          setUploadProgress(Math.min(pct, 95))
-        }
-      }
-
-      const uploadPromise = new Promise<{ publicUrl: string }>((resolve, reject) => {
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            try {
-              const res = JSON.parse(xhr.responseText)
-              resolve(res)
-            } catch {
-              reject(new Error('Failed to parse server response'))
-            }
-          } else {
-            reject(new Error(`Server error: ${xhr.status} ${xhr.statusText}`))
-          }
-        }
-        xhr.onerror = () => reject(new Error('Network error during file upload.'))
+      const uploaded = await uploadFileToR2(file, {
+        folder: 'homepage',
+        mediaRole: 'HOMEPAGE_VIDEO',
+        onProgress: (pct) => setUploadProgress(pct),
       })
 
-      xhr.send(formData)
-      const data = await uploadPromise
-
       setUploadProgress(100)
-      setVideoUrl(data.publicUrl)
-      setCustomUrlInput(data.publicUrl)
+      setVideoUrl(uploaded.publicUrl)
+      setCustomUrlInput(uploaded.publicUrl)
       setToast({
         type: 'success',
-        message: `Video "${file.name}" uploaded successfully! Click "Save & Publish" to update the live homepage.`,
+        message: `Video "${file.name}" uploaded to Cloudflare R2 successfully! Click "Save & Publish" to update the live homepage.`,
       })
     } catch (err: any) {
       console.error('Video upload error:', err)
@@ -285,20 +257,12 @@ export default function HomepageVideoClient({
 
     try {
       setUploadingThumb(true)
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('folder', 'homepage')
-      formData.append('mediaRole', 'HOMEPAGE_POSTER')
-
-      const res = await fetch('/api/admin/media/upload', {
-        method: 'POST',
-        body: formData,
+      const uploaded = await uploadFileToR2(file, {
+        folder: 'homepage',
+        mediaRole: 'HOMEPAGE_POSTER',
       })
-
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Thumbnail upload failed')
-      setVideoThumb(data.publicUrl)
-      setToast({ type: 'success', message: 'Video poster thumbnail updated.' })
+      setVideoThumb(uploaded.publicUrl)
+      setToast({ type: 'success', message: 'Video poster thumbnail updated in Cloudflare R2.' })
     } catch (err: any) {
       setToast({ type: 'error', message: err.message || 'Thumbnail upload failed.' })
     } finally {

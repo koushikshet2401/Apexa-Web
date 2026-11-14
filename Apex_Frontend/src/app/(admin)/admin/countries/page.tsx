@@ -7,7 +7,13 @@ export const dynamic = 'force-dynamic'
 export default async function AdminCountriesPage() {
   const countries = await db.country.findMany({
     include: {
-      _count: { select: { properties: true } },
+      _count: {
+        select: {
+          properties: {
+            where: { isArchived: false },
+          },
+        },
+      },
     },
     orderBy: { displayOrder: 'asc' },
   })

@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
   },
   transpilePackages: ['gsap'],
   allowedDevOrigins: ['localhost:3000', '*.trycloudflare.com'],
+  experimental: {
+    middlewareClientMaxBodySize: '500mb',
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
@@ -43,6 +46,27 @@ const nextConfig: NextConfig = {
       source: '/destinations/georgia',
       destination: '/collection/georgia',
       permanent: true,
+    },
+    // Admin underscore -> hyphen CMS alias redirects
+    {
+      source: '/admin/homepage_video',
+      destination: '/admin/homepage-video',
+      permanent: false,
+    },
+    {
+      source: '/admin/space_in_round',
+      destination: '/admin/space-in-round',
+      permanent: false,
+    },
+    {
+      source: '/admin/one_team',
+      destination: '/admin/one-team',
+      permanent: false,
+    },
+    {
+      source: '/admin/collection_media',
+      destination: '/admin/collection-media',
+      permanent: false,
     },
     // Redirect /destinations → /collection
     {

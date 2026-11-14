@@ -6,6 +6,7 @@ import { reconcileFeaturedLaunches } from '@/lib/launchesQueue'
 import { hasForbiddenFinancialFields } from '@/lib/projectValidation'
 import { syncProjectMediaAssets } from '@/lib/mediaAssetStore'
 import { revalidatePropertyCms } from '@/lib/revalidate'
+import { deleteR2Object, extractR2KeyFromUrl } from '@/lib/mediaStorage'
 import { Prisma } from '@prisma/client'
 
 /**
@@ -339,10 +340,126 @@ export async function DELETE(
     const { id } = await params
     const project = await db.property.findUnique({
       where: { id },
-      include: { country: { select: { slug: true } } },
+      include: {
+        country: { select: { slug: true } },
+        images: true,
+      },
     })
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const isPermanent = searchParams.get('permanent') === 'true'
+
+    if (isPermanent) {
+      // 1. Gather all R2 media associated with this property
+      const r2KeysToDelete: string[] = []
+      const addKeyIfR2 = (urlOrKey?: string | null) => {
+        if (!urlOrKey) return
+        const k = extractR2KeyFromUrl(urlOrKey)
+        if (k && !r2KeysToDelete.includes(k)) r2KeysToDelete.push(k)
+      }
+
+      addKeyIfR2(project.mainImage)
+      addKeyIfR2(project.mainVideoUrl)
+      addKeyIfR2(project.mainVideoThumb)
+      addKeyIfR2(project.spaceRoundImage)
+
+      for (const img of project.images || []) {
+        addKeyIfR2(img.url)
+      }
+
+      try {
+        const mediaAssets = await db.mediaAsset.findMany({
+          where: { propertyId: id },
+          select: { r2Key: true },
+        })
+        for (const ma of mediaAssets) {
+          if (ma.r2Key && !r2KeysToDelete.includes(ma.r2Key)) r2KeysToDelete.push(ma.r2Key)
+        }
+      } catch {
+        // MediaAsset table might not exist in old migration
+      }
+
+      // 2. Delete each R2 object permanently from Cloudflare R2
+      const deletedR2Keys: string[] = []
+      for (const key of r2KeysToDelete) {
+        try {
+          await deleteR2Object(key)
+          deletedR2Keys.push(key)
+        } catch (err) {
+          console.warn(`[Permanent Delete] Failed to delete R2 object "${key}":`, err)
+        }
+      }
+
+      // 3. Delete DB relations
+      try {
+        await db.propertyImage.deleteMany({ where: { propertyId: id } })
+      } catch {}
+      try {
+        await db.propertyService.deleteMany({ where: { propertyId: id } })
+      } catch {}
+      try {
+        await db.dealFinancialAdjustment.deleteMany({ where: { deal: { propertyId: id } } })
+      } catch {}
+      try {
+        await db.deal.deleteMany({ where: { propertyId: id } })
+      } catch {}
+      try {
+        await db.propertyValuationSnapshot.deleteMany({ where: { propertyId: id } })
+      } catch {}
+      try {
+        await db.mediaAsset.deleteMany({ where: { propertyId: id } })
+      } catch {}
+
+      // 4. Delete the property row
+      await db.property.delete({ where: { id } })
+
+      // 5. Reconcile space in round queue if needed
+      if (project.isSpaceInRound) {
+        const remainingSpaces = await db.property.findMany({
+          where: { isSpaceInRound: true, isArchived: false },
+          orderBy: { spaceOrder: 'asc' },
+        })
+        for (let i = 0; i < remainingSpaces.length; i++) {
+          await db.property.update({
+            where: { id: remainingSpaces[i].id },
+            data: { spaceOrder: i + 1 },
+          })
+        }
+      }
+
+      // Reconcile featured launches queue if needed
+      if (project.isFeaturedLaunch) {
+        await reconcileFeaturedLaunches(id, true)
+      }
+
+      // Audit Log entry
+      await logAdminActivity({
+        adminId: auth.id,
+        adminEmail: auth.email,
+        action: 'PROJECT_PURGED',
+        entityType: 'Property',
+        entityId: id,
+        summary: `Project "${project.name}" permanently purged. ${deletedR2Keys.length} R2 media files deleted.`,
+        metadata: {
+          projectId: id,
+          deletedR2Keys,
+        },
+      })
+
+      revalidatePropertyCms({
+        slug: project.slug,
+        countrySlug: project.country?.slug,
+      })
+
+      return NextResponse.json({
+        ok: true,
+        purged: true,
+        message: `Project "${project.name}" permanently deleted and ${deletedR2Keys.length} Cloudflare R2 media files purged.`,
+        deletedR2Count: deletedR2Keys.length,
+      })
     }
 
     if (project.isArchived) {
@@ -365,11 +482,27 @@ export async function DELETE(
         isArchived: true,
         isPublished: false,
         isPubliclyVisible: false,
+        isSpaceInRound: false,
+        spaceOrder: null,
         archivedAt: new Date(),
         archivedById: auth.id,
         archivedReason: reason,
       },
     })
+
+    // Reconcile space in round queue: re-sequence remaining slots
+    if (project.isSpaceInRound) {
+      const remainingSpaces = await db.property.findMany({
+        where: { isSpaceInRound: true, isArchived: false },
+        orderBy: { spaceOrder: 'asc' },
+      })
+      for (let i = 0; i < remainingSpaces.length; i++) {
+        await db.property.update({
+          where: { id: remainingSpaces[i].id },
+          data: { spaceOrder: i + 1 },
+        })
+      }
+    }
 
     // Reconcile featured launches queue: remove archived project from launches
     if (archived.isFeaturedLaunch) {

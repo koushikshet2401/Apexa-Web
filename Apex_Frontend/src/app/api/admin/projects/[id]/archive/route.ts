@@ -46,11 +46,27 @@ export async function POST(
         isArchived: true,
         isPublished: false,
         isPubliclyVisible: false,
+        isSpaceInRound: false,
+        spaceOrder: null,
         archivedAt: new Date(),
         archivedById: auth.id,
         archivedReason: reason,
       },
     })
+
+    // Reconcile space in round queue: re-sequence remaining slots
+    if (project.isSpaceInRound) {
+      const remainingSpaces = await db.property.findMany({
+        where: { isSpaceInRound: true, isArchived: false },
+        orderBy: { spaceOrder: 'asc' },
+      })
+      for (let i = 0; i < remainingSpaces.length; i++) {
+        await db.property.update({
+          where: { id: remainingSpaces[i].id },
+          data: { spaceOrder: i + 1 },
+        })
+      }
+    }
 
     // Reconcile featured launches queue: if this archived project was featured, promote last-in project to fill slot
     const updatedLaunches = await reconcileFeaturedLaunches(id, true)

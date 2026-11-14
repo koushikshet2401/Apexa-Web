@@ -10,7 +10,18 @@ export async function GET(request: NextRequest) {
   try {
     const services = await db.serviceCategory.findMany({
       include: {
-        _count: { select: { properties: true } },
+        _count: {
+          select: {
+            properties: {
+              where: {
+                property: {
+                  isArchived: false,
+                  isPublished: true,
+                },
+              },
+            },
+          },
+        },
       },
       orderBy: { displayOrder: 'asc' },
     })

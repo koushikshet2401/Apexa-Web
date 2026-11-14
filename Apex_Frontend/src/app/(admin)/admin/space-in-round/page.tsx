@@ -7,7 +7,11 @@ export const dynamic = 'force-dynamic'
 export default async function AdminSpaceInRoundPage() {
   const [spaceProperties, candidates] = await Promise.all([
     db.property.findMany({
-      where: { isSpaceInRound: true },
+      where: {
+        isSpaceInRound: true,
+        isArchived: false,
+        isPublished: true,
+      },
       include: {
         country: {
           select: { displayName: true, slug: true },
@@ -16,7 +20,10 @@ export default async function AdminSpaceInRoundPage() {
       orderBy: { spaceOrder: 'asc' },
     }),
     db.property.findMany({
-      where: { isPublished: true },
+      where: {
+        isPublished: true,
+        isArchived: false,
+      },
       select: {
         id: true,
         name: true,

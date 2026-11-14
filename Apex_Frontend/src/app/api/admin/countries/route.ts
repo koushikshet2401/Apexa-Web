@@ -10,7 +10,13 @@ export async function GET(request: NextRequest) {
   try {
     const countries = await db.country.findMany({
       include: {
-        _count: { select: { properties: true } },
+        _count: {
+          select: {
+            properties: {
+              where: { isArchived: false },
+            },
+          },
+        },
       },
       orderBy: { displayOrder: 'asc' },
     })

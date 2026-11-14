@@ -25,6 +25,7 @@ import {
   User,
   ChevronRight,
   Sparkles,
+  Trash2,
 } from 'lucide-react'
 import { SUPPORTED_CURRENCY_CODES } from '@/config/currencies'
 
@@ -126,6 +127,8 @@ export default function PropertiesListClient({
   // 1. Delete / Archive Modal State
   const [archiveModalItem, setArchiveModalItem] = useState<PropertyItem | null>(null)
   const [archiveReason, setArchiveReason] = useState<string>('')
+  const [purgeItem, setPurgeItem] = useState<PropertyItem | null>(null)
+  const [purging, setPurging] = useState<boolean>(false)
 
   // 2. Close Deal Modal State
   const [closeDealItem, setCloseDealItem] = useState<PropertyItem | null>(null)
@@ -330,6 +333,32 @@ export default function PropertiesListClient({
       showToast('error', 'Network error while restoring project')
     } finally {
       setActionLoadingId(null)
+    }
+  }
+
+  // Permanent Purge Action (DB + R2)
+  const handlePurge = async () => {
+    if (!purgeItem) return
+    setPurging(true)
+    try {
+      const res = await fetch(`/api/admin/properties/${purgeItem.id}?permanent=true`, {
+        method: 'DELETE',
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setProperties((prev) => prev.filter((item) => item.id !== purgeItem.id))
+        showToast(
+          'success',
+          `Project "${purgeItem.name}" and all associated Cloudflare R2 media files purged permanently.`
+        )
+        setPurgeItem(null)
+      } else {
+        showToast('error', data.error || data.message || 'Permanent deletion failed')
+      }
+    } catch {
+      showToast('error', 'Network error while permanently deleting project')
+    } finally {
+      setPurging(false)
     }
   }
 
@@ -977,7 +1006,7 @@ export default function PropertiesListClient({
                       <td className="py-4 px-5 font-mono text-gray-400 text-xs">
                         {p.archivedAt ? new Date(p.archivedAt).toLocaleDateString() : '—'}
                       </td>
-                      <td className="py-4 px-5 text-right whitespace-nowrap">
+                      <td className="py-4 px-5 text-right whitespace-nowrap space-x-2">
                         <button
                           onClick={() => handleRestore(p)}
                           disabled={actionLoadingId === p.id}
@@ -986,6 +1015,15 @@ export default function PropertiesListClient({
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
                           <span>Restore</span>
+                        </button>
+                        <button
+                          onClick={() => setPurgeItem(p)}
+                          disabled={actionLoadingId === p.id}
+                          className="px-3 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                          title="Permanently Delete and Purge all R2 Media Files"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Purge R2 & DB</span>
                         </button>
                       </td>
                     </tr>
@@ -1206,6 +1244,76 @@ export default function PropertiesListClient({
                 className="px-5 py-2 rounded-lg bg-rose-500 hover:bg-rose-600 text-white font-semibold text-xs transition-all shadow-[0_0_15px_rgba(244,63,94,0.3)] disabled:opacity-40 cursor-pointer"
               >
                 {actionLoadingId === archiveModalItem.id ? 'Deleting...' : 'Confirm Deletion'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PERMANENT PURGE (DB + R2) MODAL */}
+      {purgeItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-[#070E1C] border border-rose-500/30 rounded-2xl shadow-2xl max-w-lg w-full p-6 text-white space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-lg bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400">
+                  <Trash2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white">Permanently Delete Project</h3>
+                  <p className="text-xs text-rose-300/80">Irreversible Action & R2 Media Cleanup</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setPurgeItem(null)}
+                className="text-gray-400 hover:text-white p-1 rounded-lg"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs text-gray-300">
+              <p>
+                You are about to permanently purge <strong className="text-white">{purgeItem.name}</strong>.
+              </p>
+              <div className="p-3 rounded-lg bg-rose-950/40 border border-rose-500/20 text-rose-200 text-xs space-y-1.5">
+                <p className="font-semibold text-rose-100 flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 text-rose-400" /> Warning: Unrecoverable Storage Purge
+                </p>
+                <ul className="list-disc pl-5 space-y-1 text-[11px] text-rose-300">
+                  <li>The database record and all related property images will be deleted forever.</li>
+                  <li>All associated images, videos, and thumbnails in Cloudflare R2 will be purged immediately to release bucket storage.</li>
+                  <li>This project cannot be restored later.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
+              <button
+                type="button"
+                onClick={() => setPurgeItem(null)}
+                disabled={purging}
+                className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handlePurge}
+                disabled={purging}
+                className="px-5 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-lg shadow-rose-900/40 transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                {purging ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Purging R2 & DB...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Confirm Permanent Delete</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

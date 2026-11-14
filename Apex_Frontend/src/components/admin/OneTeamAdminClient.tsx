@@ -17,6 +17,7 @@ import {
   FolderOpen,
 } from 'lucide-react'
 import MediaLibraryModal from './MediaLibraryModal'
+import { uploadFileToR2 } from '@/lib/clientMediaUpload'
 
 interface ServiceSummary {
   id: string
@@ -239,35 +240,24 @@ export default function OneTeamAdminClient({
     setToast(null)
 
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('folder', 'one-team')
-      formData.append('mediaRole', mediaRole)
-
-      const res = await fetch('/api/admin/media/upload', {
-        method: 'POST',
-        body: formData,
+      const { publicUrl } = await uploadFileToR2(file, {
+        folder: 'one-team',
+        mediaRole,
       })
 
-      const data = await res.json()
-      const uploadedUrl = data.publicUrl || data.url
-      if (!res.ok || !uploadedUrl) {
-        setToast({ type: 'error', message: data.error || 'Failed to upload asset to Cloudflare R2.' })
-        return
-      }
-
-      if (slot === 'villas') setLuxuryVillasImageUrl(uploadedUrl)
-      if (slot === 'commercial') setCommercialImageUrl(uploadedUrl)
-      if (slot === 'sky') setSkyResidencesImageUrl(uploadedUrl)
-      if (slot === 'waterfront') setWaterfrontImageUrl(uploadedUrl)
-      if (slot === 'video') setCenterVideoUrl(uploadedUrl)
+      if (slot === 'villas') setLuxuryVillasImageUrl(publicUrl)
+      if (slot === 'commercial') setCommercialImageUrl(publicUrl)
+      if (slot === 'sky') setSkyResidencesImageUrl(publicUrl)
+      if (slot === 'waterfront') setWaterfrontImageUrl(publicUrl)
+      if (slot === 'video') setCenterVideoUrl(publicUrl)
 
       setToast({
         type: 'success',
         message: 'Uploaded to Cloudflare R2. Click "Save Changes" to publish.',
       })
-    } catch {
-      setToast({ type: 'error', message: 'Network error uploading file to R2.' })
+    } catch (err: any) {
+      console.error('Upload error in OneTeamAdminClient:', err)
+      setToast({ type: 'error', message: err?.message || 'Failed to upload file to Cloudflare R2.' })
     } finally {
       setUploadingSlot(null)
     }
