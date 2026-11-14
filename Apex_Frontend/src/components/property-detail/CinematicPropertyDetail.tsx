@@ -511,13 +511,13 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
             )}
           >
             {/* 21.dev GatewayFlow Background Animation */}
-            <div className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden opacity-40">
+            <div className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden opacity-90 transition-opacity duration-300">
               <GatewayFlow
                 mode={isLight ? "light" : "dark"}
                 speed={0.85}
                 density={1}
-                size={1}
-                opacity={0.9}
+                size={1.1}
+                opacity={1}
                 className="w-full h-full"
               />
             </div>
@@ -526,8 +526,14 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
             <div className={cn(
               "absolute inset-0 z-1 pointer-events-none transition-all duration-500",
               isLight
-                ? "bg-[radial-gradient(ellipse_at_center,rgba(251,249,246,0.65)_0%,rgba(251,249,246,0.95)_100%)]"
-                : "bg-[radial-gradient(ellipse_at_center,rgba(4,8,16,0.65)_0%,rgba(4,8,16,0.95)_100%)]"
+                ? "bg-[radial-gradient(ellipse_at_center,rgba(251,249,246,0.15)_0%,rgba(251,249,246,0.40)_60%,rgba(251,249,246,0.85)_100%)]"
+                : "bg-[radial-gradient(ellipse_at_center,rgba(4,8,16,0.15)_0%,rgba(4,8,16,0.40)_60%,rgba(4,8,16,0.85)_100%)]"
+            )} />
+
+            {/* Soft Typography Legibility Shield */}
+            <div className={cn(
+              "absolute inset-0 max-w-2xl mx-auto my-auto h-80 rounded-full blur-3xl pointer-events-none z-[5] transition-colors duration-500",
+              isLight ? "bg-[#FBF9F6]/55" : "bg-[#040810]/55"
             )} />
 
             {/* Centered Luxury Details Container */}

@@ -67,7 +67,8 @@ const GATEWAY_FLOW_DEFAULTS = {
   brightness: 1,
 } as const;
 
-const LIGHT_PAPER = "#eef1f6";
+const LIGHT_PAPER = "#FBF9F6";
+const DARK_PAPER = "#040810";
 
 function clamp(value: number, minimum: number, maximum: number) {
   return Math.min(maximum, Math.max(minimum, value));
@@ -146,7 +147,7 @@ const gatewayFlowSource = `<!DOCTYPE html>
         width: 100%;
         height: 100%;
         overflow: hidden;
-        background: #000000;
+        background: transparent;
       }
       #flow-canvas {
         position: absolute;
@@ -158,8 +159,7 @@ const gatewayFlowSource = `<!DOCTYPE html>
     </style>
 </head>
 <body>
-    <div style="position: fixed; inset: 0; overflow: hidden; background: #000000;">
-        <div style="position: absolute; inset: 0; opacity: 0.1; background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.01) 0%, rgba(0, 0, 0, 0) 80%);"></div>
+    <div style="position: fixed; inset: 0; overflow: hidden; background: transparent;">
         <canvas id="flow-canvas"></canvas>
     </div>
 
@@ -189,16 +189,22 @@ const gatewayFlowSource = `<!DOCTYPE html>
             });
 
             const paths = [];
-            const numPaths = 80;
+            const numPaths = 90;
             
             for(let i = 0; i < numPaths; i++) {
                 paths.push({
                     isLeft: i % 2 === 0,
                     startY: (i / numPaths) * height * 1.4 - height * 0.2,
-                    particles: [{
-                        t: Math.random(),
-                        speed: 0.0015 + Math.random() * 0.002
-                    }]
+                    particles: [
+                        {
+                            t: Math.random(),
+                            speed: 0.0016 + Math.random() * 0.0022
+                        },
+                        {
+                            t: (Math.random() + 0.5) % 1,
+                            speed: 0.0012 + Math.random() * 0.0018
+                        }
+                    ]
                 });
             }
 
@@ -215,6 +221,8 @@ const gatewayFlowSource = `<!DOCTYPE html>
                 const centerX = width / 2;
                 const centerY = height / 2;
 
+                const isLight = (window.__SF_CONTROLS && window.__SF_CONTROLS.mode === 'light');
+
                 explosions.forEach(exp => {
                     exp.radius += 15;
                     exp.life -= 0.015;
@@ -230,9 +238,12 @@ const gatewayFlowSource = `<!DOCTYPE html>
                     ctx.beginPath();
                     ctx.moveTo(p0.x, p0.y);
                     ctx.bezierCurveTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
-                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-                    ctx.lineWidth = 1.2;
-                    ctx.setLineDash([1, 4]);
+
+                    // High contrast adaptive strokes
+                    // Dark mode: luminous light lines; Light mode: dark charcoal lines
+                    ctx.strokeStyle = isLight ? 'rgba(15, 23, 42, 0.72)' : 'rgba(255, 255, 255, 0.78)';
+                    ctx.lineWidth = 1.4;
+                    ctx.setLineDash([2, 3.5]);
                     ctx.stroke();
                     ctx.setLineDash([]);
 
@@ -260,8 +271,20 @@ const gatewayFlowSource = `<!DOCTYPE html>
                         pos.x += dxTotal;
                         pos.y += dyTotal;
 
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-                        ctx.fillRect(pos.x - 1.5, pos.y - 1.5, 3, 3);
+                        // High contrast particles
+                        // Light mode: dark slate particles
+                        // Dark mode: luminous glowing particles
+                        if (isLight) {
+                            ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+                            ctx.shadowColor = 'rgba(15, 23, 42, 0.35)';
+                            ctx.shadowBlur = 2;
+                        } else {
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.98)';
+                            ctx.shadowColor = 'rgba(255, 255, 255, 0.85)';
+                            ctx.shadowBlur = 6;
+                        }
+                        ctx.fillRect(pos.x - 1.75, pos.y - 1.75, 3.5, 3.5);
+                        ctx.shadowBlur = 0;
                     });
                 });
                 
@@ -278,31 +301,37 @@ const GATEWAY_FLOW_DEFINITION: EffectDefinition = {
   title: "Gateway Flow",
   source: gatewayFlowSource,
   supportsMode: true,
-  background: (mode) => (mode === "light" ? LIGHT_PAPER : "#000000"),
+  background: (mode) => (mode === "light" ? LIGHT_PAPER : DARK_PAPER),
   targets: [{ selector: "#flow-canvas", role: "background" }],
   patch(source, { size, density, mode }) {
     let next = source
       .replace(
-        "const numPaths = 80;",
-        `const numPaths = ${scaleCount(80, density, 12)};`,
+        "const numPaths = 90;",
+        `const numPaths = ${scaleCount(90, density, 12)};`,
       )
       .replace(
         "p.t += p.speed;",
         "p.t += p.speed * ((window.__SF_CONTROLS&&window.__SF_CONTROLS.speed)||1);",
       )
       .replace(
-        "ctx.lineWidth = 1.2;",
-        `ctx.lineWidth = ${Number((1.2 * size).toFixed(2))};`,
+        "ctx.lineWidth = 1.4;",
+        `ctx.lineWidth = ${Number((1.4 * size).toFixed(2))};`,
       );
     if (mode === "light") {
       next = next
         .replace(
-          "ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';",
-          "ctx.strokeStyle = 'rgba(26, 31, 42, 0.4)';",
+          "ctx.strokeStyle = isLight ? 'rgba(15, 23, 42, 0.72)' : 'rgba(255, 255, 255, 0.78)';",
+          "ctx.strokeStyle = 'rgba(15, 23, 42, 0.75)';",
         )
         .replace(
-          "ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';",
-          "ctx.fillStyle = `rgba(26, 31, 42, 0.75)`;",
+          "ctx.fillStyle = 'rgba(255, 255, 255, 0.98)';",
+          "ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';",
+        );
+    } else {
+      next = next
+        .replace(
+          "ctx.strokeStyle = isLight ? 'rgba(15, 23, 42, 0.72)' : 'rgba(255, 255, 255, 0.78)';",
+          "ctx.strokeStyle = 'rgba(255, 255, 255, 0.82)';",
         );
     }
     return next;
