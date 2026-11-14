@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import {
   UploadCloud,
   CheckCircle2,
@@ -14,7 +14,16 @@ import {
 interface MediaUploaderProps {
   onUploadComplete: (url: string, key?: string) => void
   accept?: 'image/*' | 'video/mp4' | string
-  folder?: 'properties' | 'countries' | 'services' | 'homepage' | 'one-team' | 'collection-media' | 'general'
+  folder?:
+    | 'properties'
+    | 'space-in-round'
+    | 'countries'
+    | 'services'
+    | 'homepage'
+    | 'one-team'
+    | 'collection-media'
+    | 'general'
+    | string
   countrySlug?: string
   projectSlug?: string
   mediaRole?:
@@ -22,6 +31,7 @@ interface MediaUploaderProps {
     | 'HERO_VIDEO'
     | 'GALLERY'
     | 'SPACE_ROUND'
+    | 'SPACE_IN_ROUND'
     | 'HOMEPAGE_VIDEO'
     | 'HOMEPAGE_POSTER'
     | 'COUNTRY_MEDIA'
@@ -32,6 +42,7 @@ interface MediaUploaderProps {
     | 'COLLECTION_COVER'
     | 'COLLECTION_HERO_VIDEO'
     | 'OTHER'
+    | string
   label?: string
 }
 
@@ -52,7 +63,20 @@ export default function MediaUploader({
   const [successUrl, setSuccessUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const isVideo = accept.includes('video')
+  // Smart accept detection
+  const acceptsVideo = accept.includes('video') || accept === '*' || accept.includes('*/*')
+  const acceptsImage = accept.includes('image') || accept === '*' || accept.includes('*/*')
+  const isVideoOnly = acceptsVideo && !acceptsImage
+  const isImageOnly = acceptsImage && !acceptsVideo
+
+  // Cleanup object URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (preview && preview.startsWith('blob:')) {
+        URL.revokeObjectURL(preview)
+      }
+    }
+  }, [preview])
 
   const validateAndSelectFile = (selectedFile: File) => {
     setError(null)
@@ -69,40 +93,63 @@ export default function MediaUploader({
 
     const extMatch = selectedFile.name.toLowerCase().match(/\.[a-z0-9]+$/)
     const ext = extMatch ? extMatch[0] : ''
+    const isFileVideo =
+      allowedVideoExts.includes(ext) ||
+      selectedFile.type.startsWith('video/') ||
+      selectedFile.type === 'video/mp4' ||
+      selectedFile.type === 'video/quicktime' ||
+      selectedFile.type === 'video/webm'
+    const isFileImage =
+      allowedImageExts.includes(ext) || selectedFile.type.startsWith('image/')
 
-    if (isVideo) {
-      const validVideoMime =
-        selectedFile.type === 'video/mp4' ||
-        selectedFile.type === 'video/quicktime' ||
-        selectedFile.type === 'video/webm'
-      if (!allowedVideoExts.includes(ext) && !validVideoMime) {
+    if (isVideoOnly) {
+      if (!isFileVideo) {
         setError('Only MP4, MOV, or WebM videos are allowed (.mp4, .mov, .webm).')
         return
       }
-      // 500MB max for video
       if (selectedFile.size > 500 * 1024 * 1024) {
         setError(`Video exceeds 500MB limit (${(selectedFile.size / (1024 * 1024)).toFixed(1)}MB).`)
         return
       }
-    } else {
-      if (!allowedImageExts.includes(ext) && !selectedFile.type.startsWith('image/')) {
+    } else if (isImageOnly) {
+      if (!isFileImage) {
         setError('Only image files (.jpg, .jpeg, .png, .webp, .gif) are allowed.')
         return
       }
-      // 20MB max for image
-      if (selectedFile.size > 20 * 1024 * 1024) {
-        setError(`Image exceeds 20MB limit (${(selectedFile.size / (1024 * 1024)).toFixed(1)}MB).`)
+      if (selectedFile.size > 50 * 1024 * 1024) {
+        setError(`Image exceeds 50MB limit (${(selectedFile.size / (1024 * 1024)).toFixed(1)}MB).`)
+        return
+      }
+    } else {
+      // Accepts both images and videos
+      if (!isFileImage && !isFileVideo) {
+        setError('Please select a valid image (.jpg, .png, .webp) or video (.mp4, .mov, .webm) file.')
+        return
+      }
+      if (isFileVideo && selectedFile.size > 500 * 1024 * 1024) {
+        setError(`Video exceeds 500MB limit (${(selectedFile.size / (1024 * 1024)).toFixed(1)}MB).`)
+        return
+      }
+      if (isFileImage && selectedFile.size > 50 * 1024 * 1024) {
+        setError(`Image exceeds 50MB limit (${(selectedFile.size / (1024 * 1024)).toFixed(1)}MB).`)
         return
       }
     }
 
     setFile(selectedFile)
 
-    // Generate preview for images
+    // Generate preview
     if (selectedFile.type.startsWith('image/')) {
       const reader = new FileReader()
       reader.onload = (e) => setPreview(e.target?.result as string)
       reader.readAsDataURL(selectedFile)
+    } else if (selectedFile.type.startsWith('video/')) {
+      try {
+        const objUrl = URL.createObjectURL(selectedFile)
+        setPreview(objUrl)
+      } catch {
+        setPreview(null)
+      }
     } else {
       setPreview(null)
     }
@@ -122,13 +169,17 @@ export default function MediaUploader({
     setProgress(0)
 
     try {
+      const isFileVideo =
+        file.type.startsWith('video/') ||
+        ['.mp4', '.mov', '.webm', '.m4v'].some((ext) => file.name.toLowerCase().endsWith(ext))
+
       // 1. Get R2 upload target from API
       const presignRes = await fetch('/api/admin/media/presign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           filename: file.name,
-          contentType: file.type || (isVideo ? 'video/mp4' : 'image/jpeg'),
+          contentType: file.type || (isFileVideo ? 'video/mp4' : 'image/jpeg'),
           fileSize: file.size,
           folder,
           countrySlug: countrySlug || null,
@@ -149,7 +200,7 @@ export default function MediaUploader({
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest()
         xhr.open('PUT', uploadUrl)
-        xhr.setRequestHeader('Content-Type', file.type || (isVideo ? 'video/mp4' : 'image/jpeg'))
+        xhr.setRequestHeader('Content-Type', file.type || (isFileVideo ? 'video/mp4' : 'image/jpeg'))
 
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
@@ -181,7 +232,12 @@ export default function MediaUploader({
           }
         }
 
-        xhr.onerror = () => reject(new Error('Network error occurred during file upload. Please check your connection and retry.'))
+        xhr.onerror = () =>
+          reject(
+            new Error(
+              'Network error occurred during file upload. Please check your connection and retry.'
+            )
+          )
         xhr.send(file)
       })
     } catch (err: any) {
@@ -193,6 +249,9 @@ export default function MediaUploader({
   }
 
   const reset = () => {
+    if (preview && preview.startsWith('blob:')) {
+      URL.revokeObjectURL(preview)
+    }
     setFile(null)
     setPreview(null)
     setProgress(0)
@@ -202,6 +261,11 @@ export default function MediaUploader({
       fileInputRef.current.value = ''
     }
   }
+
+  const isCurrentFileVideo =
+    file &&
+    (file.type.startsWith('video/') ||
+      ['.mp4', '.mov', '.webm', '.m4v'].some((ext) => file.name.toLowerCase().endsWith(ext)))
 
   return (
     <div className="w-full space-y-3 font-sans">
@@ -230,8 +294,12 @@ export default function MediaUploader({
               <UploadCloud className="w-5 h-5" />
             </div>
             <div className="text-xs font-medium text-white">{label}</div>
-            <p className="text-[11px] text-gray-500 font-mono">
-              {isVideo ? 'Click or drag & drop MP4 / MOV / WebM (max 500MB)' : 'Click or drag & drop PNG, JPG, WebP (max 20MB)'}
+            <p className="text-[11px] text-gray-400 font-mono">
+              {isVideoOnly
+                ? 'Click or drag & drop MP4 / MOV / WebM (max 500MB)'
+                : isImageOnly
+                  ? 'Click or drag & drop PNG, JPG, WebP (max 50MB)'
+                  : 'Click or drag & drop Image (PNG, JPG, WebP max 50MB) or Video (MP4, MOV, WebM max 500MB)'}
             </p>
           </div>
         </div>
@@ -239,21 +307,25 @@ export default function MediaUploader({
         <div className="border border-white/10 rounded-xl p-4 bg-[#070E1C] space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 overflow-hidden">
-              {preview ? (
+              {preview && !isCurrentFileVideo ? (
                 <div className="w-12 h-12 rounded border border-white/10 overflow-hidden shrink-0 bg-black">
                   <img src={preview} alt="Upload preview" className="w-full h-full object-cover" />
                 </div>
+              ) : preview && isCurrentFileVideo ? (
+                <div className="w-12 h-12 rounded border border-white/10 overflow-hidden shrink-0 bg-black flex items-center justify-center">
+                  <video src={preview} className="w-full h-full object-cover" muted />
+                </div>
               ) : (
                 <div className="w-12 h-12 rounded border border-white/10 bg-[#0B1528] flex items-center justify-center text-[#7DD3FC] shrink-0">
-                  {isVideo ? <FileVideo className="w-6 h-6" /> : <FileImage className="w-6 h-6" />}
+                  {isCurrentFileVideo ? <FileVideo className="w-6 h-6" /> : <FileImage className="w-6 h-6" />}
                 </div>
               )}
               <div className="overflow-hidden">
                 <div className="text-xs font-medium text-white truncate max-w-[200px] sm:max-w-xs">
                   {file.name}
                 </div>
-                <div className="text-[10px] text-gray-500 font-mono">
-                  {(file.size / (1024 * 1024)).toFixed(2)} MB • {file.type || 'binary'}
+                <div className="text-[10px] text-gray-400 font-mono">
+                  {(file.size / (1024 * 1024)).toFixed(2)} MB • {file.type || (isCurrentFileVideo ? 'video/mp4' : 'image/jpeg')}
                 </div>
               </div>
             </div>
@@ -262,7 +334,7 @@ export default function MediaUploader({
               <button
                 type="button"
                 onClick={reset}
-                className="p-1 rounded text-gray-500 hover:text-white"
+                className="p-1 rounded text-gray-500 hover:text-white cursor-pointer"
                 title="Cancel"
               >
                 <X className="w-4 h-4" />
@@ -275,7 +347,7 @@ export default function MediaUploader({
             <div className="space-y-1.5">
               <div className="flex justify-between text-[11px] font-mono text-gray-400">
                 <span className="flex items-center gap-1.5 text-[#7DD3FC]">
-                  <Loader2 className="w-3 h-3 animate-spin" /> Uploading to Storage...
+                  <Loader2 className="w-3 h-3 animate-spin" /> Uploading to Cloudflare R2...
                 </span>
                 <span>{progress}%</span>
               </div>
@@ -294,14 +366,14 @@ export default function MediaUploader({
               <button
                 type="button"
                 onClick={reset}
-                className="px-3 py-1.5 rounded text-xs text-gray-400 hover:text-white"
+                className="px-3 py-1.5 rounded text-xs text-gray-400 hover:text-white cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleUpload}
-                className="px-4 py-1.5 rounded-lg bg-[#CBD5E1] hover:bg-white text-[#040810] text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer"
+                className="px-4 py-1.5 rounded-lg bg-[#38BDF8] hover:bg-[#7DD3FC] text-[#040810] text-xs font-semibold flex items-center gap-1.5 transition-all shadow-[0_0_15px_rgba(56,189,248,0.25)] cursor-pointer"
               >
                 <UploadCloud className="w-3.5 h-3.5" />
                 <span>Start Upload</span>

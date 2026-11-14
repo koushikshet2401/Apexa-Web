@@ -47,10 +47,15 @@ export async function GET(request: NextRequest) {
     assertR2Ready()
 
     const { searchParams } = new URL(request.url)
-    const effectivePrefix = resolveListingPrefix(
-      searchParams.get('folder'),
-      searchParams.get('prefix')
-    )
+    const rawFolder = (searchParams.get('folder') || '').toLowerCase().trim()
+    const isSpaceInRoundQuery = rawFolder === 'space-in-round' || rawFolder === 'spaces-in-round'
+
+    const effectivePrefix = isSpaceInRoundQuery
+      ? undefined // fetch full list to capture space-in-round/ prefix as well as space-round role items
+      : resolveListingPrefix(
+          searchParams.get('folder'),
+          searchParams.get('prefix')
+        )
     const typeFilter = (searchParams.get('type') || '').toLowerCase().trim()
     const searchQuery = (searchParams.get('search') || '').toLowerCase().trim()
 
@@ -130,6 +135,15 @@ export async function GET(request: NextRequest) {
         }
       })
       .filter((item) => {
+        if (isSpaceInRoundQuery) {
+          const isSpaceItem =
+            item.folder === 'space-in-round' ||
+            item.mediaRole === 'SPACE_IN_ROUND' ||
+            item.mediaRole === 'SPACE_ROUND' ||
+            item.key.toLowerCase().includes('space-round') ||
+            item.key.toLowerCase().includes('space-in-round')
+          if (!isSpaceItem) return false
+        }
         if (typeFilter === 'image' && item.mediaCategory !== 'image') return false
         if (typeFilter === 'video' && item.mediaCategory !== 'video') return false
         if (searchQuery) {

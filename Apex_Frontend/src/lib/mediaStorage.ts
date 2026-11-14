@@ -10,6 +10,7 @@ import { getR2BucketName, getR2Client, getR2PublicUrl, isR2Configured } from './
 
 export const ALLOWED_MEDIA_FOLDERS = [
   'properties',
+  'space-in-round',
   'countries',
   'services',
   'homepage',
@@ -333,6 +334,10 @@ export function buildR2ObjectKey(params: {
     const country = sanitizePathSegment(params.countrySlug, 'general')
     const prefix = role === 'COLLECTION_COVER' ? 'cover' : role === 'COLLECTION_HERO_VIDEO' ? 'hero-video' : 'media'
     return `collection-media/${country}/${prefix}-${timestamp}-${uniqueSuffix}-${safeBase}${params.ext}`
+  }
+
+  if (folder === 'space-in-round') {
+    return `space-in-round/space-round-${timestamp}-${uniqueSuffix}-${safeBase}${params.ext}`
   }
 
   if (folder === 'one-team') {

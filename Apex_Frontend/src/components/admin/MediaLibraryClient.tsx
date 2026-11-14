@@ -14,6 +14,8 @@ import {
   RefreshCw,
   Folder,
   Search,
+  Orbit,
+  CheckCircle2,
 } from 'lucide-react'
 import MediaUploader from './MediaUploader'
 
@@ -43,15 +45,103 @@ interface MediaLibraryClientProps {
   acceptFilter?: 'all' | 'image' | 'video'
 }
 
-const FOLDER_TABS = [
+export const FOLDER_TABS = [
   'all',
   'properties',
+  'space-in-round',
   'countries',
   'services',
   'homepage',
   'one-team',
   'collection-media',
   'general',
+] as const
+
+export const FOLDER_LABELS: Record<string, string> = {
+  all: 'ALL',
+  properties: 'PROPERTIES',
+  'space-in-round': 'SPACE IN ROUND',
+  countries: 'COUNTRIES',
+  services: 'SERVICES',
+  homepage: 'HOMEPAGE',
+  'one-team': 'ONE-TEAM',
+  'collection-media': 'COLLECTION-MEDIA',
+  general: 'GENERAL',
+}
+
+export const CATEGORY_DESTINATIONS = [
+  {
+    id: 'space-in-round',
+    label: 'Spaces in the Round',
+    badge: '3D Carousel',
+    icon: '🪐',
+    folder: 'space-in-round',
+    role: 'SPACE_IN_ROUND',
+    description: 'Circular interactive cards & panoramic 3D models',
+  },
+  {
+    id: 'properties',
+    label: 'Properties & Projects',
+    badge: 'Portfolio',
+    icon: '🏢',
+    folder: 'properties',
+    role: 'GALLERY_IMAGE',
+    description: 'Architectural galleries, hero banners & blueprints',
+  },
+  {
+    id: 'countries',
+    label: 'Countries & Destinations',
+    badge: 'Destinations',
+    icon: '🌍',
+    folder: 'countries',
+    role: 'COUNTRY_MEDIA',
+    description: 'Country hero video reels, scenic posters & guides',
+  },
+  {
+    id: 'services',
+    label: 'Services & Sectors',
+    badge: 'Services',
+    icon: '⚜️',
+    folder: 'services',
+    role: 'SERVICE_MEDIA',
+    description: 'Luxury Villas, Sky Residences, Commercial & Waterfront',
+  },
+  {
+    id: 'homepage',
+    label: 'Homepage Hero Video',
+    badge: 'Landing',
+    icon: '🎬',
+    folder: 'homepage',
+    role: 'HOMEPAGE_VIDEO',
+    description: 'Cinematic landing video reel & fallback poster frames',
+  },
+  {
+    id: 'one-team',
+    label: 'One Team, End to End',
+    badge: 'One Team',
+    icon: '👥',
+    folder: 'one-team',
+    role: 'ONE_TEAM_VIDEO',
+    description: 'Middle showcase video reel & 4 architecture cards',
+  },
+  {
+    id: 'collection-media',
+    label: 'Collection Portals',
+    badge: 'Portals',
+    icon: '📁',
+    folder: 'collection-media',
+    role: 'COLLECTION_COVER',
+    description: 'Country portfolio collection reels & card covers',
+  },
+  {
+    id: 'general',
+    label: 'General Media Library',
+    badge: 'Storage',
+    icon: '📦',
+    folder: 'general',
+    role: 'GENERAL',
+    description: 'Shared assets, brand identity & general cloud storage',
+  },
 ] as const
 
 export default function MediaLibraryClient({
@@ -68,44 +158,59 @@ export default function MediaLibraryClient({
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [showUploader, setShowUploader] = useState<boolean>(false)
+  const [uploadCategory, setUploadCategory] = useState<string>(
+    initialFolder && initialFolder !== 'all' ? initialFolder : 'space-in-round'
+  )
+  const [uploadNotice, setUploadNotice] = useState<string | null>(null)
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
   const [itemToDelete, setItemToDelete] = useState<MediaItem | null>(null)
   const [deleting, setDeleting] = useState<boolean>(false)
   const [failedPreviewKeys, setFailedPreviewKeys] = useState<Record<string, boolean>>({})
 
-  const fetchMedia = useCallback(async (targetFolder = folder) => {
-    setLoading(true)
-    setFetchError(null)
-    try {
-      const params = new URLSearchParams()
-      if (targetFolder && targetFolder !== 'all') {
-        params.set('folder', targetFolder)
-        params.set('prefix', `${targetFolder}/`)
-      }
-      const query = params.toString()
-      const res = await fetch(`/api/admin/media${query ? `?${query}` : ''}`, {
-        credentials: 'include',
-      })
-      const data = await res.json().catch(() => null)
-      if (!res.ok) {
-        setItems([])
-        setFetchError(data?.error || `Failed to load media library (HTTP ${res.status}).`)
-        return
-      }
-      const parsedItems: MediaItem[] = Array.isArray(data)
-        ? data
-        : Array.isArray(data?.items)
-          ? data.items
-          : []
-      setItems(parsedItems)
-    } catch (err) {
-      console.error('Error fetching media:', err)
-      setItems([])
-      setFetchError('Network error while connecting to Cloudflare R2 media library.')
-    } finally {
-      setLoading(false)
+  // Keep upload category in sync when user switches folder tabs
+  useEffect(() => {
+    if (folder !== 'all') {
+      const match = CATEGORY_DESTINATIONS.find((c) => c.id === folder || c.folder === folder)
+      if (match) setUploadCategory(match.id)
     }
   }, [folder])
+
+  const fetchMedia = useCallback(
+    async (targetFolder = folder) => {
+      setLoading(true)
+      setFetchError(null)
+      try {
+        const params = new URLSearchParams()
+        if (targetFolder && targetFolder !== 'all') {
+          params.set('folder', targetFolder)
+          params.set('prefix', `${targetFolder}/`)
+        }
+        const query = params.toString()
+        const res = await fetch(`/api/admin/media${query ? `?${query}` : ''}`, {
+          credentials: 'include',
+        })
+        const data = await res.json().catch(() => null)
+        if (!res.ok) {
+          setItems([])
+          setFetchError(data?.error || `Failed to load media library (HTTP ${res.status}).`)
+          return
+        }
+        const parsedItems: MediaItem[] = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.items)
+            ? data.items
+            : []
+        setItems(parsedItems)
+      } catch (err) {
+        console.error('Error fetching media:', err)
+        setItems([])
+        setFetchError('Network error while connecting to Cloudflare R2 media library.')
+      } finally {
+        setLoading(false)
+      }
+    },
+    [folder]
+  )
 
   useEffect(() => {
     fetchMedia(folder)
@@ -169,9 +274,26 @@ export default function MediaLibraryClient({
     )
   }
 
+  const isSpaceInRoundItem = (item: MediaItem) => {
+    const roleUpper = String(item.mediaRole || '').toUpperCase()
+    const keyLower = item.key.toLowerCase()
+    return (
+      item.folder === 'space-in-round' ||
+      roleUpper === 'SPACE_IN_ROUND' ||
+      roleUpper === 'SPACE_ROUND' ||
+      keyLower.includes('space-round') ||
+      keyLower.includes('space-in-round')
+    )
+  }
+
   const filteredItems = useMemo(() => {
     const q = searchTerm.trim().toLowerCase()
     return items.filter((item) => {
+      // Space in Round filter
+      if (folder === 'space-in-round' && !isSpaceInRoundItem(item)) {
+        return false
+      }
+
       const isVid = isVideoItem(item)
       if (typeFilter === 'image' && isVid) return false
       if (typeFilter === 'video' && !isVid) return false
@@ -184,7 +306,10 @@ export default function MediaLibraryClient({
       }
       return true
     })
-  }, [items, typeFilter, searchTerm])
+  }, [items, folder, typeFilter, searchTerm])
+
+  const activeCategoryConfig =
+    CATEGORY_DESTINATIONS.find((c) => c.id === uploadCategory) || CATEGORY_DESTINATIONS[0]
 
   return (
     <div className={`space-y-6 ${isModal ? 'p-2' : ''}`}>
@@ -192,7 +317,7 @@ export default function MediaLibraryClient({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-white/10">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#7DD3FC]">
+            <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#38BDF8]">
               Asset Management
             </span>
           </div>
@@ -200,7 +325,7 @@ export default function MediaLibraryClient({
             {isModal ? 'Select Media from Library' : 'Media Library & Cloud Storage'}
           </h1>
           <p className="text-xs text-gray-400 mt-1">
-            Browse, upload, and organize high-resolution architectural photography and cinematic reels.
+            Browse, upload, and organize high-resolution photography and cinematic reels across all website sections.
           </p>
         </div>
 
@@ -216,8 +341,11 @@ export default function MediaLibraryClient({
 
           <button
             type="button"
-            onClick={() => setShowUploader(!showUploader)}
-            className="px-4 py-2.5 rounded-lg bg-[#CBD5E1] hover:bg-white text-[#040810] text-xs font-medium tracking-wide flex items-center gap-2 shadow-[0_0_15px_rgba(203,213,225,0.15)] transition-all cursor-pointer"
+            onClick={() => {
+              setShowUploader(!showUploader)
+              setUploadNotice(null)
+            }}
+            className="px-4 py-2.5 rounded-lg bg-[#38BDF8] hover:bg-[#7DD3FC] text-[#040810] text-xs font-semibold tracking-wide flex items-center gap-2 shadow-[0_0_15px_rgba(56,189,248,0.25)] transition-all cursor-pointer"
           >
             {showUploader ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
             <span>{showUploader ? 'Close Upload' : 'Upload File'}</span>
@@ -225,51 +353,145 @@ export default function MediaLibraryClient({
         </div>
       </div>
 
-      {/* Upload Drawer / Box */}
+      {/* Upload Notification Banner */}
+      {uploadNotice && (
+        <div className="p-3 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-between gap-3 text-emerald-300 text-xs">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{uploadNotice}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setUploadNotice(null)}
+            className="text-emerald-400 hover:text-white"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Upload Drawer / Box with Categorization Question */}
       {showUploader && (
-        <div className="p-6 rounded-xl bg-[#070E1C] border border-[#7DD3FC]/30 shadow-2xl animate-in fade-in space-y-4">
+        <div className="p-6 rounded-xl bg-[#070E1C] border border-[#38BDF8]/40 shadow-2xl animate-in fade-in space-y-5">
           <div className="flex items-center justify-between pb-3 border-b border-white/10">
-            <span className="text-xs font-mono uppercase tracking-wider text-white">
-              Upload New Media File
-            </span>
+            <div>
+              <span className="text-xs font-mono uppercase tracking-wider text-white">
+                Upload New Media File (Image or Video)
+              </span>
+              <p className="text-[11px] text-gray-400 mt-0.5">
+                Upload photography (.jpg, .png, .webp) or cinematic reels (.mp4, .mov, .webm) directly to Cloudflare R2.
+              </p>
+            </div>
             <button
               type="button"
               onClick={() => setShowUploader(false)}
-              className="text-gray-400 hover:text-white"
+              className="text-gray-400 hover:text-white cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
-          <MediaUploader
-            folder={(folder !== 'all' ? folder : 'general') as any}
-            accept="image/*,video/mp4,video/webm,video/quicktime"
-            onUploadComplete={() => {
-              fetchMedia(folder)
-              setShowUploader(false)
-            }}
-          />
+
+          {/* QUESTION: Where should this media go? */}
+          <div className="space-y-2.5">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+              <label className="text-xs font-medium text-white flex items-center gap-1.5">
+                <span>Where should this media be categorized?</span>
+                <span className="text-[#38BDF8] font-mono text-[11px]">(Required)</span>
+              </label>
+              <span className="text-[11px] font-mono text-[#38BDF8] flex items-center gap-1">
+                <span>Selected Destination:</span>
+                <span className="font-semibold underline">
+                  {activeCategoryConfig.folder}/ ({activeCategoryConfig.label})
+                </span>
+              </span>
+            </div>
+
+            {/* 8 Category Options Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {CATEGORY_DESTINATIONS.map((cat) => {
+                const isSelected = uploadCategory === cat.id
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setUploadCategory(cat.id)}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                      isSelected
+                        ? 'bg-[#0B1528] border-[#38BDF8] text-white shadow-[0_0_15px_rgba(56,189,248,0.3)] ring-1 ring-[#38BDF8]'
+                        : 'bg-[#040810]/70 border-white/10 text-gray-300 hover:text-white hover:border-white/20 hover:bg-[#070E1C]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-lg">{cat.icon}</span>
+                      <span
+                        className={`text-[9px] font-mono uppercase px-1.5 py-0.5 rounded font-semibold ${
+                          isSelected
+                            ? 'bg-[#38BDF8] text-[#040810]'
+                            : 'bg-white/10 text-gray-400'
+                        }`}
+                      >
+                        {cat.badge}
+                      </span>
+                    </div>
+                    <div className="mt-2 font-medium text-xs text-white leading-tight">
+                      {cat.label}
+                    </div>
+                    <div className="text-[10px] text-gray-400 line-clamp-1 mt-1 font-sans">
+                      {cat.description}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Media Uploader configured with chosen category */}
+          <div className="pt-2">
+            <MediaUploader
+              folder={activeCategoryConfig.folder as any}
+              mediaRole={activeCategoryConfig.role as any}
+              accept="image/*,video/mp4,video/webm,video/quicktime"
+              label={`Upload Image or Video for ${activeCategoryConfig.label}`}
+              onUploadComplete={(url, key) => {
+                const targetFolder = activeCategoryConfig.folder
+                fetchMedia(targetFolder)
+                setFolder(targetFolder)
+                setShowUploader(false)
+                setUploadNotice(
+                  `Successfully uploaded asset to "${activeCategoryConfig.label}" (${key || url}). Switched to ${activeCategoryConfig.label} tab.`
+                )
+              }}
+            />
+          </div>
         </div>
       )}
 
       {/* Folder Tabs + Search & Type Filter */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+        {/* Dynamic Category Tabs */}
         <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-lg bg-[#070E1C] border border-white/10 w-fit max-w-full overflow-x-auto">
-          {FOLDER_TABS.map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => setFolder(f)}
-              className={`px-3 py-1.5 rounded-md text-xs font-mono uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-                folder === f
-                  ? 'bg-[#0B1528] text-[#7DD3FC] border border-[#7DD3FC]/30 shadow-sm font-semibold'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              {f}
-            </button>
-          ))}
+          {FOLDER_TABS.map((f) => {
+            const isTabActive = folder === f
+            const label = FOLDER_LABELS[f] || f.toUpperCase()
+            return (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setFolder(f)}
+                className={`px-3 py-1.5 rounded-md text-xs font-mono uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                  isTabActive
+                    ? 'bg-[#38BDF8] text-[#040810] font-bold shadow-[0_0_12px_rgba(56,189,248,0.35)]'
+                    : 'text-gray-300 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                {f === 'space-in-round' && <Orbit className="w-3 h-3 shrink-0" />}
+                <span>{label}</span>
+              </button>
+            )
+          })}
         </div>
 
+        {/* Search & Media Type (Image/Video) Toggle */}
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative">
             <Search className="w-3.5 h-3.5 text-gray-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
@@ -278,7 +500,7 @@ export default function MediaLibraryClient({
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Filter filename or key..."
-              className="pl-8 pr-3 py-1.5 rounded-lg bg-[#070E1C] border border-white/10 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#7DD3FC] font-mono w-48 sm:w-56"
+              className="pl-8 pr-3 py-1.5 rounded-lg bg-[#070E1C] border border-white/10 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#38BDF8] font-mono w-48 sm:w-56"
             />
           </div>
 
@@ -290,7 +512,7 @@ export default function MediaLibraryClient({
                 onClick={() => setTypeFilter(t)}
                 className={`px-2.5 py-1 rounded text-[11px] font-mono uppercase cursor-pointer transition-colors ${
                   typeFilter === t
-                    ? 'bg-[#0B1528] text-[#7DD3FC] font-semibold'
+                    ? 'bg-[#38BDF8] text-[#040810] font-bold shadow-[0_0_8px_rgba(56,189,248,0.3)]'
                     : 'text-gray-400 hover:text-white'
                 }`}
               >
@@ -326,22 +548,35 @@ export default function MediaLibraryClient({
       ) : filteredItems.length === 0 ? (
         <div className="p-16 text-center border border-dashed border-white/10 rounded-xl space-y-3">
           <Folder className="w-8 h-8 text-gray-600 mx-auto" />
-          <p className="text-xs text-gray-400 font-mono">
-            No media objects found in &quot;{folder}&quot;{searchTerm ? ` matching "${searchTerm}"` : ''}. Click &quot;Upload File&quot; to add an asset.
+          <p className="text-xs text-gray-300 font-mono">
+            No media objects found in &quot;{FOLDER_LABELS[folder] || folder}&quot;
+            {searchTerm ? ` matching "${searchTerm}"` : ''}.
           </p>
+          <button
+            type="button"
+            onClick={() => {
+              setShowUploader(true)
+              setUploadCategory(folder !== 'all' ? folder : 'space-in-round')
+            }}
+            className="px-3.5 py-1.5 rounded-lg bg-[#38BDF8]/20 hover:bg-[#38BDF8]/30 text-[#38BDF8] text-xs font-mono border border-[#38BDF8]/40 transition-colors cursor-pointer inline-flex items-center gap-1.5"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Upload file to {FOLDER_LABELS[folder] || folder}</span>
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {filteredItems.map((item) => {
             const isVid = isVideoItem(item)
-            const displayName = item.filename || item.originalFilename || item.key.split('/').pop() || item.key
+            const displayName =
+              item.filename || item.originalFilename || item.key.split('/').pop() || item.key
             const displayType = item.contentType || item.mimeType || (isVid ? 'video/mp4' : 'image/jpeg')
             const hasPreviewFailed = Boolean(failedPreviewKeys[item.key])
 
             return (
               <div
                 key={item.key}
-                className="group relative rounded-xl border border-white/10 hover:border-[#7DD3FC]/40 overflow-hidden bg-[#070E1C] flex flex-col justify-between transition-all"
+                className="group relative rounded-xl border border-white/10 hover:border-[#38BDF8]/50 overflow-hidden bg-[#070E1C] flex flex-col justify-between transition-all hover:shadow-[0_0_15px_rgba(56,189,248,0.15)]"
               >
                 {/* Media Preview Aspect Container */}
                 <div
@@ -351,7 +586,7 @@ export default function MediaLibraryClient({
                   {isVid ? (
                     hasPreviewFailed ? (
                       <div className="flex flex-col items-center justify-center text-gray-400 gap-1.5 p-3 text-center">
-                        <Film className="w-7 h-7 text-[#7DD3FC]" />
+                        <Film className="w-7 h-7 text-[#38BDF8]" />
                         <span className="text-[10px] font-mono text-gray-400 truncate max-w-[120px]">
                           {displayName}
                         </span>
@@ -368,7 +603,7 @@ export default function MediaLibraryClient({
                           }
                           className="w-full h-full object-cover"
                         />
-                        <span className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-black/75 border border-white/15 text-[9px] font-mono text-[#7DD3FC] flex items-center gap-1">
+                        <span className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-black/80 border border-white/20 text-[9px] font-mono text-[#38BDF8] flex items-center gap-1">
                           <Film className="w-2.5 h-2.5" />
                           <span>VIDEO</span>
                         </span>
@@ -395,7 +630,7 @@ export default function MediaLibraryClient({
                   {/* Overlay button in select mode */}
                   {onSelect && (
                     <div className="absolute inset-0 bg-[#070E1C]/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                      <span className="px-3 py-1 rounded bg-[#7DD3FC] text-[#040810] text-xs font-medium">
+                      <span className="px-3 py-1 rounded bg-[#38BDF8] text-[#040810] text-xs font-semibold">
                         Select Asset
                       </span>
                     </div>
@@ -404,15 +639,20 @@ export default function MediaLibraryClient({
 
                 {/* Info and Actions */}
                 <div className="p-2.5 bg-[#040810] border-t border-white/5 space-y-1.5">
-                  <div className="text-[11px] font-mono text-white truncate" title={`${displayName}\nKey: ${item.key}`}>
+                  <div
+                    className="text-[11px] font-mono text-white truncate"
+                    title={`${displayName}\nKey: ${item.key}`}
+                  >
                     {displayName}
                   </div>
                   <div className="text-[9px] font-mono text-gray-500 truncate" title={item.key}>
                     {item.key}
                   </div>
                   <div className="flex items-center justify-between text-[10px] font-mono text-gray-400">
-                    <span className="truncate max-w-[100px]" title={displayType}>{displayType}</span>
-                    <span className={item.tracked ? 'text-emerald-400/80' : 'text-amber-300/80'}>
+                    <span className="truncate max-w-[100px]" title={displayType}>
+                      {displayType}
+                    </span>
+                    <span className={item.tracked ? 'text-emerald-400 font-semibold' : 'text-amber-300'}>
                       {item.tracked ? 'R2 · DB' : 'R2'}
                     </span>
                   </div>
@@ -425,7 +665,7 @@ export default function MediaLibraryClient({
                     <button
                       type="button"
                       onClick={() => handleCopyUrl(item.url, item.key)}
-                      className="hover:text-[#7DD3FC] p-1 flex items-center gap-1 text-[10px] font-mono cursor-pointer"
+                      className="hover:text-[#38BDF8] p-1 flex items-center gap-1 text-[10px] font-mono cursor-pointer"
                       title="Copy Public URL"
                     >
                       {copiedKey === item.key ? (
@@ -496,7 +736,7 @@ export default function MediaLibraryClient({
                   setDeleteError(null)
                   setItemToDelete(null)
                 }}
-                className="px-4 py-2 rounded-lg bg-[#0B1528] text-xs text-gray-300 hover:text-white border border-white/10"
+                className="px-4 py-2 rounded-lg bg-[#0B1528] text-xs text-gray-300 hover:text-white border border-white/10 cursor-pointer"
               >
                 Cancel
               </button>
