@@ -330,7 +330,7 @@ export function ServiceDetailClient({
                 <div className="flex items-center gap-2.5">
                   <div className={cn("relative w-6 h-6 sm:w-7 sm:h-7 rounded-full overflow-hidden p-1 flex items-center justify-center shrink-0 transition-colors", themeTokens.serviceDetail.focusIconWrap(isLight))}>
                     <Image
-                      src="/images/legacy-logo-transparent.png"
+                      src="/apex_pacific_holdings_logo.svg"
                       alt="Apex Pacific Holdings"
                       width={22}
                       height={22}
