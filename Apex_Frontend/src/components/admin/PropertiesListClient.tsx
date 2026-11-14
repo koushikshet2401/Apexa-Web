@@ -559,7 +559,10 @@ export default function PropertiesListClient({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             {countries.map((c) => {
-              const countryCount = currentProjects.filter((p) => p.country?.id === c.id).length
+              const relevantProjects =
+                activeTab === 'current' ? currentProjects : activeTab === 'sold' ? soldProjects : archivedProjects
+              const countryCount = relevantProjects.filter((p) => p.country?.id === c.id).length
+              const soldCount = soldProjects.filter((p) => p.country?.id === c.id).length
               const isSelected = selectedCountryId === c.id
 
               return (
@@ -594,6 +597,7 @@ export default function PropertiesListClient({
                       }`}
                     >
                       {countryCount} {countryCount === 1 ? 'Project' : 'Projects'}
+                      {activeTab === 'current' && soldCount > 0 && ` (${soldCount} Sold)`}
                     </span>
                   </div>
 
@@ -891,15 +895,52 @@ export default function PropertiesListClient({
                         </div>
                       </td>
                       <td className="py-4 px-5 text-right whitespace-nowrap">
-                        <Link
-                          href={publicUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 text-[11px] inline-flex items-center gap-1"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5 text-[#7DD3FC]" />
-                          <span>View Project</span>
-                        </Link>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleTogglePublish(p)}
+                            disabled={actionLoadingId === p.id}
+                            className={`px-2 py-1 rounded text-[10px] font-mono inline-flex items-center gap-1 border transition-colors cursor-pointer ${
+                              p.isPublished
+                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                                : 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20'
+                            }`}
+                            title="Toggle public website visibility"
+                          >
+                            {p.isPublished ? <Eye className="w-3 h-3 text-emerald-400" /> : <EyeOff className="w-3 h-3 text-amber-400" />}
+                            <span>{p.isPublished ? 'Public' : 'Hidden'}</span>
+                          </button>
+
+                          <Link
+                            href={`/admin/properties/${p.id}`}
+                            className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 text-[11px] inline-flex items-center gap-1 transition-colors"
+                            title="Edit Project Details"
+                          >
+                            <Edit2 className="w-3 h-3 text-[#7DD3FC]" />
+                            <span>Edit</span>
+                          </Link>
+
+                          <Link
+                            href={publicUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 text-[11px] inline-flex items-center gap-1 transition-colors"
+                            title="View on Public Website"
+                          >
+                            <ExternalLink className="w-3 h-3 text-gray-400" />
+                            <span>View</span>
+                          </Link>
+
+                          <button
+                            type="button"
+                            onClick={() => setArchiveModalItem(p)}
+                            className="px-2 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-[11px] inline-flex items-center gap-1 transition-colors cursor-pointer"
+                            title="Delete Project (moves to Deleted Projects)"
+                          >
+                            <Archive className="w-3 h-3" />
+                            <span>Delete</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )

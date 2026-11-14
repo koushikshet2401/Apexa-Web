@@ -22,6 +22,12 @@ import {
   CheckCircle2,
   Layers,
   Globe,
+  FileText,
+  MapPin,
+  Sparkles,
+  Orbit,
+  FolderOpen,
+  Briefcase,
 } from 'lucide-react'
 
 interface AdminProfile {
@@ -88,17 +94,40 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   const currentTab = searchParams ? searchParams.get('tab') : null
 
-  // EXACTLY NINE MAIN APPROVED SIDEBAR ITEMS
-  const NAV_ITEMS = [
-    { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-    { label: 'Add Project', href: '/admin/properties/new', icon: PlusCircle, badge: 'New' },
-    { label: 'Current Project', href: '/admin/properties?tab=current', icon: Building2 },
-    { label: 'Soldout Project', href: '/admin/properties?tab=sold', icon: Award },
-    { label: 'Deleted Project', href: '/admin/properties?tab=archived', icon: Archive },
-    { label: 'Messages', href: '/admin/messages', icon: Mail },
-    { label: 'Team Management', href: '/admin/users', icon: Users },
-    { label: 'Account Management', href: '/admin/account', icon: UserCheck },
-    { label: 'Settings', href: '/admin/settings', icon: Settings },
+  const NAV_GROUPS = [
+    {
+      title: 'Portfolio',
+      items: [
+        { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+        { label: 'Add Project', href: '/admin/properties/new', icon: PlusCircle, badge: 'New' },
+        { label: 'Current Project', href: '/admin/properties?tab=current', icon: Building2 },
+        { label: 'Soldout Project', href: '/admin/properties?tab=sold', icon: Award },
+        { label: 'Deleted Project', href: '/admin/properties?tab=archived', icon: Archive },
+      ],
+    },
+    {
+      title: 'Website CMS',
+      items: [
+        { label: 'Homepage Video', href: '/admin/homepage-video', icon: Film },
+        { label: 'Homepage Copy', href: '/admin/homepage', icon: FileText },
+        { label: 'One Team', href: '/admin/one-team', icon: Layers },
+        { label: 'Collection Media', href: '/admin/collection-media', icon: Globe },
+        { label: 'Countries Directory', href: '/admin/countries', icon: MapPin },
+        { label: 'Services', href: '/admin/services', icon: Briefcase },
+        { label: 'Featured Launches', href: '/admin/launches', icon: Sparkles },
+        { label: 'Spaces in Round', href: '/admin/space-in-round', icon: Orbit },
+        { label: 'Media Library', href: '/admin/media', icon: FolderOpen },
+      ],
+    },
+    {
+      title: 'Operations',
+      items: [
+        { label: 'Messages / Contact', href: '/admin/messages', icon: Mail },
+        { label: 'Team Management', href: '/admin/users', icon: Users },
+        { label: 'Account Management', href: '/admin/account', icon: UserCheck },
+        { label: 'Settings Hub', href: '/admin/settings', icon: Settings },
+      ],
+    },
   ]
 
   const isCmsSubpage =
@@ -114,7 +143,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   const CMS_SUB_TABS = [
     { label: 'Settings Hub', href: '/admin/settings' },
-    { label: 'Homepage Video & Copy', href: '/admin/homepage-video' },
+    { label: 'Homepage Video', href: '/admin/homepage-video' },
+    { label: 'Homepage Copy', href: '/admin/homepage' },
     { label: 'One Team', href: '/admin/one-team' },
     { label: 'Collection Media', href: '/admin/collection-media' },
     { label: 'Countries', href: '/admin/countries' },
@@ -124,7 +154,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     { label: 'Media Library', href: '/admin/media' },
   ]
 
-  const isNavItemActive = (item: typeof NAV_ITEMS[0]) => {
+  const isNavItemActive = (item: { label: string; href: string }) => {
     if (item.label === 'Dashboard') {
       return pathname === '/admin'
     }
@@ -141,7 +171,34 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     if (item.label === 'Deleted Project') {
       return pathname === '/admin/properties' && currentTab === 'archived'
     }
-    if (item.label === 'Messages') {
+    if (item.label === 'Homepage Video') {
+      return pathname === '/admin/homepage-video'
+    }
+    if (item.label === 'Homepage Copy') {
+      return pathname === '/admin/homepage'
+    }
+    if (item.label === 'One Team') {
+      return pathname === '/admin/one-team'
+    }
+    if (item.label === 'Collection Media') {
+      return pathname.startsWith('/admin/collection-media')
+    }
+    if (item.label === 'Countries Directory') {
+      return pathname.startsWith('/admin/countries')
+    }
+    if (item.label === 'Services') {
+      return pathname.startsWith('/admin/services')
+    }
+    if (item.label === 'Featured Launches') {
+      return pathname.startsWith('/admin/launches')
+    }
+    if (item.label === 'Spaces in Round') {
+      return pathname.startsWith('/admin/space-in-round')
+    }
+    if (item.label === 'Media Library') {
+      return pathname.startsWith('/admin/media')
+    }
+    if (item.label === 'Messages / Contact') {
       return pathname === '/admin/messages' || pathname.startsWith('/admin/enquiries')
     }
     if (item.label === 'Team Management') {
@@ -150,10 +207,10 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     if (item.label === 'Account Management') {
       return pathname === '/admin/account'
     }
-    if (item.label === 'Settings') {
-      return pathname === '/admin/settings' || isCmsSubpage
+    if (item.label === 'Settings Hub') {
+      return pathname === '/admin/settings'
     }
-    return false
+    return pathname === item.href
   }
 
   return (
@@ -235,34 +292,44 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           </Link>
         </div>
 
-        {/* Navigation Section: EXACTLY NINE CLEAN LINKS */}
-        <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1.5 scrollbar-thin scrollbar-thumb-black/10">
-          {NAV_ITEMS.map((item, index) => {
-            const Icon = item.icon
-            const active = isNavItemActive(item)
-            return (
-              <Link
-                key={item.label}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-medium transition-all duration-150 ${
-                  active
-                    ? 'bg-white text-[#0B1320] border border-black/15 shadow-sm font-semibold'
-                    : 'text-[#1E293B] hover:text-[#0B1320] hover:bg-white/40 border border-transparent'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Icon className={`w-4 h-4 ${active ? 'text-[#0B1320]' : 'text-[#334155]'}`} />
-                  <span>{item.label}</span>
-                </div>
-                {item.badge && (
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-600/15 text-emerald-800 font-mono font-semibold uppercase border border-emerald-600/30">
-                    {item.badge}
-                  </span>
-                )}
-              </Link>
-            )
-          })}
+        {/* Navigation Section: CATEGORIZED COMPREHENSIVE SIDEBAR */}
+        <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-4 scrollbar-thin scrollbar-thumb-black/10">
+          {NAV_GROUPS.map((group) => (
+            <div key={group.title} className="space-y-1">
+              <div className="px-3 py-1 text-[10px] font-mono uppercase tracking-wider text-[#0E2A47]/80 font-bold flex items-center justify-between">
+                <span>{group.title}</span>
+                <span className="text-[9px] text-[#0E2A47]/40 font-mono">({group.items.length})</span>
+              </div>
+              <div className="space-y-0.5">
+                {group.items.map((item) => {
+                  const Icon = item.icon
+                  const active = isNavItemActive(item)
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150 ${
+                        active
+                          ? 'bg-white text-[#0B1320] border border-black/15 shadow-sm font-semibold'
+                          : 'text-[#1E293B] hover:text-[#0B1320] hover:bg-white/40 border border-transparent'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Icon className={`w-3.5 h-3.5 ${active ? 'text-[#0B1320]' : 'text-[#334155]'}`} />
+                        <span>{item.label}</span>
+                      </div>
+                      {item.badge && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-600/15 text-emerald-800 font-mono font-semibold uppercase border border-emerald-600/30">
+                          {item.badge}
+                        </span>
+                      )}
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
         {/* Footer Actions */}
