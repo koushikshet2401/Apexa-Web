@@ -24,7 +24,10 @@ const primaryNavLinks = [
   { label: 'Home', href: '/#home', id: 'home' },
   { label: 'New Launches', href: '/#launches', id: 'launches' },
   { label: 'Residences', href: '/#collection', id: 'collection' },
+  { label: 'Services', href: '/#services', id: 'services' },
+  { label: 'Spaces in the Round', href: '/#spaces', id: 'spaces' },
   { label: 'About Apex', href: '/#about', id: 'about' },
+  { label: 'Contact', href: '/#contact', id: 'contact' },
 ]
 
 export interface NavItemSummary {
@@ -270,7 +273,7 @@ export function Navigation({
           history.pushState(null, '', '/#contact')
         } catch {}
       } else {
-        router.push('/contact')
+        router.push('/#contact')
       }
       return
     }
@@ -547,10 +550,10 @@ export function Navigation({
 
           {/* Menu Body */}
           <div className="flex-1 max-w-5xl w-full mx-auto px-6 sm:px-12 py-8 sm:py-10 flex flex-col justify-between">
-            {/* Primary Nav List (Home, New Launches, Residences, About Apex) */}
+            {/* Primary Nav List (Home, New Launches, Residences, Services, Spaces in the Round, About Apex, Contact) */}
             <nav
               aria-label="Main Navigation Menu"
-              className={`divide-y mb-10 transition-colors ${
+              className={`divide-y mb-8 sm:mb-10 transition-colors ${
                 isLight ? 'divide-[#0B1325]/[0.08]' : 'divide-white/[0.08]'
               }`}
             >
@@ -565,13 +568,13 @@ export function Navigation({
                       closeMenu()
                     }
                   }}
-                  className={`group flex items-center justify-between py-4 sm:py-5 transition-colors cursor-pointer ${
+                  className={`group flex items-center justify-between py-3 sm:py-4 transition-colors cursor-pointer ${
                     isLight
                       ? 'text-[#0B1325] hover:text-[#1D263B]'
                       : 'text-white hover:text-sky-300'
                   }`}
                 >
-                  <span className="font-serif text-2xl sm:text-4xl font-light tracking-tight">
+                  <span className="font-serif text-xl sm:text-3xl md:text-4xl font-light tracking-tight">
                     {item.label}
                   </span>
                   <ChevronRight
@@ -609,6 +612,16 @@ export function Navigation({
                     isLight ? 'hover:text-[#0B1325]' : 'hover:text-sky-300'
                   }`}>
                     Residences
+                  </Link>
+                  <Link href="/#services" onClick={(e) => navigateToSection(e, 'services')} className={`transition-colors cursor-pointer ${
+                    isLight ? 'hover:text-[#0B1325]' : 'hover:text-sky-300'
+                  }`}>
+                    Services
+                  </Link>
+                  <Link href="/#spaces" onClick={(e) => navigateToSection(e, 'spaces')} className={`transition-colors cursor-pointer ${
+                    isLight ? 'hover:text-[#0B1325]' : 'hover:text-sky-300'
+                  }`}>
+                    Spaces in the Round
                   </Link>
                   {displayServices.map((svc) => (
                     <Link
