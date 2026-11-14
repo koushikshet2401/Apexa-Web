@@ -522,18 +522,18 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
               />
             </div>
 
-            {/* Ambient Radial Gradient Mask for high contrast & elegance */}
+            {/* Ambient Radial Vignette for framing */}
             <div className={cn(
               "absolute inset-0 z-1 pointer-events-none transition-all duration-500",
               isLight
-                ? "bg-[radial-gradient(ellipse_at_center,rgba(251,249,246,0.15)_0%,rgba(251,249,246,0.40)_60%,rgba(251,249,246,0.85)_100%)]"
-                : "bg-[radial-gradient(ellipse_at_center,rgba(4,8,16,0.15)_0%,rgba(4,8,16,0.40)_60%,rgba(4,8,16,0.85)_100%)]"
+                ? "bg-[radial-gradient(ellipse_at_center,rgba(251,249,246,0.80)_0%,rgba(251,249,246,0.25)_55%,rgba(251,249,246,0.70)_100%)]"
+                : "bg-[radial-gradient(ellipse_at_center,rgba(4,8,16,0.80)_0%,rgba(4,8,16,0.25)_55%,rgba(4,8,16,0.70)_100%)]"
             )} />
 
-            {/* Soft Typography Legibility Shield */}
+            {/* Soft Typography Legibility Halo */}
             <div className={cn(
-              "absolute inset-0 max-w-2xl mx-auto my-auto h-80 rounded-full blur-3xl pointer-events-none z-[5] transition-colors duration-500",
-              isLight ? "bg-[#FBF9F6]/55" : "bg-[#040810]/55"
+              "absolute inset-0 max-w-3xl mx-auto my-auto h-96 rounded-full blur-3xl pointer-events-none z-[5] transition-colors duration-500",
+              isLight ? "bg-[#FBF9F6]/90" : "bg-[#040810]/90"
             )} />
 
             {/* Centered Luxury Details Container */}
@@ -541,7 +541,7 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
               {/* Location & Name Header */}
               <div className="flex items-center justify-center gap-3 mb-3 sm:mb-4">
                 <span className={cn("w-6 sm:w-10 h-px transition-colors duration-300", themeTokens.propertyDetail.labelLine(isLight))} />
-                <span className={cn("font-mono text-[10px] sm:text-xs uppercase tracking-[0.3em] font-medium transition-colors duration-300", themeTokens.propertyDetail.label(isLight))}>
+                <span className={cn("font-mono text-[10px] sm:text-xs uppercase tracking-[0.3em] font-semibold transition-colors duration-300", themeTokens.propertyDetail.label(isLight))}>
                   {property.city ? `${property.city}, ` : ''}{property.country || 'UNITED ARAB EMIRATES'} · {property.name}
                 </span>
                 <span className={cn("w-6 sm:w-10 h-px transition-colors duration-300", themeTokens.propertyDetail.labelLine(isLight))} />
@@ -563,7 +563,7 @@ export function CinematicPropertyDetail({ property, backHref }: CinematicPropert
 
               {/* Description paragraph */}
               {(property.description || property.shortDescription) && (
-                <p className={cn("font-sans text-xs sm:text-sm md:text-base font-light leading-relaxed max-w-2xl mx-auto mb-6 sm:mb-8 text-pretty transition-colors duration-300", themeTokens.propertyDetail.description(isLight))}>
+                <p className={cn("font-sans text-xs sm:text-sm md:text-base font-normal leading-relaxed max-w-2xl mx-auto mb-6 sm:mb-8 text-pretty transition-colors duration-300", themeTokens.propertyDetail.description(isLight))}>
                   {property.description || property.shortDescription}
                 </p>
               )}

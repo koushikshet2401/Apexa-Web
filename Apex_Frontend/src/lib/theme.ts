@@ -335,17 +335,17 @@ export const themeTokens = {
         ? 'bg-[#FBF9F6] border-t border-[#0B1325]/10 shadow-[0_-30px_70px_rgba(11,19,37,0.08)]'
         : 'bg-[#060D1A] border-t border-white/10 shadow-[0_-35px_80px_rgba(0,0,0,0.95)]',
     label: (isLight: boolean) =>
-      isLight ? 'text-[#6B6661]' : 'text-[#7DD3FC]',
+      isLight ? 'text-[#0B1325] font-semibold' : 'text-[#7DD3FC] font-medium',
     labelLine: (isLight: boolean) =>
-      isLight ? 'bg-[#0B1325]/30' : 'bg-[#7DD3FC]/60',
+      isLight ? 'bg-[#0B1325]/40' : 'bg-[#7DD3FC]/60',
     specs: (isLight: boolean) =>
-      isLight ? 'text-[#6B6661]' : 'text-white/90',
+      isLight ? 'text-[#1D263B] font-semibold' : 'text-white/95 font-medium',
     price: (isLight: boolean) =>
       isLight ? 'text-[#0B1325]' : 'text-white',
     description: (isLight: boolean) =>
-      isLight ? 'text-[#6B6661]' : 'text-[#CBD5E1]',
+      isLight ? 'text-[#1D263B] font-normal' : 'text-[#F1F5F9] font-normal',
     highlightItem: (isLight: boolean) =>
-      isLight ? 'text-[#0B1325]' : 'text-[#E2E8F0]',
+      isLight ? 'text-[#0B1325]' : 'text-[#F8FAFC]',
     highlightDot: (isLight: boolean) =>
       isLight ? 'bg-[#0B1325]' : 'bg-[#7DD3FC] shadow-[0_0_8px_rgba(125,211,252,0.9)]',
     showcaseTitle: (isLight: boolean) =>

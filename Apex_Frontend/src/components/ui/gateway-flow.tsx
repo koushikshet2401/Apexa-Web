@@ -229,6 +229,31 @@ const gatewayFlowSource = `<!DOCTYPE html>
                 });
                 explosions = explosions.filter(exp => exp.life > 0);
 
+                // Create a radial gradient stroke that clears the center area (around text)
+                // and gracefully ramps up into flowing streams towards the outer viewport
+                const maxDim = Math.max(width, height) * 0.75;
+                const strokeGrad = ctx.createRadialGradient(centerX, centerY, 70, centerX, centerY, maxDim);
+
+                if (isLight) {
+                    // Light mode: soft luxury graphite slate ("lil bit less color", never harsh)
+                    strokeGrad.addColorStop(0, 'rgba(100, 116, 139, 0)');
+                    strokeGrad.addColorStop(0.22, 'rgba(100, 116, 139, 0.04)');
+                    strokeGrad.addColorStop(0.42, 'rgba(100, 116, 139, 0.20)');
+                    strokeGrad.addColorStop(0.72, 'rgba(71, 85, 105, 0.34)');
+                    strokeGrad.addColorStop(1, 'rgba(71, 85, 105, 0.40)');
+                } else {
+                    // Dark mode: luminous light white/cyan streams, clearing the center text
+                    strokeGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+                    strokeGrad.addColorStop(0.22, 'rgba(255, 255, 255, 0.06)');
+                    strokeGrad.addColorStop(0.42, 'rgba(255, 255, 255, 0.40)');
+                    strokeGrad.addColorStop(0.72, 'rgba(255, 255, 255, 0.72)');
+                    strokeGrad.addColorStop(1, 'rgba(255, 255, 255, 0.82)');
+                }
+
+                ctx.strokeStyle = strokeGrad;
+                ctx.lineWidth = isLight ? 1.2 : 1.35;
+                ctx.setLineDash([2, 3.5]);
+
                 paths.forEach(path => {
                     const p0 = { x: path.isLeft ? 0 : width, y: path.startY };
                     const p1 = { x: path.isLeft ? centerX * 0.5 : width - centerX * 0.5, y: path.startY };
@@ -238,14 +263,7 @@ const gatewayFlowSource = `<!DOCTYPE html>
                     ctx.beginPath();
                     ctx.moveTo(p0.x, p0.y);
                     ctx.bezierCurveTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
-
-                    // High contrast adaptive strokes
-                    // Dark mode: luminous light lines; Light mode: dark charcoal lines
-                    ctx.strokeStyle = isLight ? 'rgba(15, 23, 42, 0.72)' : 'rgba(255, 255, 255, 0.78)';
-                    ctx.lineWidth = 1.4;
-                    ctx.setLineDash([2, 3.5]);
                     ctx.stroke();
-                    ctx.setLineDash([]);
 
                     path.particles.forEach(p => {
                         p.t += p.speed;
@@ -271,23 +289,26 @@ const gatewayFlowSource = `<!DOCTYPE html>
                         pos.x += dxTotal;
                         pos.y += dyTotal;
 
-                        // High contrast particles
-                        // Light mode: dark slate particles
-                        // Dark mode: luminous glowing particles
-                        if (isLight) {
-                            ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
-                            ctx.shadowColor = 'rgba(15, 23, 42, 0.35)';
-                            ctx.shadowBlur = 2;
-                        } else {
-                            ctx.fillStyle = 'rgba(255, 255, 255, 0.98)';
-                            ctx.shadowColor = 'rgba(255, 255, 255, 0.85)';
-                            ctx.shadowBlur = 6;
+                        // Particles dissolve as they approach the center text area (t > 0.62)
+                        const fadeFactor = p.t > 0.62 ? Math.max(0, 1 - (p.t - 0.62) / 0.32) : 1;
+
+                        if (fadeFactor > 0.05) {
+                            if (isLight) {
+                                ctx.fillStyle = 'rgba(71, 85, 105, ' + (0.42 * fadeFactor).toFixed(2) + ')';
+                                ctx.shadowColor = 'rgba(71, 85, 105, 0.15)';
+                                ctx.shadowBlur = 1;
+                            } else {
+                                ctx.fillStyle = 'rgba(255, 255, 255, ' + (0.95 * fadeFactor).toFixed(2) + ')';
+                                ctx.shadowColor = 'rgba(255, 255, 255, 0.85)';
+                                ctx.shadowBlur = 5;
+                            }
+                            ctx.fillRect(pos.x - 1.5, pos.y - 1.5, 3, 3);
+                            ctx.shadowBlur = 0;
                         }
-                        ctx.fillRect(pos.x - 1.75, pos.y - 1.75, 3.5, 3.5);
-                        ctx.shadowBlur = 0;
                     });
                 });
                 
+                ctx.setLineDash([]);
                 requestAnimationFrame(render);
             }
             
@@ -303,8 +324,8 @@ const GATEWAY_FLOW_DEFINITION: EffectDefinition = {
   supportsMode: true,
   background: (mode) => (mode === "light" ? LIGHT_PAPER : DARK_PAPER),
   targets: [{ selector: "#flow-canvas", role: "background" }],
-  patch(source, { size, density, mode }) {
-    let next = source
+  patch(source, { size, density }) {
+    return source
       .replace(
         "const numPaths = 90;",
         `const numPaths = ${scaleCount(90, density, 12)};`,
@@ -314,27 +335,9 @@ const GATEWAY_FLOW_DEFINITION: EffectDefinition = {
         "p.t += p.speed * ((window.__SF_CONTROLS&&window.__SF_CONTROLS.speed)||1);",
       )
       .replace(
-        "ctx.lineWidth = 1.4;",
-        `ctx.lineWidth = ${Number((1.4 * size).toFixed(2))};`,
+        "ctx.lineWidth = isLight ? 1.2 : 1.35;",
+        `ctx.lineWidth = Number(((isLight ? 1.2 : 1.35) * ${size}).toFixed(2));`,
       );
-    if (mode === "light") {
-      next = next
-        .replace(
-          "ctx.strokeStyle = isLight ? 'rgba(15, 23, 42, 0.72)' : 'rgba(255, 255, 255, 0.78)';",
-          "ctx.strokeStyle = 'rgba(15, 23, 42, 0.75)';",
-        )
-        .replace(
-          "ctx.fillStyle = 'rgba(255, 255, 255, 0.98)';",
-          "ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';",
-        );
-    } else {
-      next = next
-        .replace(
-          "ctx.strokeStyle = isLight ? 'rgba(15, 23, 42, 0.72)' : 'rgba(255, 255, 255, 0.78)';",
-          "ctx.strokeStyle = 'rgba(255, 255, 255, 0.82)';",
-        );
-    }
-    return next;
   },
 };
 
